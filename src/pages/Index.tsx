@@ -15,8 +15,45 @@ const Index = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="pt-24 pb-16 md:pt-32 md:pb-24 gradient-subtle overflow-hidden">
-        <div className="container mx-auto px-4">
+      <section className="pt-24 pb-16 md:pt-32 md:pb-24 gradient-subtle overflow-hidden relative">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Large gradient blob - top right */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+          
+          {/* Warm accent blob - bottom left */}
+          <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-secondary/15 rounded-full blur-3xl" />
+          
+          {/* Floating geometric shapes */}
+          <div className="absolute top-20 left-[10%] w-16 h-16 border-2 border-primary/20 rounded-2xl rotate-12 animate-float" />
+          <div className="absolute top-40 right-[15%] w-12 h-12 bg-primary/10 rounded-xl -rotate-12 animate-float" style={{ animationDelay: '1s' }} />
+          <div className="absolute bottom-32 left-[20%] w-8 h-8 bg-secondary/20 rounded-lg rotate-45 animate-float" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-60 left-[5%] w-6 h-6 bg-primary/15 rounded-full animate-float" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute bottom-20 right-[25%] w-10 h-10 border-2 border-secondary/25 rounded-full animate-float" style={{ animationDelay: '1.5s' }} />
+          
+          {/* Dotted pattern grid */}
+          <div className="absolute top-32 right-[8%] grid grid-cols-4 gap-3 opacity-40">
+            {[...Array(16)].map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 bg-primary/30 rounded-full" />
+            ))}
+          </div>
+          
+          {/* Growth/ladder icon shapes */}
+          <div className="absolute bottom-40 right-[10%] flex flex-col gap-1 opacity-30">
+            <div className="w-8 h-1 bg-primary/40 rounded-full" />
+            <div className="w-12 h-1 bg-primary/40 rounded-full" />
+            <div className="w-16 h-1 bg-primary/40 rounded-full" />
+            <div className="w-20 h-1 bg-primary/40 rounded-full" />
+          </div>
+          
+          {/* Connection lines */}
+          <svg className="absolute top-1/2 left-0 w-full h-32 opacity-10" preserveAspectRatio="none">
+            <path d="M0,50 Q200,20 400,60 T800,40 T1200,70 T1600,30" stroke="currentColor" strokeWidth="1" fill="none" className="text-primary" />
+            <path d="M0,80 Q300,50 600,90 T1000,60 T1400,100" stroke="currentColor" strokeWidth="1" fill="none" className="text-secondary" />
+          </svg>
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Content */}
             <div className="text-center lg:text-left animate-fade-up">
