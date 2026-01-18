@@ -13,6 +13,7 @@ const Blog = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(6);
 
   const categories = [
     { id: "career-tips", label: "Career Tips" },
@@ -30,6 +31,9 @@ const Blog = () => {
       : true;
     return matchesCategory && matchesSearch;
   });
+
+  const visibleBlogs = filteredBlogs.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredBlogs.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -111,7 +115,7 @@ const Blog = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{filteredBlogs.length}</span> posts
+              Showing <span className="font-medium text-foreground">{visibleBlogs.length}</span> of {filteredBlogs.length} posts
             </p>
             <Button variant="ghost" size="sm">
               <SlidersHorizontal className="w-4 h-4 mr-2" />
@@ -120,17 +124,23 @@ const Blog = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredBlogs.map((blog) => (
+            {visibleBlogs.map((blog) => (
               <BlogCard key={blog.id} {...blog} />
             ))}
           </div>
 
           {/* Load More */}
-          <div className="text-center mt-10">
-            <Button variant="outline" size="lg">
-              Load More Posts
-            </Button>
-          </div>
+          {hasMore && (
+            <div className="text-center mt-10">
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => setVisibleCount((prev) => prev + 1)}
+              >
+                Load More Posts
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
