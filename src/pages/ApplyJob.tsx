@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -26,19 +26,38 @@ import {
   FileText, 
   CheckCircle, 
   Upload,
-  GraduationCap
+  GraduationCap,
+  Save,
+  Trash2,
+  CloudOff
 } from "lucide-react";
+
+interface FormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  linkedin: string;
+  github: string;
+  portfolio: string;
+  coverLetter: string;
+}
+
+const DRAFT_KEY_PREFIX = "job_application_draft_";
 
 const ApplyJob = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const job = id ? jobDetails[id] : null;
+  const draftKey = `${DRAFT_KEY_PREFIX}${id}`;
   
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     fullName: "",
     email: "",
     phone: "",
@@ -48,6 +67,65 @@ const ApplyJob = () => {
     coverLetter: "",
   });
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeFileName, setResumeFileName] = useState<string | null>(null);
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    if (!id) return;
+    
+    try {
+      const savedDraft = localStorage.getItem(draftKey);
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        setFormData(parsed.formData);
+        setResumeFileName(parsed.resumeFileName || null);
+        setLastSaved(parsed.savedAt ? new Date(parsed.savedAt) : null);
+        setHasDraft(true);
+        toast.info("Draft loaded", {
+          description: "Your previous progress has been restored.",
+        });
+      }
+    } catch (error) {
+      console.error("Error loading draft:", error);
+    }
+  }, [id, draftKey]);
+
+  // Auto-save draft when form changes (debounced)
+  const saveDraft = useCallback(() => {
+    if (!id) return;
+    
+    const hasContent = Object.values(formData).some(value => value.trim() !== "");
+    if (!hasContent) return;
+    
+    setIsSaving(true);
+    
+    try {
+      const draftData = {
+        formData,
+        resumeFileName: resumeFile?.name || resumeFileName,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(draftKey, JSON.stringify(draftData));
+      setLastSaved(new Date());
+      setHasDraft(true);
+    } catch (error) {
+      console.error("Error saving draft:", error);
+    } finally {
+      setTimeout(() => setIsSaving(false), 500);
+    }
+  }, [formData, resumeFile, resumeFileName, id, draftKey]);
+
+  // Auto-save on form changes (with debounce)
+  useEffect(() => {
+    const hasContent = Object.values(formData).some(value => value.trim() !== "");
+    if (!hasContent) return;
+    
+    const timeoutId = setTimeout(() => {
+      saveDraft();
+    }, 1000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [formData, saveDraft]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -61,6 +139,29 @@ const ApplyJob = () => {
         return;
       }
       setResumeFile(file);
+      setResumeFileName(file.name);
+    }
+  };
+
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem(draftKey);
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        linkedin: "",
+        github: "",
+        portfolio: "",
+        coverLetter: "",
+      });
+      setResumeFile(null);
+      setResumeFileName(null);
+      setHasDraft(false);
+      setLastSaved(null);
+      toast.success("Draft cleared");
+    } catch (error) {
+      console.error("Error clearing draft:", error);
     }
   };
 
@@ -81,11 +182,14 @@ const ApplyJob = () => {
       
       console.log("Application submitted:", {
         ...formData,
-        resume: resumeFile?.name,
+        resume: resumeFile?.name || resumeFileName,
         jobId: id,
         jobTitle: job?.title,
         companyName: job?.company,
       });
+      
+      // Clear draft on successful submission
+      localStorage.removeItem(draftKey);
       
       setSubmitted(true);
     } catch (error) {
@@ -93,6 +197,22 @@ const ApplyJob = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatLastSaved = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return "Just now";
+    if (diffMins === 1) return "1 minute ago";
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours === 1) return "1 hour ago";
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    
+    return date.toLocaleDateString();
   };
 
   // Job not found
@@ -183,13 +303,32 @@ const ApplyJob = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Application Form */}
             <div className="lg:col-span-2">
-              <div className="mb-6">
-                <h1 className="text-2xl font-display font-bold text-foreground mb-2">
-                  Apply for this Role
-                </h1>
-                <p className="text-muted-foreground">
-                  Complete the form below to submit your application
-                </p>
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h1 className="text-2xl font-display font-bold text-foreground mb-2">
+                    Apply for this Role
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Complete the form below to submit your application
+                  </p>
+                </div>
+                
+                {/* Draft Status */}
+                {hasDraft && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CloudOff className="w-3 h-3" />
+                        <span>Draft saved {lastSaved && formatLastSaved(lastSaved)}</span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -326,10 +465,10 @@ const ApplyJob = () => {
                           htmlFor="resume"
                           className="flex items-center justify-center gap-2 w-full p-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary transition-colors bg-muted/30"
                         >
-                          {resumeFile ? (
+                          {resumeFile || resumeFileName ? (
                             <>
                               <FileText className="w-5 h-5 text-primary" />
-                              <span className="text-sm text-foreground">{resumeFile.name}</span>
+                              <span className="text-sm text-foreground">{resumeFile?.name || resumeFileName}</span>
                             </>
                           ) : (
                             <>
@@ -368,11 +507,21 @@ const ApplyJob = () => {
                 </Card>
 
                 {/* Submit */}
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                   <Button type="button" variant="outline" onClick={() => navigate(`/jobs/${id}`)}>
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex-1" disabled={loading}>
+                  {hasDraft && (
+                    <Button type="button" variant="ghost" onClick={clearDraft} className="text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Clear Draft
+                    </Button>
+                  )}
+                  <Button type="button" variant="secondary" onClick={saveDraft} className="sm:ml-auto">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Draft
+                  </Button>
+                  <Button type="submit" disabled={loading}>
                     {loading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -451,6 +600,23 @@ const ApplyJob = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Draft Info Card */}
+                {hasDraft && (
+                  <Card className="mt-4 bg-muted/30 border-dashed">
+                    <CardContent className="py-4">
+                      <div className="flex items-start gap-3">
+                        <Save className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Draft saved locally</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Your progress is automatically saved to your browser. You can close this page and come back later.
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </div>
