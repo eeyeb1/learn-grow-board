@@ -6,7 +6,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, metadata?: { full_name?: string }) => Promise<{ error: Error | null }>;
+  userType: "applicant" | "company" | null;
+  signUp: (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -17,33 +18,73 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userType, setUserType] = useState<"applicant" | "company" | null>(null);
+
+  const fetchUserType = async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("user_id", userId)
+      .maybeSingle();
+    
+    if (data?.user_type) {
+      setUserType(data.user_type as "applicant" | "company");
+    }
+  };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Fetch user type after auth state change
+      if (session?.user) {
+        setTimeout(() => {
+          fetchUserType(session.user.id);
+        }, 0);
+      } else {
+        setUserType(null);
+      }
+    });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+      
+      if (session?.user) {
+        fetchUserType(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, metadata?: { full_name?: string }) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: metadata,
+        emailRedirectTo: redirectUrl,
       },
     });
+
+    // After signup, update the profile with user_type if provided
+    if (!error && data.user && metadata?.user_type) {
+      await supabase
+        .from("profiles")
+        .update({ user_type: metadata.user_type })
+        .eq("user_id", data.user.id);
+      
+      setUserType(metadata.user_type as "applicant" | "company");
+    }
+
     return { error };
   };
 
@@ -57,10 +98,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setUserType(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, userType, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

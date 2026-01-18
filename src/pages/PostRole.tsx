@@ -18,7 +18,7 @@ import { useJobs } from "@/hooks/useJobs";
 
 const PostRole = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, userType } = useAuth();
   const { companyProfile, isCompany, loading: profileLoading, createCompanyProfile } = useCompanyProfile();
   const { createJob, loading: jobLoading } = useJobs();
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -265,8 +265,44 @@ const PostRole = () => {
     );
   }
 
-  // Company Setup - Show when user is logged in but doesn't have a company profile
-  if (!isCompany || !companyProfile) {
+  // Applicant trying to access - show message
+  if (userType === "applicant") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        
+        <main className="container mx-auto px-4 pt-24 pb-16">
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-2 border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <Users className="w-10 h-10 text-primary" />
+                </div>
+                
+                <h1 className="text-2xl font-display font-bold text-foreground mb-3">
+                  This Page is for Companies
+                </h1>
+                
+                <p className="text-muted-foreground max-w-md mb-8">
+                  You're signed in as an experience seeker. This page is for companies to post volunteer opportunities.
+                </p>
+
+                <Button onClick={() => navigate("/jobs")}>
+                  <GraduationCap className="w-4 h-4 mr-2" />
+                  Browse Opportunities
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // Company Setup - Show when user signed up as company but doesn't have a company profile yet
+  if (userType === "company" && !companyProfile) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
