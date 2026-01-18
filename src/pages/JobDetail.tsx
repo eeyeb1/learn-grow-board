@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -5,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { jobDetails } from "@/data/jobDetails";
+import { isFavorite, toggleFavorite, hasApplied } from "@/hooks/useJobStorage";
+import { toast } from "sonner";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -16,12 +19,29 @@ import {
   BookOpen,
   CheckCircle2,
   Sparkles,
-  GraduationCap
+  GraduationCap,
+  Heart
 } from "lucide-react";
 
 const JobDetail = () => {
+  const [isFav, setIsFav] = useState(false);
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
   const { id } = useParams<{ id: string }>();
   const job = id ? jobDetails[id] : null;
+
+  useEffect(() => {
+    if (id) {
+      setIsFav(isFavorite(id));
+      setAlreadyApplied(hasApplied(id));
+    }
+  }, [id]);
+
+  const handleToggleFavorite = () => {
+    if (!id) return;
+    const newState = toggleFavorite(id);
+    setIsFav(newState);
+    toast.success(newState ? "Added to favorites" : "Removed from favorites");
+  };
 
   if (!job) {
     return (
@@ -122,9 +142,26 @@ const JobDetail = () => {
 
             {/* Apply Card */}
             <Card className="p-6 lg:w-80 shrink-0 h-fit">
-              <Button variant="hero" size="lg" className="w-full mb-4" asChild>
-                <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
-              </Button>
+              <div className="flex gap-2 mb-4">
+                {alreadyApplied ? (
+                  <Button variant="outline" size="lg" className="flex-1" disabled>
+                    <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
+                    Applied
+                  </Button>
+                ) : (
+                  <Button variant="hero" size="lg" className="flex-1" asChild>
+                    <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleToggleFavorite}
+                  className={isFav ? "text-red-500 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950" : ""}
+                >
+                  <Heart className={`w-5 h-5 ${isFav ? "fill-current" : ""}`} />
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground text-center mb-4">
                 Posted {job.postedAt}
               </p>
@@ -242,10 +279,27 @@ const JobDetail = () => {
               </Card>
 
               {/* Mobile Apply Button */}
-              <div className="lg:hidden">
-                <Button variant="hero" size="lg" className="w-full" asChild>
-                  <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
-                </Button>
+              <div className="lg:hidden space-y-2">
+                <div className="flex gap-2">
+                  {alreadyApplied ? (
+                    <Button variant="outline" size="lg" className="flex-1" disabled>
+                      <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
+                      Applied
+                    </Button>
+                  ) : (
+                    <Button variant="hero" size="lg" className="flex-1" asChild>
+                      <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={handleToggleFavorite}
+                    className={isFav ? "text-red-500 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950" : ""}
+                  >
+                    <Heart className={`w-5 h-5 ${isFav ? "fill-current" : ""}`} />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
