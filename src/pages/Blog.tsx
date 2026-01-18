@@ -38,37 +38,45 @@ const Blog = () => {
       {/* Header */}
       <section className="pt-24 pb-8 md:pt-28 gradient-subtle">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
-            <div>
-              <h1 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-2">
-                Blog & Insights
-              </h1>
-              <p className="text-muted-foreground max-w-xl">
-                Discover stories, tips, and insights from our community.
-              </p>
+          {/* Centered Heading */}
+          <div className="text-center mb-8">
+            <h1 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-3">
+              Blog & Insights
+            </h1>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Discover stories, tips, and insights from our community.
+            </p>
+          </div>
+          
+          {/* Centered Search Bar with Button */}
+          <div className="flex justify-center mb-6">
+            <div className="flex gap-2 w-full max-w-lg">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search posts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-card border-border/50 h-11"
+                />
+              </div>
+              <Button variant="hero" className="h-11 px-6">
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </Button>
             </div>
+          </div>
+
+          {/* Write a Post Button */}
+          <div className="flex justify-center">
             <Button 
               onClick={() => setCreateModalOpen(true)} 
-              variant="hero"
+              variant="outline"
               size="lg"
-              className="shrink-0 self-start md:self-center"
             >
               <PenSquare className="w-4 h-4 mr-2" />
               Write a Post
             </Button>
-          </div>
-          
-          {/* Simple Search Bar */}
-          <div className="max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search posts by title, content, or tags..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-card border-border/50"
-              />
-            </div>
           </div>
         </div>
       </section>
