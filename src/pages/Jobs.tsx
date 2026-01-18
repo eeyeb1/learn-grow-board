@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
@@ -8,6 +10,36 @@ import { Button } from "@/components/ui/button";
 import { SlidersHorizontal } from "lucide-react";
 
 const Jobs = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const location = searchParams.get("location") || "";
+
+  const handleSearch = (newQuery: string, newLocation: string) => {
+    const params = new URLSearchParams();
+    if (newQuery) params.set("q", newQuery);
+    if (newLocation) params.set("location", newLocation);
+    setSearchParams(params);
+  };
+
+  const filteredJobs = useMemo(() => {
+    return sampleJobs.filter((job) => {
+      const queryLower = query.toLowerCase();
+      const locationLower = location.toLowerCase();
+
+      const matchesQuery =
+        !query ||
+        job.title.toLowerCase().includes(queryLower) ||
+        job.company.toLowerCase().includes(queryLower) ||
+        job.skills.some((skill) => skill.toLowerCase().includes(queryLower));
+
+      const matchesLocation =
+        !location ||
+        job.location.toLowerCase().includes(locationLower);
+
+      return matchesQuery && matchesLocation;
+    });
+  }, [query, location]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -23,7 +55,11 @@ const Jobs = () => {
               Browse {sampleJobs.length}+ free experience roles from companies ready to mentor you.
             </p>
           </div>
-          <SearchBar />
+          <SearchBar 
+            initialQuery={query} 
+            initialLocation={location} 
+            onSearch={handleSearch} 
+          />
         </div>
       </section>
 
@@ -35,7 +71,13 @@ const Jobs = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{sampleJobs.length}</span> opportunities
+              Showing <span className="font-medium text-foreground">{filteredJobs.length}</span> opportunities
+              {query && (
+                <span> for "<span className="text-primary">{query}</span>"</span>
+              )}
+              {location && (
+                <span> in "<span className="text-primary">{location}</span>"</span>
+              )}
             </p>
             <Button variant="ghost" size="sm">
               <SlidersHorizontal className="w-4 h-4 mr-2" />
@@ -44,17 +86,25 @@ const Jobs = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sampleJobs.map((job) => (
+            {filteredJobs.map((job) => (
               <JobCard key={job.id} {...job} />
             ))}
           </div>
 
+          {filteredJobs.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No opportunities found matching your search.</p>
+            </div>
+          )}
+
           {/* Load More */}
-          <div className="text-center mt-10">
-            <Button variant="outline" size="lg">
-              Load More Opportunities
-            </Button>
-          </div>
+          {filteredJobs.length > 0 && (
+            <div className="text-center mt-10">
+              <Button variant="outline" size="lg">
+                Load More Opportunities
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
