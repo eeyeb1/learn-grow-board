@@ -7,13 +7,15 @@ import FilterBar from "@/components/FilterBar";
 import JobCard from "@/components/JobCard";
 import { sampleJobs } from "@/data/sampleData";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 
-const ITEMS_PER_PAGE = 6;
+const PAGE_SIZE_OPTIONS = [3, 6, 9, 12];
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
 
@@ -44,9 +46,14 @@ const Jobs = () => {
     });
   }, [query, location]);
 
-  const totalPages = Math.ceil(filteredJobs.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedJobs = filteredJobs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedJobs = filteredJobs.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -79,7 +86,7 @@ const Jobs = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredJobs.length)}</span> of {filteredJobs.length} opportunities
+              Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredJobs.length)}</span> of {filteredJobs.length} opportunities
               {query && (
                 <span> for "<span className="text-primary">{query}</span>"</span>
               )}
@@ -87,10 +94,27 @@ const Jobs = () => {
                 <span> in "<span className="text-primary">{location}</span>"</span>
               )}
             </p>
-            <Button variant="ghost" size="sm">
-              <SlidersHorizontal className="w-4 h-4 mr-2" />
-              Sort by: Newest
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Show:</span>
+                <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+                  <SelectTrigger className="w-[70px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button variant="ghost" size="sm">
+                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                Sort by: Newest
+              </Button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
