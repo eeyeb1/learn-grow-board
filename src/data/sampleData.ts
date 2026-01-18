@@ -75,6 +75,18 @@ export const sampleJobs: JobCardProps[] = [
     skills: ["Sales", "CRM", "Communication", "Market Research"],
     applicants: 15,
   },
+  {
+    id: "7",
+    title: "Product Design Apprentice",
+    company: "Pixel Perfect Co",
+    location: "Los Angeles, CA",
+    locationType: "remote",
+    duration: "4 months",
+    skillLevel: "beginner",
+    industry: "design",
+    skills: ["Sketch", "Figma", "Design Systems", "Wireframing"],
+    applicants: 21,
+  },
 ];
 
 export const sampleCompanies: CompanyCardProps[] = [
@@ -181,5 +193,16 @@ export const sampleBlogs: BlogCardProps[] = [
     category: "success-stories",
     tags: ["Leadership", "Growth", "Career Path", "Experience"],
     comments: 37,
+  },
+  {
+    id: "7",
+    title: "Mastering the Art of Networking as an Introvert",
+    excerpt: "You don't need to be the loudest person in the room to build meaningful professional connections. Here's how introverts can network effectively.",
+    author: "Nina Patel",
+    publishedAt: "Jan 1, 2024",
+    readTime: "6 min read",
+    category: "career-tips",
+    tags: ["Networking", "Introvert", "Professional Growth", "Career Tips"],
+    comments: 29,
   },
 ];
