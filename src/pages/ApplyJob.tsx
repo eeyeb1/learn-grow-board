@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { jobDetails } from "@/data/jobDetails";
+import { markAsApplied, hasApplied } from "@/hooks/useJobStorage";
 import { toast } from "sonner";
 import { 
   ArrowLeft, 
@@ -187,6 +188,15 @@ const ApplyJob = () => {
         jobTitle: job?.title,
         companyName: job?.company,
       });
+      
+      // Mark as applied in localStorage
+      if (id) {
+        markAsApplied(id, {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+        });
+      }
       
       // Clear draft on successful submission
       localStorage.removeItem(draftKey);

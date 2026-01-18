@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Menu, X, LogOut } from "lucide-react";
+import { Briefcase, Menu, X, LogOut, Archive } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -36,6 +36,7 @@ const Navbar = () => {
     { href: "/jobs", label: "Find Experience" },
     { href: "/companies", label: "Companies" },
     { href: "/resources", label: "Resources" },
+    { href: "/archive", label: "Archive", icon: Archive },
   ];
 
   return (
