@@ -10,12 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 
-const PAGE_SIZE_OPTIONS = [3, 6, 9, 12];
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
 
