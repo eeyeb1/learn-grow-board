@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useJobStorage } from "@/hooks/useJobStorage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
@@ -66,6 +78,8 @@ const Archive = () => {
   const [loadingApplications, setLoadingApplications] = useState(true);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   // Update application status
   const updateApplicationStatus = async (applicationId: string, newStatus: string) => {
@@ -102,6 +116,87 @@ const Archive = () => {
       toast.error("Failed to update application status");
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  // Delete single application
+  const deleteApplication = async (applicationId: string) => {
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .delete()
+        .eq("id", applicationId);
+
+      if (error) {
+        console.error("Error deleting application:", error);
+        toast.error("Failed to delete application");
+        return;
+      }
+
+      setCompanyApplications((prev) => prev.filter((app) => app.id !== applicationId));
+      setSelectedIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(applicationId);
+        return newSet;
+      });
+      setSelectedApplication(null);
+      toast.success("Application deleted");
+    } catch (error) {
+      console.error("Error deleting application:", error);
+      toast.error("Failed to delete application");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Bulk delete applications
+  const bulkDeleteApplications = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .delete()
+        .in("id", Array.from(selectedIds));
+
+      if (error) {
+        console.error("Error bulk deleting applications:", error);
+        toast.error("Failed to delete applications");
+        return;
+      }
+
+      setCompanyApplications((prev) => prev.filter((app) => !selectedIds.has(app.id)));
+      setSelectedIds(new Set());
+      toast.success(`${selectedIds.size} application(s) deleted`);
+    } catch (error) {
+      console.error("Error bulk deleting applications:", error);
+      toast.error("Failed to delete applications");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Toggle selection
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  // Toggle all selection
+  const toggleSelectAll = () => {
+    if (selectedIds.size === companyApplications.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(companyApplications.map((app) => app.id)));
     }
   };
 
@@ -330,7 +425,17 @@ const Archive = () => {
   };
 
   // Application Card for company view
-  const ApplicationCard = ({ application, onClick }: { application: Application; onClick: () => void }) => {
+  const ApplicationCard = ({ 
+    application, 
+    onClick,
+    isSelected,
+    onToggleSelect 
+  }: { 
+    application: Application; 
+    onClick: () => void;
+    isSelected: boolean;
+    onToggleSelect: () => void;
+  }) => {
     const formData = application.form_data as Record<string, unknown> | null;
     const applicantName = formData?.fullName as string || "Unknown Applicant";
     const applicantEmail = formData?.email as string || "";
@@ -350,11 +455,20 @@ const Archive = () => {
 
     return (
       <Card 
-        className="group hover:shadow-card transition-all duration-200 cursor-pointer"
+        className={`group hover:shadow-card transition-all duration-200 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
         onClick={onClick}
       >
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
+            <div 
+              className="shrink-0 pt-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelect();
+              }}
+            >
+              <Checkbox checked={isSelected} />
+            </div>
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <Users className="w-6 h-6 text-primary" />
             </div>
@@ -553,6 +667,37 @@ const Archive = () => {
                   <X className="w-4 h-4 mr-1" />
                   Reject
                 </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-destructive border-destructive/20 hover:bg-destructive/10 ml-auto"
+                      disabled={deleting}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Application</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this application? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteApplication(selectedApplication.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </div>
@@ -606,11 +751,63 @@ const Archive = () => {
                   />
                 ) : (
                   <div className="space-y-4">
+                    {/* Bulk Actions Bar */}
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={selectedIds.size === companyApplications.length && companyApplications.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {selectedIds.size > 0 
+                            ? `${selectedIds.size} selected` 
+                            : "Select all"}
+                        </span>
+                      </div>
+                      {selectedIds.size > 0 && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={deleting}
+                            >
+                              {deleting ? (
+                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-4 h-4 mr-1" />
+                              )}
+                              Delete Selected ({selectedIds.size})
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete {selectedIds.size} Application(s)</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete {selectedIds.size} application(s)? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={bulkDeleteApplications}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete All
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+
                     {companyApplications.map((app) => (
                       <ApplicationCard 
                         key={app.id} 
                         application={app} 
                         onClick={() => setSelectedApplication(app)}
+                        isSelected={selectedIds.has(app.id)}
+                        onToggleSelect={() => toggleSelection(app.id)}
                       />
                     ))}
                   </div>
