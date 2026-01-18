@@ -1,5 +1,6 @@
 import { JobCardProps } from "@/components/JobCard";
 import { CompanyCardProps } from "@/components/CompanyCard";
+import { BlogCardProps } from "@/components/BlogCard";
 
 export const sampleJobs: JobCardProps[] = [
   {
@@ -113,3 +114,72 @@ export const stats = {
   skillsGained: 15000,
   successStories: 890,
 };
+
+export const sampleBlogs: BlogCardProps[] = [
+  {
+    id: "1",
+    title: "How I Landed My Dream Job Through Free Experience Opportunities",
+    excerpt: "After completing three unpaid experience roles, I finally got the call I was waiting for. Here's my journey and what I learned along the way.",
+    author: "Sarah Chen",
+    publishedAt: "Jan 15, 2024",
+    readTime: "5 min read",
+    category: "success-stories",
+    tags: ["Career Growth", "Experience", "Job Search", "Success"],
+    comments: 24,
+  },
+  {
+    id: "2",
+    title: "5 Skills Every Junior Developer Should Master in 2024",
+    excerpt: "The tech landscape is constantly evolving. Here are the essential skills that will set you apart as a junior developer this year.",
+    author: "Michael Rodriguez",
+    publishedAt: "Jan 12, 2024",
+    readTime: "8 min read",
+    category: "career-tips",
+    tags: ["Development", "Skills", "Tech", "Learning"],
+    comments: 42,
+  },
+  {
+    id: "3",
+    title: "The Rise of Remote Work: What It Means for Entry-Level Professionals",
+    excerpt: "Remote work has changed the game for newcomers to the workforce. Learn how to leverage this trend to your advantage.",
+    author: "Emily Thompson",
+    publishedAt: "Jan 10, 2024",
+    readTime: "6 min read",
+    category: "industry-insights",
+    tags: ["Remote Work", "Career", "Industry Trends"],
+    comments: 18,
+  },
+  {
+    id: "4",
+    title: "Building Your First React Portfolio: A Step-by-Step Guide",
+    excerpt: "A comprehensive tutorial on creating an impressive portfolio website that showcases your skills and projects effectively.",
+    author: "David Park",
+    publishedAt: "Jan 8, 2024",
+    readTime: "12 min read",
+    category: "tutorials",
+    tags: ["React", "Portfolio", "Tutorial", "Web Development"],
+    comments: 56,
+  },
+  {
+    id: "5",
+    title: "Why Soft Skills Matter More Than You Think",
+    excerpt: "Technical skills get you the interview, but soft skills get you the job. Here's how to develop the interpersonal skills employers value most.",
+    author: "Jessica Williams",
+    publishedAt: "Jan 5, 2024",
+    readTime: "7 min read",
+    category: "career-tips",
+    tags: ["Soft Skills", "Communication", "Career Development"],
+    comments: 31,
+  },
+  {
+    id: "6",
+    title: "From Intern to Team Lead: A 2-Year Journey",
+    excerpt: "My rapid career progression wouldn't have been possible without the foundational experience I gained through unpaid opportunities.",
+    author: "Alex Johnson",
+    publishedAt: "Jan 3, 2024",
+    readTime: "9 min read",
+    category: "success-stories",
+    tags: ["Leadership", "Growth", "Career Path", "Experience"],
+    comments: 37,
+  },
+];
