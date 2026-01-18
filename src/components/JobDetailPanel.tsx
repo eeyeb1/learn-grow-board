@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,12 +17,15 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { JobDetail } from "@/data/jobDetails";
+import ApplyModal from "@/components/ApplyModal";
 
 interface JobDetailPanelProps {
   job: JobDetail;
 }
 
 const JobDetailPanel = ({ job }: JobDetailPanelProps) => {
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+  
   const locationTypeLabels = {
     remote: "Remote",
     "on-site": "On-site",
@@ -29,7 +33,8 @@ const JobDetailPanel = ({ job }: JobDetailPanelProps) => {
   };
 
   return (
-    <div className="p-6">
+    <>
+      <div className="p-6">
       {/* Header */}
       <div className="flex items-start gap-4 mb-6">
         <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center shrink-0">
@@ -96,7 +101,7 @@ const JobDetailPanel = ({ job }: JobDetailPanelProps) => {
 
       {/* Actions */}
       <div className="flex gap-2 mb-6">
-        <Button variant="hero" className="flex-1">
+        <Button variant="hero" className="flex-1" onClick={() => setApplyModalOpen(true)}>
           Apply Now
         </Button>
         <Link to={`/jobs/${job.id}`}>
@@ -202,6 +207,14 @@ const JobDetailPanel = ({ job }: JobDetailPanelProps) => {
         )}
       </div>
     </div>
+    
+    <ApplyModal 
+      open={applyModalOpen} 
+      onOpenChange={setApplyModalOpen}
+      jobTitle={job.title}
+      companyName={job.company}
+    />
+    </>
   );
 };
 

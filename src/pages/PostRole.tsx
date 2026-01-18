@@ -15,12 +15,12 @@ import AuthModal from "@/components/AuthModal";
 
 // Mock user state - in real app this would come from auth context
 const useMockAuth = () => {
-  // For UI demo purposes, set to null to show auth gate, or set mock data to show form
-  const [isAuthenticated] = useState(false);
-  const [userType] = useState<"applicant" | "company" | null>(null);
+  // Set to true to show the Post Role form, false to show auth gate
+  const [isAuthenticated] = useState(true);
+  const [userType] = useState<"applicant" | "company" | null>("company");
   const [companyProfile] = useState({
     companyName: "TechStart Studio",
-    companyDescription: "A forward-thinking technology company focused on innovation.",
+    companyDescription: "TechStart Studio is a dynamic web development agency focused on building modern, scalable applications. We're passionate about mentoring the next generation of developers.",
     companyWebsite: "https://techstartstudio.com",
     industry: "tech",
   });
