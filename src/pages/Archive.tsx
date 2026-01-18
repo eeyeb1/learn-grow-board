@@ -6,6 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useJobStorage } from "@/hooks/useJobStorage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompanyProfile } from "@/hooks/useCompanyProfile";
@@ -23,6 +30,10 @@ import {
   Inbox,
   Users,
   Loader2,
+  Mail,
+  Phone,
+  FileText,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -50,6 +61,7 @@ const Archive = () => {
 
   const [companyApplications, setCompanyApplications] = useState<Application[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(true);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
 
   // Fetch applications for company's jobs
   useEffect(() => {
@@ -276,13 +288,16 @@ const Archive = () => {
   };
 
   // Application Card for company view
-  const ApplicationCard = ({ application }: { application: Application }) => {
+  const ApplicationCard = ({ application, onClick }: { application: Application; onClick: () => void }) => {
     const formData = application.form_data as Record<string, unknown> | null;
     const applicantName = formData?.fullName as string || "Unknown Applicant";
     const applicantEmail = formData?.email as string || "";
 
     return (
-      <Card className="group hover:shadow-card transition-all duration-200">
+      <Card 
+        className="group hover:shadow-card transition-all duration-200 cursor-pointer"
+        onClick={onClick}
+      >
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -315,11 +330,138 @@ const Archive = () => {
                 <span className="text-xs text-muted-foreground">
                   Applied {formatDate(application.submitted_at)}
                 </span>
+                <Button variant="ghost" size="sm" className="text-primary">
+                  <Eye className="w-4 h-4 mr-1" />
+                  View Details
+                </Button>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
+    );
+  };
+
+  // Application Detail Modal
+  const ApplicationDetailModal = () => {
+    if (!selectedApplication) return null;
+    
+    const formData = selectedApplication.form_data as Record<string, unknown> | null;
+    const applicantName = formData?.fullName as string || "Unknown Applicant";
+    const applicantEmail = formData?.email as string || "";
+    const applicantPhone = formData?.phone as string || "";
+    const experience = formData?.experience as string || "";
+    const motivation = formData?.motivation as string || "";
+    const portfolio = formData?.portfolio as string || "";
+    const coverLetter = formData?.coverLetter as string || "";
+
+    return (
+      <Dialog open={!!selectedApplication} onOpenChange={() => setSelectedApplication(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <span className="block">{applicantName}</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  Applied for {selectedApplication.job_title}
+                </span>
+              </div>
+            </DialogTitle>
+            <DialogDescription>
+              Submitted on {formatDate(selectedApplication.submitted_at)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 mt-4">
+            {/* Contact Information */}
+            <div className="space-y-3">
+              <h4 className="font-semibold text-foreground flex items-center gap-2">
+                <Mail className="w-4 h-4 text-primary" />
+                Contact Information
+              </h4>
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <p className="text-sm">
+                  <span className="text-muted-foreground">Email:</span>{" "}
+                  <a href={`mailto:${applicantEmail}`} className="text-primary hover:underline">
+                    {applicantEmail}
+                  </a>
+                </p>
+                {applicantPhone && (
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Phone:</span>{" "}
+                    <a href={`tel:${applicantPhone}`} className="text-primary hover:underline">
+                      {applicantPhone}
+                    </a>
+                  </p>
+                )}
+                {portfolio && (
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Portfolio:</span>{" "}
+                    <a href={portfolio} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      {portfolio}
+                    </a>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Experience */}
+            {experience && (
+              <div className="space-y-3">
+                <h4 className="font-semibold text-foreground flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" />
+                  Experience
+                </h4>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{experience}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Motivation */}
+            {motivation && (
+              <div className="space-y-3">
+                <h4 className="font-semibold text-foreground flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-primary" />
+                  Motivation
+                </h4>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{motivation}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Cover Letter */}
+            {coverLetter && (
+              <div className="space-y-3">
+                <h4 className="font-semibold text-foreground flex items-center gap-2">
+                  <FileEdit className="w-4 h-4 text-primary" />
+                  Cover Letter
+                </h4>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{coverLetter}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Status */}
+            <div className="flex items-center justify-between pt-4 border-t">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Status:</span>
+                <Badge
+                  variant="soft"
+                  className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                >
+                  {selectedApplication.status}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     );
   };
 
@@ -369,7 +511,11 @@ const Archive = () => {
                 ) : (
                   <div className="space-y-4">
                     {companyApplications.map((app) => (
-                      <ApplicationCard key={app.id} application={app} />
+                      <ApplicationCard 
+                        key={app.id} 
+                        application={app} 
+                        onClick={() => setSelectedApplication(app)}
+                      />
                     ))}
                   </div>
                 )}
@@ -506,6 +652,9 @@ const Archive = () => {
       </main>
 
       <Footer />
+      
+      {/* Application Detail Modal */}
+      <ApplicationDetailModal />
     </div>
   );
 };
