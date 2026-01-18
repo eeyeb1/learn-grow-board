@@ -34,6 +34,9 @@ import {
   Phone,
   FileText,
   Eye,
+  Check,
+  X,
+  Clock3,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -62,6 +65,45 @@ const Archive = () => {
   const [companyApplications, setCompanyApplications] = useState<Application[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(true);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  // Update application status
+  const updateApplicationStatus = async (applicationId: string, newStatus: string) => {
+    setUpdatingStatus(true);
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .update({ status: newStatus })
+        .eq("id", applicationId);
+
+      if (error) {
+        console.error("Error updating status:", error);
+        toast.error("Failed to update application status");
+        return;
+      }
+
+      // Update local state
+      setCompanyApplications((prev) =>
+        prev.map((app) =>
+          app.id === applicationId ? { ...app, status: newStatus } : app
+        )
+      );
+
+      // Update selected application if it's the one being updated
+      if (selectedApplication?.id === applicationId) {
+        setSelectedApplication((prev) =>
+          prev ? { ...prev, status: newStatus } : null
+        );
+      }
+
+      toast.success(`Application marked as ${newStatus}`);
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Failed to update application status");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   // Fetch applications for company's jobs
   useEffect(() => {
@@ -293,6 +335,19 @@ const Archive = () => {
     const applicantName = formData?.fullName as string || "Unknown Applicant";
     const applicantEmail = formData?.email as string || "";
 
+    const getStatusStyles = (status: string) => {
+      switch (status) {
+        case "accepted":
+          return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+        case "rejected":
+          return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+        case "reviewed":
+          return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
+        default:
+          return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+      }
+    };
+
     return (
       <Card 
         className="group hover:shadow-card transition-all duration-200 cursor-pointer"
@@ -314,7 +369,7 @@ const Archive = () => {
                 </div>
                 <Badge
                   variant="soft"
-                  className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  className={`text-xs ${getStatusStyles(application.status)}`}
                 >
                   {application.status}
                 </Badge>
@@ -447,16 +502,57 @@ const Archive = () => {
               </div>
             )}
 
-            {/* Status */}
-            <div className="flex items-center justify-between pt-4 border-t">
+            {/* Status & Actions */}
+            <div className="pt-4 border-t space-y-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Status:</span>
+                <span className="text-sm text-muted-foreground">Current Status:</span>
                 <Badge
                   variant="soft"
-                  className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  className={
+                    selectedApplication.status === "accepted"
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : selectedApplication.status === "rejected"
+                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      : selectedApplication.status === "reviewed"
+                      ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  }
                 >
                   {selectedApplication.status}
                 </Badge>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-yellow-600 border-yellow-200 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                  onClick={() => updateApplicationStatus(selectedApplication.id, "reviewed")}
+                  disabled={updatingStatus || selectedApplication.status === "reviewed"}
+                >
+                  <Clock3 className="w-4 h-4 mr-1" />
+                  Mark Reviewed
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-green-600 border-green-200 hover:bg-green-50 dark:hover:bg-green-900/20"
+                  onClick={() => updateApplicationStatus(selectedApplication.id, "accepted")}
+                  disabled={updatingStatus || selectedApplication.status === "accepted"}
+                >
+                  <Check className="w-4 h-4 mr-1" />
+                  Accept
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  onClick={() => updateApplicationStatus(selectedApplication.id, "rejected")}
+                  disabled={updatingStatus || selectedApplication.status === "rejected"}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Reject
+                </Button>
               </div>
             </div>
           </div>
