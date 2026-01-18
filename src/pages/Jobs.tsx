@@ -8,15 +8,54 @@ import JobCard from "@/components/JobCard";
 import JobListItem from "@/components/JobListItem";
 import JobDetailPanel from "@/components/JobDetailPanel";
 import { sampleJobs } from "@/data/sampleData";
-import { jobDetails } from "@/data/jobDetails";
+import { jobDetails, JobDetail } from "@/data/jobDetails";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { SlidersHorizontal, ChevronLeft, ChevronRight, LayoutGrid, Columns } from "lucide-react";
+import { SlidersHorizontal, ChevronLeft, ChevronRight, LayoutGrid, Columns, Loader2 } from "lucide-react";
+import { useJobs, Job } from "@/hooks/useJobs";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
 
 type ViewMode = "grid" | "split";
+
+// Transform database job to display format
+const transformDbJob = (job: Job) => ({
+  id: job.id,
+  title: job.title,
+  company: job.company?.company_name || "Unknown Company",
+  companyLogo: job.company?.logo_url || undefined,
+  location: job.location || "Remote",
+  locationType: job.location_type as "remote" | "on-site" | "hybrid",
+  duration: job.duration || "Flexible",
+  hoursPerWeek: job.hours_per_week || "Flexible",
+  skillLevel: job.skill_level as "beginner" | "intermediate" | "advanced",
+  industry: (job.industry || "tech") as "tech" | "design" | "marketing" | "business",
+  skills: job.skills || [],
+  postedAt: job.created_at,
+});
+
+// Transform database job to detail format
+const transformDbJobToDetail = (job: Job): JobDetail => ({
+  id: job.id,
+  title: job.title,
+  company: job.company?.company_name || "Unknown Company",
+  companyLogo: job.company?.logo_url || undefined,
+  companyDescription: job.company?.company_description || "No description available",
+  location: job.location || "Remote",
+  locationType: job.location_type as "remote" | "on-site" | "hybrid",
+  duration: job.duration || "Flexible",
+  hoursPerWeek: job.hours_per_week || "Flexible",
+  skillLevel: job.skill_level as "beginner" | "intermediate" | "advanced",
+  industry: (job.industry || "tech") as "tech" | "design" | "marketing" | "business",
+  skills: job.skills || [],
+  postedAt: job.created_at,
+  description: job.description,
+  responsibilities: job.responsibilities || [],
+  requirements: job.requirements || [],
+  whatYouWillLearn: job.what_you_will_learn || [],
+  mentorshipDetails: job.mentorship_details || "Mentorship details not specified",
+});
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -24,9 +63,26 @@ const Jobs = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [dbJobs, setDbJobs] = useState<Job[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+  
+  const { fetchJobs } = useJobs();
   
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
+
+  // Fetch jobs from database
+  useEffect(() => {
+    const loadJobs = async () => {
+      setLoadingJobs(true);
+      const { data, error } = await fetchJobs();
+      if (data && !error) {
+        setDbJobs(data);
+      }
+      setLoadingJobs(false);
+    };
+    loadJobs();
+  }, [fetchJobs]);
 
   const handleSearch = (newQuery: string, newLocation: string) => {
     const params = new URLSearchParams();
@@ -36,8 +92,24 @@ const Jobs = () => {
     setCurrentPage(1);
   };
 
+  // Combine static jobs with database jobs
+  const allJobs = useMemo(() => {
+    const transformedDbJobs = dbJobs.map(transformDbJob);
+    // Put database jobs first, then sample jobs
+    return [...transformedDbJobs, ...sampleJobs];
+  }, [dbJobs]);
+
+  // Build a combined job details map
+  const allJobDetails = useMemo(() => {
+    const dbJobDetailsMap: Record<string, JobDetail> = {};
+    dbJobs.forEach(job => {
+      dbJobDetailsMap[job.id] = transformDbJobToDetail(job);
+    });
+    return { ...jobDetails, ...dbJobDetailsMap };
+  }, [dbJobs]);
+
   const filteredJobs = useMemo(() => {
-    return sampleJobs.filter((job) => {
+    return allJobs.filter((job) => {
       const queryLower = query.toLowerCase();
       const locationLower = location.toLowerCase();
 
@@ -53,7 +125,7 @@ const Jobs = () => {
 
       return matchesQuery && matchesLocation;
     });
-  }, [query, location]);
+  }, [query, location, allJobs]);
 
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -66,7 +138,7 @@ const Jobs = () => {
     }
   }, [currentPage, viewMode, paginatedJobs.length]);
 
-  const selectedJob = selectedJobId ? jobDetails[selectedJobId] : null;
+  const selectedJob = selectedJobId ? allJobDetails[selectedJobId] : null;
 
   const handleItemsPerPageChange = (value: string) => {
     setItemsPerPage(Number(value));
@@ -97,7 +169,7 @@ const Jobs = () => {
                 Find Experience Opportunities
               </h1>
               <p className="text-muted-foreground max-w-xl mx-auto">
-                Browse {sampleJobs.length}+ free experience roles from companies ready to mentor you.
+                Browse {allJobs.length}+ free experience roles from companies ready to mentor you.
               </p>
             </div>
           )}
