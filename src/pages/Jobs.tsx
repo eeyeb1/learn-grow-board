@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -59,9 +59,14 @@ const Jobs = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedJobs = filteredJobs.slice(startIndex, startIndex + itemsPerPage);
 
-  // Auto-select first job in split view
-  const effectiveSelectedJobId = selectedJobId || (viewMode === "split" && paginatedJobs[0]?.id) || null;
-  const selectedJob = effectiveSelectedJobId ? jobDetails[effectiveSelectedJobId] : null;
+  // Auto-select first job when page changes or entering split view
+  useEffect(() => {
+    if (viewMode === "split" && paginatedJobs.length > 0) {
+      setSelectedJobId(paginatedJobs[0].id);
+    }
+  }, [currentPage, viewMode, paginatedJobs.length]);
+
+  const selectedJob = selectedJobId ? jobDetails[selectedJobId] : null;
 
   const handleItemsPerPageChange = (value: string) => {
     setItemsPerPage(Number(value));
@@ -71,27 +76,31 @@ const Jobs = () => {
   const handleViewModeChange = (value: string) => {
     if (value) {
       setViewMode(value as ViewMode);
-      if (value === "split" && paginatedJobs.length > 0) {
-        setSelectedJobId(paginatedJobs[0].id);
-      }
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Selection will be handled by useEffect
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      {/* Header */}
-      <section className="pt-24 pb-8 md:pt-28 gradient-subtle">
+      {/* Header - Compact in split view */}
+      <section className={`pt-24 gradient-subtle ${viewMode === "split" ? "pb-4 md:pt-20" : "pb-8 md:pt-28"}`}>
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h1 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-3">
-              Find Experience Opportunities
-            </h1>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Browse {sampleJobs.length}+ free experience roles from companies ready to mentor you.
-            </p>
-          </div>
+          {viewMode === "grid" && (
+            <div className="text-center mb-8">
+              <h1 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-3">
+                Find Experience Opportunities
+              </h1>
+              <p className="text-muted-foreground max-w-xl mx-auto">
+                Browse {sampleJobs.length}+ free experience roles from companies ready to mentor you.
+              </p>
+            </div>
+          )}
           <SearchBar 
             initialQuery={query} 
             initialLocation={location} 
@@ -104,9 +113,9 @@ const Jobs = () => {
       <FilterBar activeFilters={["Remote", "Beginner"]} />
 
       {/* Job Listings */}
-      <section className="py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
+      <section className={`py-4 flex-1 ${viewMode === "split" ? "flex flex-col" : ""}`}>
+        <div className={`container mx-auto px-4 ${viewMode === "split" ? "flex-1 flex flex-col" : ""}`}>
+          <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-muted-foreground">
               Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredJobs.length)}</span> of {filteredJobs.length} opportunities
               {query && (
@@ -171,16 +180,16 @@ const Jobs = () => {
             </>
           )}
 
-          {/* Split View */}
+          {/* Split View - Full Height */}
           {viewMode === "split" && (
-            <div className="flex gap-0 border rounded-xl overflow-hidden bg-card min-h-[600px]">
+            <div className="flex gap-0 border rounded-xl overflow-hidden bg-card flex-1" style={{ height: "calc(100vh - 280px)", minHeight: "500px" }}>
               {/* Job List Panel */}
-              <div className="w-[380px] shrink-0 border-r overflow-y-auto max-h-[700px]">
+              <div className="w-[340px] lg:w-[400px] shrink-0 border-r overflow-y-auto">
                 {paginatedJobs.map((job) => (
                   <JobListItem
                     key={job.id}
                     {...job}
-                    isSelected={effectiveSelectedJobId === job.id}
+                    isSelected={selectedJobId === job.id}
                     onClick={() => setSelectedJobId(job.id)}
                   />
                 ))}
@@ -192,7 +201,7 @@ const Jobs = () => {
               </div>
 
               {/* Job Detail Panel */}
-              <div className="flex-1 bg-background">
+              <div className="flex-1 bg-background overflow-hidden">
                 {selectedJob ? (
                   <JobDetailPanel job={selectedJob} />
                 ) : (
@@ -206,11 +215,11 @@ const Jobs = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-10">
+            <div className="flex items-center justify-center gap-2 mt-6">
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -221,7 +230,7 @@ const Jobs = () => {
                   key={page}
                   variant={currentPage === page ? "default" : "outline"}
                   size="icon"
-                  onClick={() => setCurrentPage(page)}
+                  onClick={() => handlePageChange(page)}
                 >
                   {page}
                 </Button>
@@ -230,7 +239,7 @@ const Jobs = () => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
                 disabled={currentPage === totalPages}
               >
                 <ChevronRight className="w-4 h-4" />
@@ -240,7 +249,7 @@ const Jobs = () => {
         </div>
       </section>
 
-      <Footer />
+      {viewMode === "grid" && <Footer />}
     </div>
   );
 };
