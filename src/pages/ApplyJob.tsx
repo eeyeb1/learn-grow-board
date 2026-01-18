@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { jobDetails } from "@/data/jobDetails";
-import { markAsApplied, hasApplied } from "@/hooks/useJobStorage";
+import { useJobStorage } from "@/hooks/useJobStorage";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { 
   ArrowLeft, 
@@ -50,6 +51,8 @@ const ApplyJob = () => {
   const navigate = useNavigate();
   const job = id ? jobDetails[id] : null;
   const draftKey = `${DRAFT_KEY_PREFIX}${id}`;
+  const { user } = useAuth();
+  const { markAsApplied, hasApplied, getDraft, saveDraft: saveSupabaseDraft, deleteDraft } = useJobStorage();
   
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -70,30 +73,25 @@ const ApplyJob = () => {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeFileName, setResumeFileName] = useState<string | null>(null);
 
-  // Load draft from localStorage on mount
+  // Load draft from Supabase on mount (only if logged in)
   useEffect(() => {
-    if (!id) return;
+    if (!id || !user) return;
     
-    try {
-      const savedDraft = localStorage.getItem(draftKey);
-      if (savedDraft) {
-        const parsed = JSON.parse(savedDraft);
-        setFormData(parsed.formData);
-        setResumeFileName(parsed.resumeFileName || null);
-        setLastSaved(parsed.savedAt ? new Date(parsed.savedAt) : null);
-        setHasDraft(true);
-        toast.info("Draft loaded", {
-          description: "Your previous progress has been restored.",
-        });
-      }
-    } catch (error) {
-      console.error("Error loading draft:", error);
+    const existingDraft = getDraft(id);
+    if (existingDraft) {
+      setFormData(existingDraft.formData);
+      setResumeFileName(existingDraft.resumeFileName || null);
+      setLastSaved(existingDraft.savedAt ? new Date(existingDraft.savedAt) : null);
+      setHasDraft(true);
+      toast.info("Draft loaded", {
+        description: "Your previous progress has been restored.",
+      });
     }
-  }, [id, draftKey]);
+  }, [id, user, getDraft]);
 
-  // Auto-save draft when form changes (debounced)
-  const saveDraft = useCallback(() => {
-    if (!id) return;
+  // Auto-save draft when form changes (debounced) - only if logged in
+  const saveDraftToBackend = useCallback(async () => {
+    if (!id || !user) return;
     
     const hasContent = Object.values(formData).some(value => value.trim() !== "");
     if (!hasContent) return;
@@ -101,12 +99,7 @@ const ApplyJob = () => {
     setIsSaving(true);
     
     try {
-      const draftData = {
-        formData,
-        resumeFileName: resumeFile?.name || resumeFileName,
-        savedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(draftKey, JSON.stringify(draftData));
+      await saveSupabaseDraft(id, formData);
       setLastSaved(new Date());
       setHasDraft(true);
     } catch (error) {
@@ -114,19 +107,21 @@ const ApplyJob = () => {
     } finally {
       setTimeout(() => setIsSaving(false), 500);
     }
-  }, [formData, resumeFile, resumeFileName, id, draftKey]);
+  }, [formData, id, user, saveSupabaseDraft]);
 
-  // Auto-save on form changes (with debounce)
+  // Auto-save on form changes (with debounce) - only if logged in
   useEffect(() => {
+    if (!user) return;
+    
     const hasContent = Object.values(formData).some(value => value.trim() !== "");
     if (!hasContent) return;
     
     const timeoutId = setTimeout(() => {
-      saveDraft();
+      saveDraftToBackend();
     }, 1000);
     
     return () => clearTimeout(timeoutId);
-  }, [formData, saveDraft]);
+  }, [formData, saveDraftToBackend, user]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -144,9 +139,13 @@ const ApplyJob = () => {
     }
   };
 
-  const clearDraft = () => {
+  const clearDraft = async () => {
+    if (!id) return;
+    
     try {
-      localStorage.removeItem(draftKey);
+      if (user) {
+        await deleteDraft(id);
+      }
       setFormData({
         fullName: "",
         email: "",
@@ -189,17 +188,14 @@ const ApplyJob = () => {
         companyName: job?.company,
       });
       
-      // Mark as applied in localStorage
-      if (id) {
-        markAsApplied(id, {
+      // Mark as applied in backend (if logged in)
+      if (id && user) {
+        await markAsApplied(id, {
           fullName: formData.fullName,
           email: formData.email,
           phone: formData.phone,
         });
       }
-      
-      // Clear draft on successful submission
-      localStorage.removeItem(draftKey);
       
       setSubmitted(true);
     } catch (error) {
@@ -323,8 +319,8 @@ const ApplyJob = () => {
                   </p>
                 </div>
                 
-                {/* Draft Status */}
-                {hasDraft && (
+                {/* Draft Status - only show when logged in */}
+                {user && hasDraft && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
                     {isSaving ? (
                       <>
@@ -521,16 +517,18 @@ const ApplyJob = () => {
                   <Button type="button" variant="outline" onClick={() => navigate(`/jobs/${id}`)}>
                     Cancel
                   </Button>
-                  {hasDraft && (
+                  {hasDraft && user && (
                     <Button type="button" variant="ghost" onClick={clearDraft} className="text-destructive hover:text-destructive">
                       <Trash2 className="w-4 h-4 mr-2" />
                       Clear Draft
                     </Button>
                   )}
-                  <Button type="button" variant="secondary" onClick={saveDraft} className="sm:ml-auto">
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Draft
-                  </Button>
+                  {user && (
+                    <Button type="button" variant="secondary" onClick={saveDraftToBackend} className="sm:ml-auto">
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Draft
+                    </Button>
+                  )}
                   <Button type="submit" disabled={loading}>
                     {loading ? (
                       <>
