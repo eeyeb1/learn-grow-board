@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2, Mail, Lock, User, Phone, Chrome, Github, Linkedin, ArrowLeft, CheckCircle, Building2, Globe, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthModalProps {
   open: boolean;
@@ -18,6 +20,7 @@ type AuthView = "login" | "signup" | "forgot-password" | "reset-sent";
 type UserType = "applicant" | "company";
 
 const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
+  const { signIn, signUp } = useAuth();
   const [view, setView] = useState<AuthView>("login");
   const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
   const [userType, setUserType] = useState<UserType | null>(null);
@@ -45,15 +48,19 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     setLoading(true);
 
     try {
-      // TODO: Connect to your authentication backend
       if (isLogin) {
-        console.log("Login with:", { email, password });
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast.error(error.message || "Invalid email or password");
+          return;
+        }
         toast.success("Welcome back!");
       } else {
-        const signupData = userType === "company" 
-          ? { email, password, fullName, userType, companyName, companyDescription, companyWebsite, companyIndustry }
-          : { email, password, fullName, userType };
-        console.log("Sign up with:", signupData);
+        const { error } = await signUp(email, password, { full_name: fullName });
+        if (error) {
+          toast.error(error.message || "Failed to create account");
+          return;
+        }
         toast.success(userType === "company" ? "Company account created successfully!" : "Account created successfully!");
       }
       onOpenChange(false);
@@ -70,8 +77,11 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     setLoading(true);
 
     try {
-      // TODO: Connect to your password reset backend
-      console.log("Password reset requested for:", email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) {
+        toast.error(error.message || "Failed to send reset email");
+        return;
+      }
       setView("reset-sent");
     } catch (error) {
       toast.error("An unexpected error occurred. Please try again.");
