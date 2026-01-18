@@ -64,6 +64,22 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           toast.error(error.message || "Failed to create account");
           return;
         }
+
+        // If company user provided company details, create company profile
+        if (userType === "company" && companyName) {
+          // Wait a bit for the auth to complete
+          const { data: { user: newUser } } = await supabase.auth.getUser();
+          if (newUser) {
+            await supabase.from("company_profiles").insert({
+              user_id: newUser.id,
+              company_name: companyName,
+              company_description: companyDescription || null,
+              company_website: companyWebsite || null,
+              industry: companyIndustry || null,
+            });
+          }
+        }
+
         toast.success(userType === "company" ? "Company account created successfully!" : "Account created successfully!");
       }
       onOpenChange(false);
