@@ -29,7 +29,7 @@ const JobDetailPanel = ({ job }: JobDetailPanelProps) => {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-6">
+    <div className="p-6">
       {/* Header */}
       <div className="flex items-start gap-4 mb-6">
         <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center shrink-0">
