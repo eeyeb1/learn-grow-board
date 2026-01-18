@@ -201,7 +201,7 @@ const Jobs = () => {
               </div>
 
               {/* Job Detail Panel */}
-              <div className="flex-1 bg-background overflow-hidden">
+              <div className="flex-1 bg-background h-full overflow-y-auto">
                 {selectedJob ? (
                   <JobDetailPanel job={selectedJob} />
                 ) : (
