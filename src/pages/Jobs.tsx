@@ -7,11 +7,13 @@ import FilterBar from "@/components/FilterBar";
 import JobCard from "@/components/JobCard";
 import { sampleJobs } from "@/data/sampleData";
 import { Button } from "@/components/ui/button";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+
+const ITEMS_PER_PAGE = 6;
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [visibleCount, setVisibleCount] = useState(6);
+  const [currentPage, setCurrentPage] = useState(1);
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
 
@@ -20,6 +22,7 @@ const Jobs = () => {
     if (newQuery) params.set("q", newQuery);
     if (newLocation) params.set("location", newLocation);
     setSearchParams(params);
+    setCurrentPage(1);
   };
 
   const filteredJobs = useMemo(() => {
@@ -41,8 +44,9 @@ const Jobs = () => {
     });
   }, [query, location]);
 
-  const visibleJobs = filteredJobs.slice(0, visibleCount);
-  const hasMore = visibleCount < filteredJobs.length;
+  const totalPages = Math.ceil(filteredJobs.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedJobs = filteredJobs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-background">
@@ -75,7 +79,7 @@ const Jobs = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{visibleJobs.length}</span> of {filteredJobs.length} opportunities
+              Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredJobs.length)}</span> of {filteredJobs.length} opportunities
               {query && (
                 <span> for "<span className="text-primary">{query}</span>"</span>
               )}
@@ -90,7 +94,7 @@ const Jobs = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {visibleJobs.map((job) => (
+            {paginatedJobs.map((job) => (
               <JobCard key={job.id} {...job} />
             ))}
           </div>
@@ -101,15 +105,36 @@ const Jobs = () => {
             </div>
           )}
 
-          {/* Load More */}
-          {hasMore && (
-            <div className="text-center mt-10">
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => setVisibleCount((prev) => prev + 1)}
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-10">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
               >
-                Load More Opportunities
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           )}
