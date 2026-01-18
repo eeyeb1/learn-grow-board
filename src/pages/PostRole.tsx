@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -9,31 +9,28 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Clock, MapPin, GraduationCap, FileText, AlertCircle, Building2, Lock, Users } from "lucide-react";
+import { X, Plus, Clock, MapPin, GraduationCap, FileText, AlertCircle, Building2, Lock, Users, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import AuthModal from "@/components/AuthModal";
-
-// Mock user state - in real app this would come from auth context
-const useMockAuth = () => {
-  // Set to true to show the Post Role form, false to show auth gate
-  const [isAuthenticated] = useState(true);
-  const [userType] = useState<"applicant" | "company" | null>("company");
-  const [companyProfile] = useState({
-    companyName: "TechStart Studio",
-    companyDescription: "TechStart Studio is a dynamic web development agency focused on building modern, scalable applications. We're passionate about mentoring the next generation of developers.",
-    companyWebsite: "https://techstartstudio.com",
-    industry: "tech",
-  });
-
-  return { isAuthenticated, userType, companyProfile };
-};
+import { useAuth } from "@/contexts/AuthContext";
+import { useCompanyProfile } from "@/hooks/useCompanyProfile";
+import { useJobs } from "@/hooks/useJobs";
 
 const PostRole = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, userType, companyProfile } = useMockAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { companyProfile, isCompany, loading: profileLoading, createCompanyProfile } = useCompanyProfile();
+  const { createJob, loading: jobLoading } = useJobs();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [showCompanySetup, setShowCompanySetup] = useState(false);
   
-  // Job Details State - company info auto-filled from profile
+  // Company setup fields
+  const [setupCompanyName, setSetupCompanyName] = useState("");
+  const [setupCompanyDescription, setSetupCompanyDescription] = useState("");
+  const [setupCompanyWebsite, setSetupCompanyWebsite] = useState("");
+  const [setupCompanyIndustry, setSetupCompanyIndustry] = useState("");
+  
+  // Job Details State
   const [jobDetails, setJobDetails] = useState({
     title: "",
     location: "",
@@ -41,7 +38,7 @@ const PostRole = () => {
     duration: "",
     hoursPerWeek: "",
     skillLevel: "beginner" as "beginner" | "intermediate" | "advanced",
-    industry: companyProfile.industry as "tech" | "design" | "marketing" | "business",
+    industry: "tech" as "tech" | "design" | "marketing" | "business",
     description: "",
     mentorshipDetails: "",
   });
@@ -58,6 +55,13 @@ const PostRole = () => {
   
   // What You'll Learn State
   const [whatYouWillLearn, setWhatYouWillLearn] = useState<string[]>([""]);
+
+  // Update industry when company profile loads
+  useEffect(() => {
+    if (companyProfile?.industry) {
+      setJobDetails(prev => ({ ...prev, industry: companyProfile.industry as typeof prev.industry }));
+    }
+  }, [companyProfile]);
 
   const handleAddSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
@@ -98,7 +102,29 @@ const PostRole = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCompanySetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!setupCompanyName.trim()) {
+      toast.error("Company name is required");
+      return;
+    }
+
+    const { error } = await createCompanyProfile({
+      company_name: setupCompanyName,
+      company_description: setupCompanyDescription,
+      company_website: setupCompanyWebsite,
+      industry: setupCompanyIndustry,
+    });
+
+    if (error) {
+      toast.error("Failed to create company profile");
+    } else {
+      toast.success("Company profile created!");
+      setShowCompanySetup(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
@@ -112,24 +138,48 @@ const PostRole = () => {
     const filteredRequirements = requirements.filter(r => r.trim());
     const filteredWhatYouWillLearn = whatYouWillLearn.filter(w => w.trim());
 
-    const roleData = {
-      ...jobDetails,
-      company: companyProfile.companyName,
-      companyDescription: companyProfile.companyDescription,
-      companyWebsite: companyProfile.companyWebsite,
+    const { error } = await createJob({
+      title: jobDetails.title,
+      description: jobDetails.description,
+      location: jobDetails.location,
+      location_type: jobDetails.locationType,
+      duration: jobDetails.duration,
+      hours_per_week: jobDetails.hoursPerWeek,
+      skill_level: jobDetails.skillLevel,
+      industry: jobDetails.industry,
       skills,
       responsibilities: filteredResponsibilities,
       requirements: filteredRequirements,
-      whatYouWillLearn: filteredWhatYouWillLearn,
-    };
+      what_you_will_learn: filteredWhatYouWillLearn,
+      mentorship_details: jobDetails.mentorshipDetails,
+    });
 
-    console.log("Role data:", roleData);
-    toast.success("Role posted successfully!");
-    navigate("/jobs");
+    if (error) {
+      toast.error("Failed to post role. Please try again.");
+      console.error("Error posting job:", error);
+    } else {
+      toast.success("Role posted successfully!");
+      navigate("/jobs");
+    }
   };
 
-  // Auth Gate - Show when user is not authenticated or not a company
-  if (!isAuthenticated || userType !== "company") {
+  const isLoading = authLoading || profileLoading;
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container mx-auto px-4 pt-24 pb-16 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Auth Gate - Show when user is not authenticated
+  if (!user) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -215,6 +265,83 @@ const PostRole = () => {
     );
   }
 
+  // Company Setup - Show when user is logged in but doesn't have a company profile
+  if (!isCompany || !companyProfile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        
+        <main className="container mx-auto px-4 pt-24 pb-16">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-primary" />
+                  Set Up Your Company Profile
+                </CardTitle>
+                <CardDescription>
+                  Before posting roles, please set up your company profile.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCompanySetup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="setupCompanyName">Company Name *</Label>
+                    <Input
+                      id="setupCompanyName"
+                      placeholder="e.g., TechStart Studio"
+                      value={setupCompanyName}
+                      onChange={(e) => setSetupCompanyName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="setupCompanyDescription">Description</Label>
+                    <Textarea
+                      id="setupCompanyDescription"
+                      placeholder="Tell us about your company..."
+                      value={setupCompanyDescription}
+                      onChange={(e) => setSetupCompanyDescription(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="setupCompanyWebsite">Website</Label>
+                    <Input
+                      id="setupCompanyWebsite"
+                      placeholder="https://yourcompany.com"
+                      value={setupCompanyWebsite}
+                      onChange={(e) => setSetupCompanyWebsite(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="setupCompanyIndustry">Industry</Label>
+                    <Select value={setupCompanyIndustry} onValueChange={setSetupCompanyIndustry}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select industry" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="tech">Technology</SelectItem>
+                        <SelectItem value="design">Design</SelectItem>
+                        <SelectItem value="marketing">Marketing</SelectItem>
+                        <SelectItem value="business">Business</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="w-full">
+                    Create Company Profile
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
+
   // Main Form - Only shown to authenticated company users
   return (
     <div className="min-h-screen bg-background">
@@ -239,8 +366,8 @@ const PostRole = () => {
                 <Building2 className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground">Posting as {companyProfile.companyName}</p>
-                <p className="text-sm text-muted-foreground truncate">{companyProfile.companyWebsite}</p>
+                <p className="font-medium text-foreground">Posting as {companyProfile.company_name}</p>
+                <p className="text-sm text-muted-foreground truncate">{companyProfile.company_website || "No website"}</p>
               </div>
               <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
                 Edit Profile
