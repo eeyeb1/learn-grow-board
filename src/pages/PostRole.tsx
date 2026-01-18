@@ -301,7 +301,7 @@ const PostRole = () => {
     );
   }
 
-  // Company Setup - Show when user signed up as company but doesn't have a company profile yet
+  // Company without profile - edge case (profile should be created during registration)
   if (userType === "company" && !companyProfile) {
     return (
       <div className="min-h-screen bg-background">
@@ -309,65 +309,23 @@ const PostRole = () => {
         
         <main className="container mx-auto px-4 pt-24 pb-16">
           <div className="max-w-2xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-primary" />
-                  Set Up Your Company Profile
-                </CardTitle>
-                <CardDescription>
-                  Before posting roles, please set up your company profile.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleCompanySetup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="setupCompanyName">Company Name *</Label>
-                    <Input
-                      id="setupCompanyName"
-                      placeholder="e.g., TechStart Studio"
-                      value={setupCompanyName}
-                      onChange={(e) => setSetupCompanyName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="setupCompanyDescription">Description</Label>
-                    <Textarea
-                      id="setupCompanyDescription"
-                      placeholder="Tell us about your company..."
-                      value={setupCompanyDescription}
-                      onChange={(e) => setSetupCompanyDescription(e.target.value)}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="setupCompanyWebsite">Website</Label>
-                    <Input
-                      id="setupCompanyWebsite"
-                      placeholder="https://yourcompany.com"
-                      value={setupCompanyWebsite}
-                      onChange={(e) => setSetupCompanyWebsite(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="setupCompanyIndustry">Industry</Label>
-                    <Select value={setupCompanyIndustry} onValueChange={setSetupCompanyIndustry}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select industry" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="tech">Technology</SelectItem>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="business">Business</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button type="submit" className="w-full">
-                    Create Company Profile
-                  </Button>
-                </form>
+            <Card className="border-2 border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <AlertCircle className="w-10 h-10 text-primary" />
+                </div>
+                
+                <h1 className="text-2xl font-display font-bold text-foreground mb-3">
+                  Company Profile Missing
+                </h1>
+                
+                <p className="text-muted-foreground max-w-md mb-8">
+                  It looks like your company profile wasn't created during registration. Please sign out and register again as a company to set up your profile.
+                </p>
+
+                <Button onClick={() => navigate("/")}>
+                  Go Home
+                </Button>
               </CardContent>
             </Card>
           </div>
