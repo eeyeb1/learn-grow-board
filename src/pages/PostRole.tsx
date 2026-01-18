@@ -302,7 +302,7 @@ const PostRole = () => {
   }
 
   // Company without profile - edge case (profile should be created during registration)
-  if (userType === "company" && !companyProfile) {
+  if ((userType === "company" || isCompany) && !companyProfile) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -331,6 +331,19 @@ const PostRole = () => {
           </div>
         </main>
 
+        <Footer />
+      </div>
+    );
+  }
+
+  // Guard: Ensure companyProfile exists before rendering main form
+  if (!companyProfile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container mx-auto px-4 pt-24 pb-16 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </main>
         <Footer />
       </div>
     );
