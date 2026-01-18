@@ -68,6 +68,42 @@ export type Database = {
         }
         Relationships: []
       }
+      company_profiles: {
+        Row: {
+          company_description: string | null
+          company_name: string
+          company_website: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          logo_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_description?: string | null
+          company_name: string
+          company_website?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_description?: string | null
+          company_name?: string
+          company_website?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          logo_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -89,6 +125,77 @@ export type Database = {
         }
         Relationships: []
       }
+      jobs: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string
+          duration: string | null
+          hours_per_week: string | null
+          id: string
+          industry: string | null
+          location: string | null
+          location_type: string
+          mentorship_details: string | null
+          requirements: string[] | null
+          responsibilities: string[] | null
+          skill_level: string
+          skills: string[] | null
+          status: string
+          title: string
+          updated_at: string
+          what_you_will_learn: string[] | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description: string
+          duration?: string | null
+          hours_per_week?: string | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          location_type?: string
+          mentorship_details?: string | null
+          requirements?: string[] | null
+          responsibilities?: string[] | null
+          skill_level?: string
+          skills?: string[] | null
+          status?: string
+          title: string
+          updated_at?: string
+          what_you_will_learn?: string[] | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string
+          duration?: string | null
+          hours_per_week?: string | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          location_type?: string
+          mentorship_details?: string | null
+          requirements?: string[] | null
+          responsibilities?: string[] | null
+          skill_level?: string
+          skills?: string[] | null
+          status?: string
+          title?: string
+          updated_at?: string
+          what_you_will_learn?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -98,6 +205,7 @@ export type Database = {
           id: string
           updated_at: string
           user_id: string
+          user_type: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -107,6 +215,7 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id: string
+          user_type?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -116,6 +225,7 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+          user_type?: string | null
         }
         Relationships: []
       }
