@@ -3,8 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Mail, Lock, User, Phone, Chrome, Github, Linkedin, ArrowLeft, CheckCircle } from "lucide-react";
+import { Loader2, Mail, Lock, User, Phone, Chrome, Github, Linkedin, ArrowLeft, CheckCircle, Building2, Globe, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface AuthModalProps {
@@ -14,10 +15,12 @@ interface AuthModalProps {
 
 type AuthMethod = "email" | "phone";
 type AuthView = "login" | "signup" | "forgot-password" | "reset-sent";
+type UserType = "applicant" | "company";
 
 const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [view, setView] = useState<AuthView>("login");
   const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
+  const [userType, setUserType] = useState<UserType | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -25,6 +28,12 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [verificationCode, setVerificationCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Company-specific fields
+  const [companyName, setCompanyName] = useState("");
+  const [companyDescription, setCompanyDescription] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [companyIndustry, setCompanyIndustry] = useState("");
 
   const isLogin = view === "login";
   const isSignup = view === "signup";
@@ -41,8 +50,11 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         console.log("Login with:", { email, password });
         toast.success("Welcome back!");
       } else {
-        console.log("Sign up with:", { email, password, fullName });
-        toast.success("Account created successfully!");
+        const signupData = userType === "company" 
+          ? { email, password, fullName, userType, companyName, companyDescription, companyWebsite, companyIndustry }
+          : { email, password, fullName, userType };
+        console.log("Sign up with:", signupData);
+        toast.success(userType === "company" ? "Company account created successfully!" : "Account created successfully!");
       }
       onOpenChange(false);
       resetForm();
@@ -78,8 +90,11 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         setCodeSent(true);
         toast.success("Verification code sent!");
       } else {
-        console.log("Verify code:", { phoneNumber, verificationCode });
-        toast.success(isLogin ? "Welcome back!" : "Account created successfully!");
+        const signupData = userType === "company" 
+          ? { phoneNumber, verificationCode, fullName, userType, companyName, companyDescription, companyWebsite, companyIndustry }
+          : { phoneNumber, verificationCode, fullName, userType };
+        console.log("Verify code:", signupData);
+        toast.success(isLogin ? "Welcome back!" : userType === "company" ? "Company account created successfully!" : "Account created successfully!");
         onOpenChange(false);
         resetForm();
       }
@@ -104,6 +119,11 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     setCodeSent(false);
     setAuthMethod("email");
     setView("login");
+    setUserType(null);
+    setCompanyName("");
+    setCompanyDescription("");
+    setCompanyWebsite("");
+    setCompanyIndustry("");
   };
 
   const getTitle = () => {
@@ -111,7 +131,8 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
       case "login":
         return "Welcome Back";
       case "signup":
-        return "Create Account";
+        if (!userType) return "Join Us";
+        return userType === "company" ? "Register Your Company" : "Create Account";
       case "forgot-password":
         return "Reset Password";
       case "reset-sent":
@@ -226,14 +247,84 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     );
   }
 
+  // User Type Selection View (only for signup)
+  if (isSignup && !userType) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-display text-center">
+              {getTitle()}
+            </DialogTitle>
+          </DialogHeader>
+
+          <p className="text-center text-muted-foreground text-sm">
+            How would you like to use the platform?
+          </p>
+
+          <div className="grid gap-4 mt-4">
+            <button
+              type="button"
+              onClick={() => setUserType("applicant")}
+              className="group relative flex flex-col items-center p-6 rounded-xl border-2 border-border hover:border-primary transition-all bg-card hover:bg-primary/5"
+            >
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <Users className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-1">Experience Seeker</h3>
+              <p className="text-sm text-muted-foreground text-center">
+                Looking for volunteer opportunities to build skills and gain experience
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setUserType("company")}
+              className="group relative flex flex-col items-center p-6 rounded-xl border-2 border-border hover:border-primary transition-all bg-card hover:bg-primary/5"
+            >
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <Building2 className="w-7 h-7 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-1">Company / Organization</h3>
+              <p className="text-sm text-muted-foreground text-center">
+                Post volunteer roles and find talented individuals for your team
+              </p>
+            </button>
+          </div>
+
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => setView("login")}
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Already have an account?{" "}
+              <span className="text-primary font-medium">Sign in</span>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   // Main Login/Signup View
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-display text-center">
             {getTitle()}
           </DialogTitle>
+          {isSignup && userType && (
+            <button
+              type="button"
+              onClick={() => setUserType(null)}
+              className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mt-1"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Change account type
+            </button>
+          )}
         </DialogHeader>
 
         {/* Social Login Buttons */}
@@ -311,13 +402,13 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           <form onSubmit={handleEmailSubmit} className="space-y-4">
             {isSignup && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">{userType === "company" ? "Contact Person Name" : "Full Name"}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="fullName"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder={userType === "company" ? "Enter contact person name" : "Enter your full name"}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="pl-10"
@@ -371,6 +462,67 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               </div>
             </div>
 
+            {/* Company-specific fields */}
+            {isSignup && userType === "company" && (
+              <>
+                <Separator className="my-4" />
+                <p className="text-sm font-medium text-foreground">Company Details</p>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="companyName">Company/Organization Name *</Label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="companyName"
+                      type="text"
+                      placeholder="e.g., TechStart Studio"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="companyDescription">Company Description</Label>
+                  <Textarea
+                    id="companyDescription"
+                    placeholder="Tell applicants about your organization..."
+                    value={companyDescription}
+                    onChange={(e) => setCompanyDescription(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="companyWebsite">Company Website</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="companyWebsite"
+                      type="url"
+                      placeholder="https://yourcompany.com"
+                      value={companyWebsite}
+                      onChange={(e) => setCompanyWebsite(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="companyIndustry">Industry</Label>
+                  <Input
+                    id="companyIndustry"
+                    type="text"
+                    placeholder="e.g., Technology, Healthcare, Education"
+                    value={companyIndustry}
+                    onChange={(e) => setCompanyIndustry(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
@@ -378,7 +530,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
                   {isLogin ? "Signing in..." : "Creating account..."}
                 </>
               ) : (
-                <>{isLogin ? "Sign In" : "Create Account"}</>
+                <>{isLogin ? "Sign In" : userType === "company" ? "Register Company" : "Create Account"}</>
               )}
             </Button>
           </form>
@@ -388,21 +540,84 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         {authMethod === "phone" && (
           <form onSubmit={handlePhoneSubmit} className="space-y-4">
             {isSignup && !codeSent && (
-              <div className="space-y-2">
-                <Label htmlFor="fullNamePhone">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="fullNamePhone"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10"
-                    required={isSignup}
-                  />
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullNamePhone">{userType === "company" ? "Contact Person Name" : "Full Name"}</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="fullNamePhone"
+                      type="text"
+                      placeholder={userType === "company" ? "Enter contact person name" : "Enter your full name"}
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="pl-10"
+                      required={isSignup}
+                    />
+                  </div>
                 </div>
-              </div>
+
+                {/* Company-specific fields for phone signup */}
+                {userType === "company" && (
+                  <>
+                    <Separator className="my-4" />
+                    <p className="text-sm font-medium text-foreground">Company Details</p>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="companyNamePhone">Company/Organization Name *</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="companyNamePhone"
+                          type="text"
+                          placeholder="e.g., TechStart Studio"
+                          value={companyName}
+                          onChange={(e) => setCompanyName(e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="companyDescriptionPhone">Company Description</Label>
+                      <Textarea
+                        id="companyDescriptionPhone"
+                        placeholder="Tell applicants about your organization..."
+                        value={companyDescription}
+                        onChange={(e) => setCompanyDescription(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="companyWebsitePhone">Company Website</Label>
+                      <div className="relative">
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="companyWebsitePhone"
+                          type="url"
+                          placeholder="https://yourcompany.com"
+                          value={companyWebsite}
+                          onChange={(e) => setCompanyWebsite(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="companyIndustryPhone">Industry</Label>
+                      <Input
+                        id="companyIndustryPhone"
+                        type="text"
+                        placeholder="e.g., Technology, Healthcare, Education"
+                        value={companyIndustry}
+                        onChange={(e) => setCompanyIndustry(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+              </>
             )}
 
             <div className="space-y-2">
@@ -461,7 +676,10 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         <div className="text-center mt-4">
           <button
             type="button"
-            onClick={() => setView(isLogin ? "signup" : "login")}
+            onClick={() => {
+              setView(isLogin ? "signup" : "login");
+              setUserType(null);
+            }}
             className="text-sm text-muted-foreground hover:text-primary transition-colors"
           >
             {isLogin ? (
