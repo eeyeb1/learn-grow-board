@@ -86,9 +86,11 @@ const Navbar = () => {
                 Sign In
               </Button>
             )}
-            <Button variant="hero" size="sm">
-              Post a Role
-            </Button>
+            <Link to="/post-role">
+              <Button variant="hero" size="sm">
+                Post a Role
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -133,7 +135,9 @@ const Navbar = () => {
                     Sign In
                   </Button>
                 )}
-                <Button variant="hero">Post a Role</Button>
+                <Link to="/post-role" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="hero" className="w-full">Post a Role</Button>
+                </Link>
               </div>
             </div>
           </div>
