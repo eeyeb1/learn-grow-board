@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { jobDetails } from "@/data/jobDetails";
-import { isFavorite, toggleFavorite, hasApplied } from "@/hooks/useJobStorage";
+import { useJobStorage } from "@/hooks/useJobStorage";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthModal from "@/components/AuthModal";
 import { toast } from "sonner";
 import { 
   ArrowLeft, 
@@ -24,22 +26,24 @@ import {
 } from "lucide-react";
 
 const JobDetail = () => {
-  const [isFav, setIsFav] = useState(false);
-  const [alreadyApplied, setAlreadyApplied] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const { id } = useParams<{ id: string }>();
   const job = id ? jobDetails[id] : null;
+  const { user } = useAuth();
+  const { isFavorite, hasApplied, toggleFavorite } = useJobStorage();
 
-  useEffect(() => {
-    if (id) {
-      setIsFav(isFavorite(id));
-      setAlreadyApplied(hasApplied(id));
-    }
-  }, [id]);
+  const isFav = id ? isFavorite(id) : false;
+  const alreadyApplied = id ? hasApplied(id) : false;
 
-  const handleToggleFavorite = () => {
+  const handleToggleFavorite = async () => {
     if (!id) return;
-    const newState = toggleFavorite(id);
-    setIsFav(newState);
+    
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    const newState = await toggleFavorite(id);
     toast.success(newState ? "Added to favorites" : "Removed from favorites");
   };
 
@@ -307,6 +311,11 @@ const JobDetail = () => {
       </section>
 
       <Footer />
+
+      <AuthModal 
+        open={authModalOpen} 
+        onOpenChange={setAuthModalOpen} 
+      />
     </div>
   );
 };
