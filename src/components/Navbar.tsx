@@ -1,43 +1,37 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Menu, X, LogOut, Archive } from "lucide-react";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { Briefcase, Menu, X, LogOut, Archive, User as UserIcon, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import AuthModal from "./AuthModal";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, userType, signOut } = useAuth();
   const location = useLocation();
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     setIsMenuOpen(false);
   };
 
+  // Base nav links (Archive removed - now in profile dropdown)
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/jobs", label: "Find Experience" },
     { href: "/companies", label: "Companies" },
     { href: "/resources", label: "Resources" },
-    { href: "/archive", label: "Archive", icon: Archive },
   ];
+
+  const isCompany = userType === "company";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -73,25 +67,45 @@ const Navbar = () => {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <>
-                <span className="text-sm text-muted-foreground">
-                  {user.email}
-                </span>
-                <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                      <UserIcon className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="max-w-[120px] truncate text-sm">
+                      {user.user_metadata?.full_name || user.email?.split("@")[0]}
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-background border border-border z-50">
+                  <DropdownMenuItem asChild>
+                    <Link to="/archive" className="flex items-center gap-2 cursor-pointer">
+                      <Archive className="w-4 h-4" />
+                      Archive
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button variant="ghost" size="sm" onClick={() => setAuthModalOpen(true)}>
                 Sign In
               </Button>
             )}
-            <Link to="/post-role">
-              <Button variant="hero" size="sm">
-                Post a Role
-              </Button>
-            </Link>
+            {/* Only show Post a Role for companies or non-logged in users */}
+            {(!user || isCompany) && (
+              <Link to="/post-role">
+                <Button variant="hero" size="sm">
+                  Post a Role
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -125,6 +139,20 @@ const Navbar = () => {
                   {link.label}
                 </Link>
               ))}
+              {user && (
+                <Link
+                  to="/archive"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                    location.pathname === "/archive"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Archive className="w-4 h-4" />
+                  Archive
+                </Link>
+              )}
               <div className="flex flex-col gap-2 mt-4 px-4">
                 {user ? (
                   <Button variant="ghost" className="justify-start" onClick={handleSignOut}>
@@ -136,9 +164,11 @@ const Navbar = () => {
                     Sign In
                   </Button>
                 )}
-                <Link to="/post-role" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="hero" className="w-full">Post a Role</Button>
-                </Link>
+                {(!user || isCompany) && (
+                  <Link to="/post-role" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="hero" className="w-full">Post a Role</Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
