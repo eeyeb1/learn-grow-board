@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,6 +11,7 @@ import { SlidersHorizontal } from "lucide-react";
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [visibleCount, setVisibleCount] = useState(6);
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
 
@@ -39,6 +40,9 @@ const Jobs = () => {
       return matchesQuery && matchesLocation;
     });
   }, [query, location]);
+
+  const visibleJobs = filteredJobs.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredJobs.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,7 +75,7 @@ const Jobs = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{filteredJobs.length}</span> opportunities
+              Showing <span className="font-medium text-foreground">{visibleJobs.length}</span> of {filteredJobs.length} opportunities
               {query && (
                 <span> for "<span className="text-primary">{query}</span>"</span>
               )}
@@ -86,7 +90,7 @@ const Jobs = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredJobs.map((job) => (
+            {visibleJobs.map((job) => (
               <JobCard key={job.id} {...job} />
             ))}
           </div>
@@ -98,9 +102,13 @@ const Jobs = () => {
           )}
 
           {/* Load More */}
-          {filteredJobs.length > 0 && (
+          {hasMore && (
             <div className="text-center mt-10">
-              <Button variant="outline" size="lg">
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => setVisibleCount((prev) => prev + 1)}
+              >
                 Load More Opportunities
               </Button>
             </div>
