@@ -98,8 +98,8 @@ const Navbar = () => {
                 Sign In
               </Button>
             )}
-            {/* Only show Post a Role for companies or non-logged in users */}
-            {(!user || isCompany) && (
+            {/* Only show Post a Role for company users (not for applicants or when logged out) */}
+            {isCompany && (
               <Link to="/post-role">
                 <Button variant="hero" size="sm">
                   Post a Role
@@ -164,7 +164,7 @@ const Navbar = () => {
                     Sign In
                   </Button>
                 )}
-                {(!user || isCompany) && (
+                {isCompany && (
                   <Link to="/post-role" onClick={() => setIsMenuOpen(false)}>
                     <Button variant="hero" className="w-full">Post a Role</Button>
                   </Link>
