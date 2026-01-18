@@ -5,17 +5,26 @@ import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import FilterBar from "@/components/FilterBar";
 import JobCard from "@/components/JobCard";
+import JobListItem from "@/components/JobListItem";
+import JobDetailPanel from "@/components/JobDetailPanel";
 import { sampleJobs } from "@/data/sampleData";
+import { jobDetails } from "@/data/jobDetails";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { SlidersHorizontal, ChevronLeft, ChevronRight, LayoutGrid, Columns } from "lucide-react";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
+
+type ViewMode = "grid" | "split";
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
 
@@ -50,9 +59,22 @@ const Jobs = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedJobs = filteredJobs.slice(startIndex, startIndex + itemsPerPage);
 
+  // Auto-select first job in split view
+  const effectiveSelectedJobId = selectedJobId || (viewMode === "split" && paginatedJobs[0]?.id) || null;
+  const selectedJob = effectiveSelectedJobId ? jobDetails[effectiveSelectedJobId] : null;
+
   const handleItemsPerPageChange = (value: string) => {
     setItemsPerPage(Number(value));
     setCurrentPage(1);
+  };
+
+  const handleViewModeChange = (value: string) => {
+    if (value) {
+      setViewMode(value as ViewMode);
+      if (value === "split" && paginatedJobs.length > 0) {
+        setSelectedJobId(paginatedJobs[0].id);
+      }
+    }
   };
 
   return (
@@ -95,6 +117,21 @@ const Jobs = () => {
               )}
             </p>
             <div className="flex items-center gap-3">
+              {/* View Mode Toggle */}
+              <ToggleGroup 
+                type="single" 
+                value={viewMode} 
+                onValueChange={handleViewModeChange}
+                className="border rounded-lg p-1"
+              >
+                <ToggleGroupItem value="grid" aria-label="Grid view" className="h-8 w-8 p-0">
+                  <LayoutGrid className="w-4 h-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="split" aria-label="Split view" className="h-8 w-8 p-0">
+                  <Columns className="w-4 h-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Show:</span>
                 <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
@@ -117,15 +154,53 @@ const Jobs = () => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedJobs.map((job) => (
-              <JobCard key={job.id} {...job} />
-            ))}
-          </div>
+          {/* Grid View */}
+          {viewMode === "grid" && (
+            <>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {paginatedJobs.map((job) => (
+                  <JobCard key={job.id} {...job} />
+                ))}
+              </div>
 
-          {filteredJobs.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No opportunities found matching your search.</p>
+              {filteredJobs.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">No opportunities found matching your search.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Split View */}
+          {viewMode === "split" && (
+            <div className="flex gap-0 border rounded-xl overflow-hidden bg-card min-h-[600px]">
+              {/* Job List Panel */}
+              <div className="w-[380px] shrink-0 border-r overflow-y-auto max-h-[700px]">
+                {paginatedJobs.map((job) => (
+                  <JobListItem
+                    key={job.id}
+                    {...job}
+                    isSelected={effectiveSelectedJobId === job.id}
+                    onClick={() => setSelectedJobId(job.id)}
+                  />
+                ))}
+                {filteredJobs.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground text-sm">No opportunities found.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Job Detail Panel */}
+              <div className="flex-1 bg-background">
+                {selectedJob ? (
+                  <JobDetailPanel job={selectedJob} />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Select a job to view details
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
