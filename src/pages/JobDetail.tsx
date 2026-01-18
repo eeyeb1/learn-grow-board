@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -6,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { jobDetails } from "@/data/jobDetails";
-import ApplyModal from "@/components/ApplyModal";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -24,7 +22,6 @@ import {
 const JobDetail = () => {
   const { id } = useParams<{ id: string }>();
   const job = id ? jobDetails[id] : null;
-  const [applyModalOpen, setApplyModalOpen] = useState(false);
 
   if (!job) {
     return (
@@ -125,8 +122,8 @@ const JobDetail = () => {
 
             {/* Apply Card */}
             <Card className="p-6 lg:w-80 shrink-0 h-fit">
-              <Button variant="hero" size="lg" className="w-full mb-4" onClick={() => setApplyModalOpen(true)}>
-                Apply Now
+              <Button variant="hero" size="lg" className="w-full mb-4" asChild>
+                <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
               </Button>
               <p className="text-xs text-muted-foreground text-center mb-4">
                 Posted {job.postedAt}
@@ -246,8 +243,8 @@ const JobDetail = () => {
 
               {/* Mobile Apply Button */}
               <div className="lg:hidden">
-                <Button variant="hero" size="lg" className="w-full" onClick={() => setApplyModalOpen(true)}>
-                  Apply Now
+                <Button variant="hero" size="lg" className="w-full" asChild>
+                  <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
                 </Button>
               </div>
             </div>
@@ -256,13 +253,6 @@ const JobDetail = () => {
       </section>
 
       <Footer />
-
-      <ApplyModal 
-        open={applyModalOpen} 
-        onOpenChange={setApplyModalOpen}
-        jobTitle={job.title}
-        companyName={job.company}
-      />
     </div>
   );
 };
