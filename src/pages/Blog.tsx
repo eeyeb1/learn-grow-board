@@ -71,7 +71,7 @@ const Blog = () => {
           <div className="flex justify-center">
             <Button 
               onClick={() => setCreateModalOpen(true)} 
-              variant="outline"
+              variant="hero"
               size="lg"
             >
               <PenSquare className="w-4 h-4 mr-2" />
