@@ -56,7 +56,10 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         }
         toast.success("Welcome back!");
       } else {
-        const { error } = await signUp(email, password, { full_name: fullName });
+        const { error } = await signUp(email, password, { 
+          full_name: fullName,
+          user_type: userType || "applicant"
+        });
         if (error) {
           toast.error(error.message || "Failed to create account");
           return;
