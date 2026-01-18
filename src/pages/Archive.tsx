@@ -38,7 +38,7 @@ interface Application {
 
 const Archive = () => {
   const { user, userType } = useAuth();
-  const { isCompany, companyProfile } = useCompanyProfile();
+  const { isCompany, companyProfile, loading: profileLoading } = useCompanyProfile();
   const {
     favorites,
     applied,
@@ -49,12 +49,18 @@ const Archive = () => {
   } = useJobStorage();
 
   const [companyApplications, setCompanyApplications] = useState<Application[]>([]);
-  const [loadingApplications, setLoadingApplications] = useState(false);
+  const [loadingApplications, setLoadingApplications] = useState(true);
 
   // Fetch applications for company's jobs
   useEffect(() => {
     const fetchCompanyApplications = async () => {
-      if (!isCompany || !companyProfile) return;
+      // Wait for profile to load
+      if (profileLoading) return;
+      
+      if (!isCompany || !companyProfile) {
+        setLoadingApplications(false);
+        return;
+      }
 
       setLoadingApplications(true);
       try {
@@ -66,6 +72,7 @@ const Archive = () => {
 
         if (jobsError || !jobs || jobs.length === 0) {
           setCompanyApplications([]);
+          setLoadingApplications(false);
           return;
         }
 
@@ -81,6 +88,7 @@ const Archive = () => {
 
         if (appsError) {
           console.error("Error fetching applications:", appsError);
+          setLoadingApplications(false);
           return;
         }
 
@@ -99,7 +107,7 @@ const Archive = () => {
     };
 
     fetchCompanyApplications();
-  }, [isCompany, companyProfile]);
+  }, [isCompany, companyProfile, profileLoading]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
