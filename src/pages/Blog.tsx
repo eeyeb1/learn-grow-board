@@ -48,19 +48,19 @@ const Blog = () => {
             </p>
           </div>
           
-          {/* Centered Search Bar with Button */}
+          {/* Centered Search Bar with Button Inside */}
           <div className="flex justify-center mb-6">
-            <div className="flex gap-2 w-full max-w-lg">
+            <div className="bg-card rounded-2xl shadow-elevated p-2 flex gap-2 w-full max-w-lg">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   placeholder="Search posts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-card border-border/50 h-11"
+                  className="pl-12 border-0 shadow-none bg-transparent h-12 focus-visible:ring-0"
                 />
               </div>
-              <Button variant="hero" className="h-11 px-6">
+              <Button variant="hero" className="h-12 px-6">
                 <Search className="w-4 h-4 mr-2" />
                 Search
               </Button>
