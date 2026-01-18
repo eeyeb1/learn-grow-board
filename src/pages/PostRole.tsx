@@ -9,25 +9,39 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { X, Plus, Briefcase, Clock, MapPin, GraduationCap, FileText, AlertCircle } from "lucide-react";
+import { X, Plus, Clock, MapPin, GraduationCap, FileText, AlertCircle, Building2, Lock, Users } from "lucide-react";
 import { toast } from "sonner";
+import AuthModal from "@/components/AuthModal";
+
+// Mock user state - in real app this would come from auth context
+const useMockAuth = () => {
+  // For UI demo purposes, set to null to show auth gate, or set mock data to show form
+  const [isAuthenticated] = useState(false);
+  const [userType] = useState<"applicant" | "company" | null>(null);
+  const [companyProfile] = useState({
+    companyName: "TechStart Studio",
+    companyDescription: "A forward-thinking technology company focused on innovation.",
+    companyWebsite: "https://techstartstudio.com",
+    industry: "tech",
+  });
+
+  return { isAuthenticated, userType, companyProfile };
+};
 
 const PostRole = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, userType, companyProfile } = useMockAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   
-  // Job Details State
+  // Job Details State - company info auto-filled from profile
   const [jobDetails, setJobDetails] = useState({
     title: "",
-    company: "",
-    companyDescription: "",
-    companyWebsite: "",
     location: "",
     locationType: "remote" as "remote" | "on-site" | "hybrid",
     duration: "",
     hoursPerWeek: "",
     skillLevel: "beginner" as "beginner" | "intermediate" | "advanced",
-    industry: "tech" as "tech" | "design" | "marketing" | "business",
+    industry: companyProfile.industry as "tech" | "design" | "marketing" | "business",
     description: "",
     mentorshipDetails: "",
   });
@@ -88,7 +102,7 @@ const PostRole = () => {
     e.preventDefault();
     
     // Basic validation
-    if (!jobDetails.title || !jobDetails.company || !jobDetails.description) {
+    if (!jobDetails.title || !jobDetails.description) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -100,6 +114,9 @@ const PostRole = () => {
 
     const roleData = {
       ...jobDetails,
+      company: companyProfile.companyName,
+      companyDescription: companyProfile.companyDescription,
+      companyWebsite: companyProfile.companyWebsite,
       skills,
       responsibilities: filteredResponsibilities,
       requirements: filteredRequirements,
@@ -111,6 +128,94 @@ const PostRole = () => {
     navigate("/jobs");
   };
 
+  // Auth Gate - Show when user is not authenticated or not a company
+  if (!isAuthenticated || userType !== "company") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        
+        <main className="container mx-auto px-4 pt-24 pb-16">
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-2 border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <Lock className="w-10 h-10 text-primary" />
+                </div>
+                
+                <h1 className="text-2xl font-display font-bold text-foreground mb-3">
+                  Company Account Required
+                </h1>
+                
+                <p className="text-muted-foreground max-w-md mb-8">
+                  Only registered companies can post volunteer roles. Sign in with your company account or register your organization to start posting opportunities.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
+                  <Button 
+                    className="flex-1" 
+                    size="lg"
+                    onClick={() => setAuthModalOpen(true)}
+                  >
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Sign In / Register
+                  </Button>
+                </div>
+
+                <div className="mt-8 pt-8 border-t border-border w-full max-w-md">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Looking for volunteer opportunities instead?
+                  </p>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate("/jobs")}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Browse Available Roles
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Benefits of registering */}
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <GraduationCap className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-1">Access Talent</h3>
+                <p className="text-sm text-muted-foreground">
+                  Connect with motivated individuals eager to learn and contribute
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-1">Easy Posting</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create and manage role listings with our simple posting form
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                  <Building2 className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-1">Build Your Brand</h3>
+                <p className="text-sm text-muted-foreground">
+                  Showcase your organization to potential future employees
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <Footer />
+        <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      </div>
+    );
+  }
+
+  // Main Form - Only shown to authenticated company users
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -127,61 +232,43 @@ const PostRole = () => {
             </p>
           </div>
 
+          {/* Company Info Banner */}
+          <Card className="mb-8 bg-primary/5 border-primary/20">
+            <CardContent className="flex items-center gap-4 py-4">
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Building2 className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground">Posting as {companyProfile.companyName}</p>
+                <p className="text-sm text-muted-foreground truncate">{companyProfile.companyWebsite}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
+                Edit Profile
+              </Button>
+            </CardContent>
+          </Card>
+
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Basic Information */}
+            {/* Role Details */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-primary" />
-                  Basic Information
+                  <FileText className="w-5 h-5 text-primary" />
+                  Role Details
                 </CardTitle>
                 <CardDescription>
-                  Tell us about the role and your organization
+                  Basic information about the volunteer opportunity
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Role Title *</Label>
-                    <Input
-                      id="title"
-                      placeholder="e.g., Junior Frontend Developer"
-                      value={jobDetails.title}
-                      onChange={(e) => setJobDetails({ ...jobDetails, title: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company/Organization Name *</Label>
-                    <Input
-                      id="company"
-                      placeholder="e.g., TechStart Studio"
-                      value={jobDetails.company}
-                      onChange={(e) => setJobDetails({ ...jobDetails, company: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="companyDescription">Company Description</Label>
-                  <Textarea
-                    id="companyDescription"
-                    placeholder="Tell applicants about your organization..."
-                    value={jobDetails.companyDescription}
-                    onChange={(e) => setJobDetails({ ...jobDetails, companyDescription: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="companyWebsite">Company Website</Label>
+                  <Label htmlFor="title">Role Title *</Label>
                   <Input
-                    id="companyWebsite"
-                    type="url"
-                    placeholder="https://yourcompany.com"
-                    value={jobDetails.companyWebsite}
-                    onChange={(e) => setJobDetails({ ...jobDetails, companyWebsite: e.target.value })}
+                    id="title"
+                    placeholder="e.g., Junior Frontend Developer"
+                    value={jobDetails.title}
+                    onChange={(e) => setJobDetails({ ...jobDetails, title: e.target.value })}
+                    required
                   />
                 </div>
 
@@ -452,13 +539,26 @@ const PostRole = () => {
                     <Plus className="w-4 h-4 mr-2" /> Add Learning Outcome
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* Mentorship */}
+            {/* Mentorship */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  Mentorship & Support
+                </CardTitle>
+                <CardDescription>
+                  What kind of guidance will you provide?
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-2">
-                  <Label htmlFor="mentorshipDetails">Mentorship & Support Offered</Label>
+                  <Label htmlFor="mentorshipDetails">Mentorship Details</Label>
                   <Textarea
                     id="mentorshipDetails"
-                    placeholder="Describe what mentorship or guidance you'll provide..."
+                    placeholder="Describe the mentorship and support you'll provide (e.g., weekly 1:1 meetings, code reviews, career guidance...)"
                     value={jobDetails.mentorshipDetails}
                     onChange={(e) => setJobDetails({ ...jobDetails, mentorshipDetails: e.target.value })}
                     rows={3}
@@ -467,109 +567,70 @@ const PostRole = () => {
               </CardContent>
             </Card>
 
-            {/* Application Form Preview */}
-            <Card>
+            {/* Application Preview */}
+            <Card className="bg-muted/30">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  Application Form
-                </CardTitle>
+                <CardTitle className="text-lg">Application Form Preview</CardTitle>
                 <CardDescription>
-                  Applicants will fill out this standard form when applying
+                  Applicants will submit the following standard information
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-muted/50 rounded-lg p-6 space-y-4">
-                  <p className="text-sm text-muted-foreground mb-4">
-                    The following fields will be collected from applicants:
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Full Name</Label>
-                      <div className="h-9 bg-background rounded-md border border-input px-3 flex items-center text-sm text-muted-foreground">
-                        Required
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Email Address</Label>
-                      <div className="h-9 bg-background rounded-md border border-input px-3 flex items-center text-sm text-muted-foreground">
-                        Required
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Phone Number</Label>
-                      <div className="h-9 bg-background rounded-md border border-input px-3 flex items-center text-sm text-muted-foreground">
-                        Optional
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">LinkedIn Profile</Label>
-                      <div className="h-9 bg-background rounded-md border border-input px-3 flex items-center text-sm text-muted-foreground">
-                        Optional
-                      </div>
-                    </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    Full Name
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Portfolio/Website URL</Label>
-                    <div className="h-9 bg-background rounded-md border border-input px-3 flex items-center text-sm text-muted-foreground">
-                      Optional
-                    </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    Email Address
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Resume/CV</Label>
-                    <div className="h-9 bg-background rounded-md border border-input px-3 flex items-center text-sm text-muted-foreground">
-                      File Upload (PDF) - Required
-                    </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    Phone Number
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Why are you interested in this role?</Label>
-                    <div className="h-20 bg-background rounded-md border border-input px-3 py-2 flex items-start text-sm text-muted-foreground">
-                      Required - Cover letter / motivation
-                    </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    LinkedIn Profile
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Weekly Availability</Label>
-                    <div className="h-9 bg-background rounded-md border border-input px-3 flex items-center text-sm text-muted-foreground">
-                      Required - Hours per week available
-                    </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    Portfolio/GitHub
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Relevant Experience or Skills</Label>
-                    <div className="h-20 bg-background rounded-md border border-input px-3 py-2 flex items-start text-sm text-muted-foreground">
-                      Optional - Previous experience or self-taught skills
-                    </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    Resume/CV
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground col-span-2">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    Cover Letter / Why interested
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Disclaimer */}
-            <Card className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/20">
-              <CardContent className="pt-6">
-                <div className="flex gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-amber-800 dark:text-amber-400 mb-1">
-                      Important: Unpaid Experience-Based Role
-                    </h4>
-                    <p className="text-sm text-amber-700 dark:text-amber-500">
-                      By posting this role, you confirm that this is an unpaid, experience-based opportunity 
-                      focused on providing learning and mentorship. This platform is for volunteer positions 
-                      only and should not be used for roles that would typically be paid employment.
-                    </p>
-                  </div>
+            <Card className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+              <CardContent className="flex gap-4 pt-6">
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-medium text-amber-800 dark:text-amber-400">
+                    Experience-Based Roles Only
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-500">
+                    This platform is for unpaid volunteer opportunities focused on skill development and mentorship. 
+                    By posting, you confirm this role provides genuine learning value and is not a substitute for paid employment.
+                  </p>
                 </div>
               </CardContent>
             </Card>
 
-            <Separator />
-
-            {/* Submit */}
+            {/* Submit Buttons */}
             <div className="flex justify-end gap-4">
               <Button type="button" variant="outline" onClick={() => navigate(-1)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="hero" size="lg">
+              <Button type="submit" size="lg">
                 Post Role
               </Button>
             </div>
