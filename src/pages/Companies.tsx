@@ -73,7 +73,7 @@ const Companies = () => {
             Help aspiring professionals gain experience while getting fresh perspectives for your team.
           </p>
           <Button variant="hero" size="lg">
-            Post a Free Experience Role
+            Post an Experience Role
           </Button>
         </div>
       </section>
