@@ -82,7 +82,7 @@ const Index = () => {
                   </Link>
                 </Button>
                 <Button variant="outline-primary" size="xl" asChild>
-                  <Link to="/post">Post a Free Role</Link>
+                  <Link to="/post">Post a Role</Link>
                 </Button>
               </div>
 
