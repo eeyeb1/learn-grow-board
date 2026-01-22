@@ -303,9 +303,8 @@ const Index = () => {
               <Link to="/jobs">Find Experience</Link>
             </Button>
             <Button
-              variant="outline"
               size="xl"
-              className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10"
+              className="bg-background/20 text-primary-foreground border-2 border-primary-foreground hover:bg-background hover:text-foreground transition-colors"
               asChild
             >
               <Link to="/post">Post a Role</Link>
