@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,15 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
   const navigate = useNavigate();
   const [query, setQuery] = useState(initialQuery);
   const [location, setLocation] = useState(initialLocation);
+
+  // Sync local state with props when they change (e.g., from URL)
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
+
+  useEffect(() => {
+    setLocation(initialLocation);
+  }, [initialLocation]);
 
   const handleSearch = () => {
     if (onSearch) {
