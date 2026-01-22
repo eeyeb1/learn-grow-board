@@ -1,9 +1,9 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
-import FilterBar from "@/components/FilterBar";
+import FilterBar, { Filters } from "@/components/FilterBar";
 import JobCard from "@/components/JobCard";
 import JobListItem from "@/components/JobListItem";
 import JobDetailPanel from "@/components/JobDetailPanel";
@@ -18,6 +18,13 @@ import { useJobs, Job } from "@/hooks/useJobs";
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
 
 type ViewMode = "grid" | "split";
+
+const initialFilters: Filters = {
+  industry: [],
+  skillLevel: [],
+  locationType: [],
+  duration: [],
+};
 
 // Transform database job to display format
 const transformDbJob = (job: Job) => ({
@@ -65,6 +72,7 @@ const Jobs = () => {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [dbJobs, setDbJobs] = useState<Job[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
+  const [filters, setFilters] = useState<Filters>(initialFilters);
   
   const { fetchJobs } = useJobs();
   
@@ -92,6 +100,11 @@ const Jobs = () => {
     setCurrentPage(1);
   };
 
+  const handleFiltersChange = useCallback((newFilters: Filters) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  }, []);
+
   // Combine static jobs with database jobs
   const allJobs = useMemo(() => {
     const transformedDbJobs = dbJobs.map(transformDbJob);
@@ -113,19 +126,48 @@ const Jobs = () => {
       const queryLower = query.toLowerCase();
       const locationLower = location.toLowerCase();
 
+      // Text search
       const matchesQuery =
         !query ||
         job.title.toLowerCase().includes(queryLower) ||
         job.company.toLowerCase().includes(queryLower) ||
         job.skills.some((skill) => skill.toLowerCase().includes(queryLower));
 
+      // Location search
       const matchesLocation =
         !location ||
         job.location.toLowerCase().includes(locationLower);
 
-      return matchesQuery && matchesLocation;
+      // Industry filter
+      const matchesIndustry =
+        filters.industry.length === 0 ||
+        filters.industry.includes(job.industry);
+
+      // Skill level filter
+      const matchesSkillLevel =
+        filters.skillLevel.length === 0 ||
+        filters.skillLevel.includes(job.skillLevel);
+
+      // Location type filter
+      const matchesLocationType =
+        filters.locationType.length === 0 ||
+        filters.locationType.includes(job.locationType);
+
+      // Duration filter
+      const matchesDuration =
+        filters.duration.length === 0 ||
+        filters.duration.includes(job.duration);
+
+      return (
+        matchesQuery &&
+        matchesLocation &&
+        matchesIndustry &&
+        matchesSkillLevel &&
+        matchesLocationType &&
+        matchesDuration
+      );
     });
-  }, [query, location, allJobs]);
+  }, [query, location, allJobs, filters]);
 
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -182,7 +224,7 @@ const Jobs = () => {
       </section>
 
       {/* Filters */}
-      <FilterBar activeFilters={["Remote", "Beginner"]} />
+      <FilterBar filters={filters} onFiltersChange={handleFiltersChange} />
 
       {/* Job Listings */}
       <section className={`py-4 flex-1 ${viewMode === "split" ? "flex flex-col" : ""}`}>
