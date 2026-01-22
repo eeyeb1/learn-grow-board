@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Briefcase } from "lucide-react";
+import { Search, MapPin, Briefcase, X } from "lucide-react";
 
 interface SearchBarProps {
   initialQuery?: string;
@@ -33,6 +33,20 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
     }
   };
 
+  const clearQuery = () => {
+    setQuery("");
+    if (onSearch) {
+      onSearch("", location);
+    }
+  };
+
+  const clearLocation = () => {
+    setLocation("");
+    if (onSearch) {
+      onSearch(query, "");
+    }
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="bg-card rounded-2xl shadow-elevated p-2 flex flex-col md:flex-row gap-2">
@@ -44,8 +58,17 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="pl-12 border-0 shadow-none bg-transparent h-12 focus-visible:ring-0"
+            className="pl-12 pr-10 border-0 shadow-none bg-transparent h-12 focus-visible:ring-0"
           />
+          {query && (
+            <button
+              onClick={clearQuery}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
         {/* Location */}
@@ -56,8 +79,17 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="pl-12 md:pl-14 border-0 shadow-none bg-transparent h-12 focus-visible:ring-0"
+            className="pl-12 md:pl-14 pr-10 border-0 shadow-none bg-transparent h-12 focus-visible:ring-0"
           />
+          {location && (
+            <button
+              onClick={clearLocation}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors"
+              aria-label="Clear location"
+            >
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
 
         {/* Search Button */}
