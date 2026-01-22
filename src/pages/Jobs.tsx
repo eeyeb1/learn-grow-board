@@ -12,8 +12,9 @@ import { jobDetails, JobDetail } from "@/data/jobDetails";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { SlidersHorizontal, ChevronLeft, ChevronRight, LayoutGrid, Columns, Loader2 } from "lucide-react";
+import { SlidersHorizontal, ChevronLeft, ChevronRight, LayoutGrid, Columns, Loader2, Sparkles } from "lucide-react";
 import { useJobs, Job } from "@/hooks/useJobs";
+import { useSemanticSearch } from "@/hooks/useSemanticSearch";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
 
@@ -73,8 +74,10 @@ const Jobs = () => {
   const [dbJobs, setDbJobs] = useState<Job[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [semanticMatchIds, setSemanticMatchIds] = useState<string[] | null>(null);
   
   const { fetchJobs } = useJobs();
+  const { searchJobs, loading: semanticLoading } = useSemanticSearch();
   
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
@@ -92,13 +95,28 @@ const Jobs = () => {
     loadJobs();
   }, [fetchJobs]);
 
-  const handleSearch = (newQuery: string, newLocation: string) => {
+  const handleSearch = useCallback(async (newQuery: string, newLocation: string) => {
     const params = new URLSearchParams();
     if (newQuery) params.set("q", newQuery);
     if (newLocation) params.set("location", newLocation);
     setSearchParams(params);
     setCurrentPage(1);
-  };
+    
+    // Trigger semantic search for database jobs
+    if (newQuery.trim()) {
+      const matchIds = await searchJobs(newQuery, newLocation);
+      setSemanticMatchIds(matchIds);
+    } else {
+      setSemanticMatchIds(null);
+    }
+  }, [setSearchParams, searchJobs]);
+
+  // Run semantic search on initial load if there's a query
+  useEffect(() => {
+    if (query && !semanticLoading && semanticMatchIds === null) {
+      searchJobs(query, location).then(setSemanticMatchIds);
+    }
+  }, [query, location, searchJobs, semanticLoading, semanticMatchIds]);
 
   const handleFiltersChange = useCallback((newFilters: Filters) => {
     setFilters(newFilters);
@@ -122,52 +140,70 @@ const Jobs = () => {
   }, [dbJobs]);
 
   const filteredJobs = useMemo(() => {
-    return allJobs.filter((job) => {
+    let jobs = allJobs;
+    
+    // If we have semantic matches from AI, prioritize those for database jobs
+    if (semanticMatchIds && semanticMatchIds.length > 0 && query) {
+      const semanticSet = new Set(semanticMatchIds);
+      
+      // Separate matched and unmatched jobs
+      const semanticMatches = jobs.filter(job => semanticSet.has(job.id));
+      const otherJobs = jobs.filter(job => !semanticSet.has(job.id));
+      
+      // For non-semantic matched jobs, apply traditional text search
+      const textMatchedOthers = otherJobs.filter((job) => {
+        const queryLower = query.toLowerCase();
+        return (
+          job.title.toLowerCase().includes(queryLower) ||
+          job.company.toLowerCase().includes(queryLower) ||
+          job.skills.some((skill) => skill.toLowerCase().includes(queryLower))
+        );
+      });
+      
+      // Combine: semantic matches first (in AI-ranked order), then text matches
+      jobs = [...semanticMatches, ...textMatchedOthers];
+    } else if (query) {
+      // Fallback to text search if no semantic results
       const queryLower = query.toLowerCase();
-      const locationLower = location.toLowerCase();
-
-      // Text search
-      const matchesQuery =
-        !query ||
+      jobs = jobs.filter((job) => (
         job.title.toLowerCase().includes(queryLower) ||
         job.company.toLowerCase().includes(queryLower) ||
-        job.skills.some((skill) => skill.toLowerCase().includes(queryLower));
-
-      // Location search
-      const matchesLocation =
-        !location ||
-        job.location.toLowerCase().includes(locationLower);
-
-      // Industry filter
+        job.skills.some((skill) => skill.toLowerCase().includes(queryLower))
+      ));
+    }
+    
+    // Apply location filter
+    if (location) {
+      const locationLower = location.toLowerCase();
+      jobs = jobs.filter((job) => job.location.toLowerCase().includes(locationLower));
+    }
+    
+    // Apply other filters
+    return jobs.filter((job) => {
       const matchesIndustry =
         filters.industry.length === 0 ||
         filters.industry.includes(job.industry);
 
-      // Skill level filter
       const matchesSkillLevel =
         filters.skillLevel.length === 0 ||
         filters.skillLevel.includes(job.skillLevel);
 
-      // Location type filter
       const matchesLocationType =
         filters.locationType.length === 0 ||
         filters.locationType.includes(job.locationType);
 
-      // Duration filter
       const matchesDuration =
         filters.duration.length === 0 ||
         filters.duration.includes(job.duration);
 
       return (
-        matchesQuery &&
-        matchesLocation &&
         matchesIndustry &&
         matchesSkillLevel &&
         matchesLocationType &&
         matchesDuration
       );
     });
-  }, [query, location, allJobs, filters]);
+  }, [query, location, allJobs, filters, semanticMatchIds]);
 
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -230,15 +266,32 @@ const Jobs = () => {
       <section className={`py-4 flex-1 ${viewMode === "split" ? "flex flex-col" : ""}`}>
         <div className={`container mx-auto px-4 ${viewMode === "split" ? "flex-1 flex flex-col" : ""}`}>
           <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
             <p className="text-sm text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredJobs.length)}</span> of {filteredJobs.length} opportunities
-              {query && (
-                <span> for "<span className="text-primary">{query}</span>"</span>
-              )}
-              {location && (
-                <span> in "<span className="text-primary">{location}</span>"</span>
+              {semanticLoading ? (
+                <span className="flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  AI searching...
+                </span>
+              ) : (
+                <>
+                  Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredJobs.length)}</span> of {filteredJobs.length} opportunities
+                  {query && (
+                    <span> for "<span className="text-primary">{query}</span>"</span>
+                  )}
+                  {location && (
+                    <span> in "<span className="text-primary">{location}</span>"</span>
+                  )}
+                  {semanticMatchIds && semanticMatchIds.length > 0 && (
+                    <span className="inline-flex items-center gap-1 ml-2 text-primary">
+                      <Sparkles className="w-3 h-3" />
+                      AI-powered
+                    </span>
+                  )}
+                </>
               )}
             </p>
+          </div>
             <div className="flex items-center gap-3">
               {/* View Mode Toggle */}
               <ToggleGroup 
