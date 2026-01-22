@@ -1,1 +1,4 @@
 project_id = "lipcbcvacnmhhwgkbffj"
+
+[functions.semantic-job-search]
+verify_jwt = false
