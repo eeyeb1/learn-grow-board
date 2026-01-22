@@ -1,42 +1,221 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, Briefcase, X, Loader2 } from "lucide-react";
 
-// Common job roles for autocomplete
-const commonRoles = [
-  "Frontend Developer",
-  "Backend Developer",
-  "Full Stack Developer",
-  "UI/UX Designer",
-  "Product Designer",
-  "Graphic Designer",
-  "Data Analyst",
-  "Data Scientist",
-  "Marketing Assistant",
-  "Social Media Manager",
-  "Content Writer",
-  "Copywriter",
-  "Business Analyst",
-  "Project Manager",
-  "Product Manager",
-  "Software Engineer",
-  "QA Engineer",
-  "DevOps Engineer",
-  "Mobile Developer",
-  "Web Developer",
-  "Junior Developer",
-  "Intern",
-  "Research Assistant",
-  "Sales Representative",
-  "Customer Success",
-  "HR Assistant",
-  "Finance Analyst",
-  "Video Editor",
-  "Photographer",
-  "Animator",
-];
+// Comprehensive job roles organized by category
+const jobRolesByCategory = {
+  "Software & Engineering": [
+    "Software Engineer",
+    "Software Developer",
+    "Frontend Developer",
+    "Backend Developer",
+    "Full Stack Developer",
+    "Web Developer",
+    "Mobile Developer",
+    "iOS Developer",
+    "Android Developer",
+    "React Developer",
+    "Node.js Developer",
+    "Python Developer",
+    "Java Developer",
+    "DevOps Engineer",
+    "Site Reliability Engineer",
+    "Cloud Engineer",
+    "Data Engineer",
+    "Machine Learning Engineer",
+    "AI Engineer",
+    "QA Engineer",
+    "Test Engineer",
+    "Automation Engineer",
+    "Security Engineer",
+    "Systems Engineer",
+    "Embedded Systems Engineer",
+    "Firmware Engineer",
+    "Game Developer",
+    "Blockchain Developer",
+  ],
+  "Design & Creative": [
+    "UI Designer",
+    "UX Designer",
+    "UI/UX Designer",
+    "Product Designer",
+    "Graphic Designer",
+    "Visual Designer",
+    "Web Designer",
+    "Interaction Designer",
+    "Motion Designer",
+    "Brand Designer",
+    "Creative Director",
+    "Art Director",
+    "Illustrator",
+    "Video Editor",
+    "Animator",
+    "3D Artist",
+    "Photographer",
+    "Content Creator",
+    "Creative Strategist",
+  ],
+  "Data & Analytics": [
+    "Data Analyst",
+    "Data Scientist",
+    "Business Analyst",
+    "Business Intelligence Analyst",
+    "Research Analyst",
+    "Market Research Analyst",
+    "Quantitative Analyst",
+    "Financial Analyst",
+    "Data Visualization Specialist",
+    "Analytics Manager",
+    "Insights Analyst",
+    "Statistical Analyst",
+  ],
+  "Marketing & Communications": [
+    "Marketing Manager",
+    "Marketing Coordinator",
+    "Marketing Assistant",
+    "Digital Marketing Specialist",
+    "Social Media Manager",
+    "Social Media Specialist",
+    "Content Marketing Manager",
+    "Content Strategist",
+    "Content Writer",
+    "Copywriter",
+    "SEO Specialist",
+    "SEM Specialist",
+    "Email Marketing Specialist",
+    "Growth Marketing Manager",
+    "Brand Manager",
+    "PR Specialist",
+    "Communications Manager",
+    "Marketing Analyst",
+    "Influencer Marketing Manager",
+  ],
+  "Product & Project Management": [
+    "Product Manager",
+    "Associate Product Manager",
+    "Technical Product Manager",
+    "Product Owner",
+    "Project Manager",
+    "Program Manager",
+    "Scrum Master",
+    "Agile Coach",
+    "Product Analyst",
+    "Product Marketing Manager",
+  ],
+  "Sales & Business Development": [
+    "Sales Representative",
+    "Sales Associate",
+    "Account Executive",
+    "Account Manager",
+    "Business Development Representative",
+    "Business Development Manager",
+    "Sales Manager",
+    "Sales Engineer",
+    "Customer Success Manager",
+    "Client Success Manager",
+    "Partnership Manager",
+    "Enterprise Sales",
+    "Inside Sales Representative",
+  ],
+  "Customer Support": [
+    "Customer Support Specialist",
+    "Customer Service Representative",
+    "Technical Support Specialist",
+    "Help Desk Technician",
+    "Support Engineer",
+    "Customer Experience Specialist",
+    "Community Manager",
+    "Customer Success Associate",
+  ],
+  "Human Resources": [
+    "HR Coordinator",
+    "HR Specialist",
+    "HR Manager",
+    "Recruiter",
+    "Technical Recruiter",
+    "Talent Acquisition Specialist",
+    "HR Business Partner",
+    "People Operations Manager",
+    "Learning & Development Specialist",
+    "Compensation Analyst",
+    "Employee Relations Specialist",
+  ],
+  "Finance & Accounting": [
+    "Accountant",
+    "Staff Accountant",
+    "Senior Accountant",
+    "Financial Analyst",
+    "Finance Manager",
+    "Controller",
+    "Bookkeeper",
+    "Accounts Payable Specialist",
+    "Accounts Receivable Specialist",
+    "Tax Accountant",
+    "Auditor",
+    "Budget Analyst",
+    "Treasury Analyst",
+  ],
+  "Operations & Administration": [
+    "Operations Manager",
+    "Operations Coordinator",
+    "Office Manager",
+    "Administrative Assistant",
+    "Executive Assistant",
+    "Office Administrator",
+    "Facilities Manager",
+    "Procurement Specialist",
+    "Supply Chain Analyst",
+    "Logistics Coordinator",
+  ],
+  "Legal": [
+    "Paralegal",
+    "Legal Assistant",
+    "Legal Counsel",
+    "Contract Specialist",
+    "Compliance Officer",
+    "Legal Operations",
+  ],
+  "Healthcare": [
+    "Nurse",
+    "Registered Nurse",
+    "Medical Assistant",
+    "Healthcare Administrator",
+    "Clinical Research Coordinator",
+    "Health Coach",
+    "Mental Health Counselor",
+    "Physical Therapist",
+  ],
+  "Education": [
+    "Teacher",
+    "Tutor",
+    "Curriculum Developer",
+    "Instructional Designer",
+    "Training Specialist",
+    "Academic Advisor",
+    "Education Coordinator",
+  ],
+  "Entry Level & Internships": [
+    "Intern",
+    "Internship",
+    "Junior Developer",
+    "Junior Designer",
+    "Junior Analyst",
+    "Associate",
+    "Trainee",
+    "Apprentice",
+    "Entry Level",
+    "Graduate",
+    "Co-op",
+    "Fellow",
+    "Research Assistant",
+    "Teaching Assistant",
+  ],
+};
+
+// Flatten all roles for searching
+const allJobRoles = Object.values(jobRolesByCategory).flat();
 
 interface LocationSuggestion {
   display_name: string;
@@ -69,6 +248,47 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
   useEffect(() => {
     setLocation(initialLocation);
   }, [initialLocation]);
+
+  // Filter job roles based on input with smart matching
+  const filteredRoles = useMemo(() => {
+    if (query.length === 0) {
+      // Show popular roles when empty
+      return [
+        "Software Engineer",
+        "Product Designer",
+        "Data Analyst",
+        "Marketing Manager",
+        "Project Manager",
+        "Intern",
+      ];
+    }
+
+    const queryLower = query.toLowerCase();
+    const matches: { role: string; score: number }[] = [];
+
+    allJobRoles.forEach((role) => {
+      const roleLower = role.toLowerCase();
+      
+      // Exact start match gets highest priority
+      if (roleLower.startsWith(queryLower)) {
+        matches.push({ role, score: 3 });
+      }
+      // Word start match (e.g., "dev" matches "Frontend Developer")
+      else if (roleLower.split(" ").some(word => word.startsWith(queryLower))) {
+        matches.push({ role, score: 2 });
+      }
+      // Contains match
+      else if (roleLower.includes(queryLower)) {
+        matches.push({ role, score: 1 });
+      }
+    });
+
+    // Sort by score (higher first) then alphabetically
+    return matches
+      .sort((a, b) => b.score - a.score || a.role.localeCompare(b.role))
+      .slice(0, 8)
+      .map(m => m.role);
+  }, [query]);
 
   // Fetch location suggestions from Nominatim API
   useEffect(() => {
@@ -215,13 +435,6 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
     setLocationSuggestions([]);
   };
 
-  // Filter suggestions based on input
-  const filteredRoles = query.length > 0
-    ? commonRoles.filter((role) =>
-        role.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 6)
-    : commonRoles.slice(0, 6);
-
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="bg-card rounded-2xl shadow-elevated p-2 flex flex-col md:flex-row gap-2">
@@ -229,7 +442,7 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
         <div className="flex-1 relative" ref={queryRef}>
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
           <Input
-            placeholder="Search roles, skills, or keywords..."
+            placeholder="Job title, skills, or keywords..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setShowQuerySuggestions(true)}
@@ -251,7 +464,7 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
             <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 overflow-hidden">
               <div className="py-1">
                 <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                  Popular roles
+                  {query.length > 0 ? "Suggested roles" : "Popular roles"}
                 </div>
                 {filteredRoles.map((role) => (
                   <button
@@ -259,7 +472,7 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
                     onClick={() => selectQuerySuggestion(role)}
                     className="w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors flex items-center gap-2"
                   >
-                    <Search className="w-4 h-4 text-muted-foreground" />
+                    <Briefcase className="w-4 h-4 text-muted-foreground" />
                     <span>{role}</span>
                   </button>
                 ))}
