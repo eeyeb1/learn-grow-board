@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Menu, X, LogOut, Archive, User as UserIcon, ChevronDown } from "lucide-react";
+import { Briefcase, Menu, X, LogOut, Archive, User as UserIcon, ChevronDown, Settings } from "lucide-react";
 import { useState } from "react";
 import AuthModal from "./AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -84,6 +84,12 @@ const Navbar = () => {
                     <Link to="/archive" className="flex items-center gap-2 cursor-pointer">
                       <Archive className="w-4 h-4" />
                       Archive
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+                      <Settings className="w-4 h-4" />
+                      Settings
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
