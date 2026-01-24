@@ -318,10 +318,10 @@ const Jobs = () => {
       <Navbar />
 
       {/* Header - Compact in split view */}
-      <section className={`pt-24 gradient-subtle ${viewMode === "split" ? "pb-4 md:pt-20" : "pb-8 md:pt-28"} relative z-10`}>
+      <section className={`pt-24 gradient-subtle ${viewMode === "split" ? "pb-2 md:pt-20" : "pb-4 md:pt-28"} relative z-10`}>
         <div className="container mx-auto px-4">
           {viewMode === "grid" && (
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <h1 className="font-display font-bold text-3xl md:text-4xl text-foreground mb-3">
                 Find Experience Opportunities
               </h1>
@@ -330,6 +330,12 @@ const Jobs = () => {
               </p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Search & Filters */}
+      <div className="sticky top-16 z-30 bg-background border-b border-border">
+        <div className="container mx-auto px-4 py-4">
           <SearchBar 
             initialQuery={query} 
             initialLocation={location}
@@ -338,10 +344,8 @@ const Jobs = () => {
             onSearch={handleSearch} 
           />
         </div>
-      </section>
-
-      {/* Filters */}
-      <FilterBar filters={filters} onFiltersChange={handleFiltersChange} />
+        <FilterBar filters={filters} onFiltersChange={handleFiltersChange} />
+      </div>
 
       {/* Job Listings */}
       <section className={`py-4 flex-1 ${viewMode === "split" ? "flex flex-col" : ""}`}>
