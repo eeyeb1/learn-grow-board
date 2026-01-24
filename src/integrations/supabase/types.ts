@@ -260,31 +260,43 @@ export type Database = {
       }
       profiles: {
         Row: {
+          application_updates: boolean | null
           avatar_url: string | null
           created_at: string
           email: string | null
+          email_notifications: boolean | null
           full_name: string | null
           id: string
+          marketing_emails: boolean | null
+          new_opportunities: boolean | null
           updated_at: string
           user_id: string
           user_type: string | null
         }
         Insert: {
+          application_updates?: boolean | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          marketing_emails?: boolean | null
+          new_opportunities?: boolean | null
           updated_at?: string
           user_id: string
           user_type?: string | null
         }
         Update: {
+          application_updates?: boolean | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_notifications?: boolean | null
           full_name?: string | null
           id?: string
+          marketing_emails?: boolean | null
+          new_opportunities?: boolean | null
           updated_at?: string
           user_id?: string
           user_type?: string | null
