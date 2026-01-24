@@ -2,7 +2,9 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Briefcase, X, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, MapPin, Briefcase, X, Loader2, Navigation } from "lucide-react";
+import { RADIUS_OPTIONS, RadiusValue } from "@/utils/distance";
 
 // Comprehensive job roles organized by category
 const jobRolesByCategory = {
@@ -220,18 +222,35 @@ const allJobRoles = Object.values(jobRolesByCategory).flat();
 interface LocationSuggestion {
   display_name: string;
   place_id: number;
+  lat?: string;
+  lon?: string;
+}
+
+export interface LocationCoords {
+  lat: number;
+  lng: number;
 }
 
 interface SearchBarProps {
   initialQuery?: string;
   initialLocation?: string;
-  onSearch?: (query: string, location: string) => void;
+  initialRadius?: RadiusValue;
+  initialCoords?: LocationCoords | null;
+  onSearch?: (query: string, location: string, radius: RadiusValue, coords: LocationCoords | null) => void;
 }
 
-const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: SearchBarProps) => {
+const SearchBar = ({ 
+  initialQuery = "", 
+  initialLocation = "", 
+  initialRadius = -1,
+  initialCoords = null,
+  onSearch 
+}: SearchBarProps) => {
   const navigate = useNavigate();
   const [query, setQuery] = useState(initialQuery);
   const [location, setLocation] = useState(initialLocation);
+  const [radius, setRadius] = useState<RadiusValue>(initialRadius);
+  const [locationCoords, setLocationCoords] = useState<LocationCoords | null>(initialCoords);
   const [showQuerySuggestions, setShowQuerySuggestions] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
@@ -324,10 +343,12 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
         
         if (response.ok) {
           const data = await response.json();
-          // Format the display names to be more concise
+          // Format the display names to be more concise and include coordinates
           const formatted = data.map((item: any) => ({
             display_name: formatLocationName(item),
             place_id: item.place_id,
+            lat: item.lat,
+            lon: item.lon,
           }));
           setLocationSuggestions(formatted);
         }
@@ -390,11 +411,16 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
     setShowQuerySuggestions(false);
     setShowLocationSuggestions(false);
     if (onSearch) {
-      onSearch(query, location);
+      onSearch(query, location, radius, locationCoords);
     } else {
       const params = new URLSearchParams();
       if (query) params.set("q", query);
       if (location) params.set("location", location);
+      if (radius !== -1) params.set("radius", String(radius));
+      if (locationCoords) {
+        params.set("lat", String(locationCoords.lat));
+        params.set("lng", String(locationCoords.lng));
+      }
       navigate(`/jobs${params.toString() ? `?${params.toString()}` : ""}`);
     }
   };
@@ -412,15 +438,17 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
   const clearQuery = () => {
     setQuery("");
     if (onSearch) {
-      onSearch("", location);
+      onSearch("", location, radius, locationCoords);
     }
   };
 
   const clearLocation = () => {
     setLocation("");
     setLocationSuggestions([]);
+    setLocationCoords(null);
+    setRadius(-1);
     if (onSearch) {
-      onSearch(query, "");
+      onSearch(query, "", -1, null);
     }
   };
 
@@ -429,10 +457,30 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
     setShowQuerySuggestions(false);
   };
 
-  const selectLocationSuggestion = (suggestion: string) => {
-    setLocation(suggestion);
+  const selectLocationSuggestion = (suggestion: LocationSuggestion) => {
+    setLocation(suggestion.display_name);
     setShowLocationSuggestions(false);
     setLocationSuggestions([]);
+    
+    // Store coordinates if available (not for "Remote")
+    if (suggestion.lat && suggestion.lon) {
+      setLocationCoords({
+        lat: parseFloat(suggestion.lat),
+        lng: parseFloat(suggestion.lon),
+      });
+      // Default to 25km when a location is selected
+      if (radius === -1) {
+        setRadius(25);
+      }
+    } else {
+      setLocationCoords(null);
+      setRadius(-1);
+    }
+  };
+
+  const handleRadiusChange = (value: string) => {
+    const newRadius = parseInt(value, 10) as RadiusValue;
+    setRadius(newRadius);
   };
 
   return (
@@ -483,23 +531,49 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
 
         {/* Location */}
         <div className="flex-1 relative md:border-l border-border" ref={locationRef}>
-          <MapPin className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
-          <Input
-            placeholder="City, state, or Remote"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            onFocus={() => setShowLocationSuggestions(true)}
-            onKeyDown={handleKeyDown}
-            className="pl-12 md:pl-14 pr-10 border-0 shadow-none bg-transparent h-12 focus-visible:ring-0"
-          />
-          {location && (
-            <button
-              onClick={clearLocation}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors z-10"
-              aria-label="Clear location"
-            >
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
+          <div className="relative">
+            <MapPin className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+            <Input
+              placeholder="City, state, or Remote"
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                // Clear coords when user types (they'll be set when selecting from dropdown)
+                setLocationCoords(null);
+              }}
+              onFocus={() => setShowLocationSuggestions(true)}
+              onKeyDown={handleKeyDown}
+              className="pl-12 md:pl-14 pr-10 border-0 shadow-none bg-transparent h-12 focus-visible:ring-0"
+            />
+            {location && (
+              <button
+                onClick={clearLocation}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors z-10"
+                aria-label="Clear location"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+
+          {/* Radius Selector - Shows when a location with coords is selected */}
+          {locationCoords && location && location.toLowerCase() !== "remote" && (
+            <div className="flex items-center gap-2 px-4 md:px-6 pb-2 -mt-1">
+              <Navigation className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Within</span>
+              <Select value={String(radius)} onValueChange={handleRadiusChange}>
+                <SelectTrigger className="h-6 w-[90px] text-xs border-0 bg-accent/50 px-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RADIUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={String(option.value)} className="text-xs">
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
 
           {/* Location Suggestions Dropdown */}
@@ -519,7 +593,7 @@ const SearchBar = ({ initialQuery = "", initialLocation = "", onSearch }: Search
                     {locationSuggestions.map((loc) => (
                       <button
                         key={loc.place_id}
-                        onClick={() => selectLocationSuggestion(loc.display_name)}
+                        onClick={() => selectLocationSuggestion(loc)}
                         className="w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors flex items-center gap-2"
                       >
                         <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
