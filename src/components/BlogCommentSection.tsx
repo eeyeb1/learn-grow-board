@@ -100,22 +100,66 @@ const BlogCommentSection = ({
     0
   );
 
-  const CommentItem = ({
-    comment,
-    isReply = false,
-    rootCommentId,
-  }: {
-    comment: Comment;
-    isReply?: boolean;
-    rootCommentId?: string;
-  }) => {
+  // Render reply form separately to avoid re-mounting issues
+  const renderReplyForm = (comment: Comment, actualRootId: string) => {
+    if (replyingTo !== comment.id) return null;
+    
+    return (
+      <div className="ml-8 mt-2 border-l-2 border-primary/30 pl-4">
+        <Card className="p-3 bg-muted/30">
+          <Textarea
+            placeholder={`Reply to ${comment.user_name}...`}
+            value={replyContent}
+            onChange={(e) => setReplyContent(e.target.value)}
+            disabled={submitting}
+            className="mb-2 resize-none text-sm"
+            rows={2}
+            autoFocus
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setReplyingTo(null);
+                setReplyContent("");
+              }}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="hero"
+              size="sm"
+              onClick={() => handleReply(actualRootId)}
+              disabled={!replyContent.trim() || submitting}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  Replying...
+                </>
+              ) : (
+                "Reply"
+              )}
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderComment = (
+    comment: Comment,
+    isReply: boolean = false,
+    rootCommentId?: string
+  ): React.ReactNode => {
     const hasReplies = comment.replies && comment.replies.length > 0;
     const isExpanded = expandedReplies.has(comment.id);
-    // For replies, use the root comment ID; for root comments, use own ID
     const actualRootId = rootCommentId || comment.id;
 
     return (
-      <div className={isReply ? "ml-8 border-l-2 border-border pl-4" : ""}>
+      <div key={comment.id} className={isReply ? "ml-8 border-l-2 border-border pl-4" : ""}>
         <Card className={`p-4 ${isReply ? "bg-muted/30" : ""}`}>
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
@@ -201,56 +245,12 @@ const BlogCommentSection = ({
         </Card>
 
         {/* Reply Form */}
-        {replyingTo === comment.id && (
-          <div className="ml-8 mt-2 border-l-2 border-primary/30 pl-4">
-            <Card className="p-3 bg-muted/30">
-              <Textarea
-                placeholder={`Reply to ${comment.user_name}...`}
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                disabled={submitting}
-                className="mb-2 resize-none text-sm"
-                rows={2}
-                autoFocus
-              />
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setReplyingTo(null);
-                    setReplyContent("");
-                  }}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="hero"
-                  size="sm"
-                  onClick={() => handleReply(actualRootId)}
-                  disabled={!replyContent.trim() || submitting}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      Replying...
-                    </>
-                  ) : (
-                    "Reply"
-                  )}
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
+        {renderReplyForm(comment, actualRootId)}
 
         {/* Replies - only shown for root comments */}
         {!isReply && hasReplies && isExpanded && (
           <div className="mt-2 space-y-2">
-            {comment.replies!.map((reply) => (
-              <CommentItem key={reply.id} comment={reply} isReply rootCommentId={comment.id} />
-            ))}
+            {comment.replies!.map((reply) => renderComment(reply, true, comment.id))}
           </div>
         )}
       </div>
@@ -299,9 +299,7 @@ const BlogCommentSection = ({
             No comments yet. Be the first to comment!
           </p>
         ) : (
-          comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} />
-          ))
+          comments.map((comment) => renderComment(comment))
         )}
       </div>
     </div>
