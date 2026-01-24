@@ -103,12 +103,16 @@ const BlogCommentSection = ({
   const CommentItem = ({
     comment,
     isReply = false,
+    rootCommentId,
   }: {
     comment: Comment;
     isReply?: boolean;
+    rootCommentId?: string;
   }) => {
     const hasReplies = comment.replies && comment.replies.length > 0;
     const isExpanded = expandedReplies.has(comment.id);
+    // For replies, use the root comment ID; for root comments, use own ID
+    const actualRootId = rootCommentId || comment.id;
 
     return (
       <div className={isReply ? "ml-8 border-l-2 border-border pl-4" : ""}>
@@ -136,7 +140,7 @@ const BlogCommentSection = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  {!isReply && user && (
+                  {user && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -171,8 +175,8 @@ const BlogCommentSection = ({
                 {comment.content}
               </p>
 
-              {/* Show/Hide Replies Button */}
-              {hasReplies && (
+              {/* Show/Hide Replies Button - only for root comments */}
+              {!isReply && hasReplies && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -224,7 +228,7 @@ const BlogCommentSection = ({
                 <Button
                   variant="hero"
                   size="sm"
-                  onClick={() => handleReply(comment.id)}
+                  onClick={() => handleReply(actualRootId)}
                   disabled={!replyContent.trim() || submitting}
                 >
                   {submitting ? (
@@ -241,11 +245,11 @@ const BlogCommentSection = ({
           </div>
         )}
 
-        {/* Replies */}
-        {hasReplies && isExpanded && (
+        {/* Replies - only shown for root comments */}
+        {!isReply && hasReplies && isExpanded && (
           <div className="mt-2 space-y-2">
             {comment.replies!.map((reply) => (
-              <CommentItem key={reply.id} comment={reply} isReply />
+              <CommentItem key={reply.id} comment={reply} isReply rootCommentId={comment.id} />
             ))}
           </div>
         )}
