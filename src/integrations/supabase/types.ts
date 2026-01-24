@@ -131,6 +131,7 @@ export type Database = {
           created_at: string
           description: string
           duration: string | null
+          expires_at: string | null
           hours_per_week: string | null
           id: string
           industry: string | null
@@ -151,6 +152,7 @@ export type Database = {
           created_at?: string
           description: string
           duration?: string | null
+          expires_at?: string | null
           hours_per_week?: string | null
           id?: string
           industry?: string | null
@@ -171,6 +173,7 @@ export type Database = {
           created_at?: string
           description?: string
           duration?: string | null
+          expires_at?: string | null
           hours_per_week?: string | null
           id?: string
           industry?: string | null

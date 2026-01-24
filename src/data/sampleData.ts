@@ -14,6 +14,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "tech",
     skills: ["React", "JavaScript", "CSS", "Git"],
     applicants: 12,
+    postedAt: "2024-01-20T10:00:00Z",
   },
   {
     id: "2",
@@ -26,6 +27,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "design",
     skills: ["Figma", "User Research", "Prototyping", "Adobe XD"],
     applicants: 24,
+    postedAt: "2024-01-18T14:30:00Z",
   },
   {
     id: "3",
@@ -38,6 +40,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "marketing",
     skills: ["Content Creation", "Analytics", "Copywriting"],
     applicants: 18,
+    postedAt: "2024-01-22T09:15:00Z",
   },
   {
     id: "4",
@@ -50,6 +53,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "tech",
     skills: ["Python", "SQL", "Excel", "Data Visualization", "Statistics"],
     applicants: 8,
+    postedAt: "2024-01-15T11:00:00Z",
   },
   {
     id: "5",
@@ -62,6 +66,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "marketing",
     skills: ["Writing", "SEO", "Research"],
     applicants: 32,
+    postedAt: "2024-01-10T08:00:00Z",
   },
   {
     id: "6",
@@ -74,6 +79,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "business",
     skills: ["Sales", "CRM", "Communication", "Market Research"],
     applicants: 15,
+    postedAt: "2024-01-19T16:45:00Z",
   },
   {
     id: "7",
@@ -86,6 +92,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "design",
     skills: ["Sketch", "Figma", "Design Systems", "Wireframing"],
     applicants: 21,
+    postedAt: "2024-01-21T13:20:00Z",
   },
   {
     id: "8",
@@ -98,6 +105,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "tech",
     skills: ["JavaScript", "TypeScript", "Node.js", "REST APIs"],
     applicants: 28,
+    postedAt: "2024-01-23T10:30:00Z",
   },
   {
     id: "9",
@@ -110,6 +118,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "tech",
     skills: ["Python", "Django", "PostgreSQL", "Docker"],
     applicants: 15,
+    postedAt: "2024-01-17T15:00:00Z",
   },
   {
     id: "10",
@@ -122,6 +131,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "tech",
     skills: ["Linux", "AWS", "CI/CD", "Kubernetes", "Terraform"],
     applicants: 11,
+    postedAt: "2024-01-24T08:45:00Z",
   },
   {
     id: "11",
@@ -134,6 +144,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "tech",
     skills: ["Python", "TensorFlow", "PyTorch", "Machine Learning", "Deep Learning"],
     applicants: 42,
+    postedAt: "2024-01-12T09:00:00Z",
   },
   {
     id: "12",
@@ -146,6 +157,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "tech",
     skills: ["Testing", "Selenium", "Jest", "Test Automation"],
     applicants: 19,
+    postedAt: "2024-01-16T12:00:00Z",
   },
   {
     id: "13",
@@ -158,6 +170,7 @@ export const sampleJobs: JobCardProps[] = [
     industry: "tech",
     skills: ["React", "Node.js", "MongoDB", "GraphQL", "TypeScript"],
     applicants: 36,
+    postedAt: "2024-01-25T11:15:00Z",
   },
 ];
 

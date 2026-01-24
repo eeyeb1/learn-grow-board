@@ -15,6 +15,7 @@ export interface JobCardProps {
   industry: "tech" | "design" | "marketing" | "business";
   skills: string[];
   applicants?: number;
+  postedAt?: string;
 }
 
 const JobCard = ({

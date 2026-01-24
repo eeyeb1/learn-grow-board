@@ -20,6 +20,13 @@ import { calculateDistance, RadiusValue } from "@/utils/distance";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
 
+type SortOption = "newest" | "oldest";
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "newest", label: "Newest" },
+  { value: "oldest", label: "Oldest" },
+];
+
 type ViewMode = "grid" | "split";
 
 const initialFilters: Filters = {
@@ -76,6 +83,7 @@ const Jobs = () => {
   const [dbJobs, setDbJobs] = useState<Job[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [semanticMatchIds, setSemanticMatchIds] = useState<string[] | null>(null);
   const [jobLocationCoords, setJobLocationCoords] = useState<Map<string, { lat: number; lng: number } | null>>(new Map());
   
@@ -267,9 +275,18 @@ const Jobs = () => {
     });
   }, [query, location, allJobs, filters, semanticMatchIds, searchCoords, radius, jobLocationCoords]);
 
-  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+  // Sort jobs
+  const sortedJobs = useMemo(() => {
+    return [...filteredJobs].sort((a, b) => {
+      const dateA = new Date(a.postedAt || "2024-01-01").getTime();
+      const dateB = new Date(b.postedAt || "2024-01-01").getTime();
+      return sortBy === "newest" ? dateB - dateA : dateA - dateB;
+    });
+  }, [filteredJobs, sortBy]);
+
+  const totalPages = Math.ceil(sortedJobs.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedJobs = filteredJobs.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedJobs = sortedJobs.slice(startIndex, startIndex + itemsPerPage);
 
   // Auto-select first job when page changes or entering split view
   useEffect(() => {
@@ -339,7 +356,7 @@ const Jobs = () => {
                 </span>
               ) : (
                 <>
-                  Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredJobs.length)}</span> of {filteredJobs.length} opportunities
+                  Showing <span className="font-medium text-foreground">{startIndex + 1}-{Math.min(startIndex + itemsPerPage, sortedJobs.length)}</span> of {sortedJobs.length} opportunities
                   {query && (
                     <span> for "<span className="text-primary">{query}</span>"</span>
                   )}
@@ -387,10 +404,19 @@ const Jobs = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button variant="ghost" size="sm">
-                <SlidersHorizontal className="w-4 h-4 mr-2" />
-                Sort by: Newest
-              </Button>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+                <SelectTrigger className="h-8 w-[130px]">
+                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
