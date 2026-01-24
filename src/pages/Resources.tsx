@@ -18,7 +18,7 @@ const resources = [
     title: "Mentoring Beginners Effectively",
     description: "A guide for companies on creating meaningful learning experiences.",
     category: "For Companies",
-    link: null,
+    link: "/blog/mentoring-beginners",
   },
   {
     icon: Shield,
