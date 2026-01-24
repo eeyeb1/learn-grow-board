@@ -530,8 +530,8 @@ const SearchBar = ({
         </div>
 
         {/* Location */}
-        <div className="flex-1 md:border-l border-border" ref={locationRef}>
-          <div className="relative">
+        <div className="flex-1 relative md:border-l border-border" ref={locationRef}>
+          <div className="relative h-12 flex items-center">
             <MapPin className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
             <Input
               placeholder="City, state, or Remote"
@@ -578,7 +578,7 @@ const SearchBar = ({
 
           {/* Location Suggestions Dropdown */}
           {showLocationSuggestions && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+            <div className="absolute top-12 left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 overflow-hidden">
               <div className="py-1">
                 {isLoadingLocations ? (
                   <div className="px-3 py-3 flex items-center justify-center gap-2 text-sm text-muted-foreground">
