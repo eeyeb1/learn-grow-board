@@ -530,7 +530,7 @@ const SearchBar = ({
         </div>
 
         {/* Location */}
-        <div className="flex-1 relative md:border-l border-border" ref={locationRef}>
+        <div className="flex-1 md:border-l border-border" ref={locationRef}>
           <div className="relative">
             <MapPin className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
             <Input
@@ -558,7 +558,7 @@ const SearchBar = ({
 
           {/* Radius Selector - Shows when a location with coords is selected */}
           {locationCoords && location && location.toLowerCase() !== "remote" && (
-            <div className="flex items-center gap-2 px-4 md:px-6 pb-2 -mt-1">
+            <div className="flex items-center gap-2 px-4 md:px-6 pb-2">
               <Navigation className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">Within</span>
               <Select value={String(radius)} onValueChange={handleRadiusChange}>
