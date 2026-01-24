@@ -7,27 +7,48 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, User, Bell, Shield, Camera } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Shield, Camera, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import AuthModal from "@/components/AuthModal";
 
 const Settings = () => {
   const { user, userType } = useAuth();
-  const navigate = useNavigate();
+  const { 
+    profile, 
+    loading: profileLoading, 
+    uploading,
+    updateProfile, 
+    updateNotificationPreferences, 
+    uploadAvatar,
+    sendPasswordReset 
+  } = useUserProfile();
+  
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Profile form state
-  const [fullName, setFullName] = useState(user?.user_metadata?.full_name || "");
-  const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || "");
+  const [fullName, setFullName] = useState("");
 
   // Notification preferences
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [applicationUpdates, setApplicationUpdates] = useState(true);
   const [newOpportunities, setNewOpportunities] = useState(false);
   const [marketingEmails, setMarketingEmails] = useState(false);
+
+  // Sync form state with profile data
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || "");
+      setEmailNotifications(profile.email_notifications ?? true);
+      setApplicationUpdates(profile.application_updates ?? true);
+      setNewOpportunities(profile.new_opportunities ?? false);
+      setMarketingEmails(profile.marketing_emails ?? false);
+    }
+  }, [profile]);
 
   if (!user) {
     return (
@@ -55,21 +76,96 @@ const Settings = () => {
     );
   }
 
-  const handleSaveProfile = () => {
-    toast.success("Profile updated successfully");
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    const { error } = await updateProfile({ full_name: fullName });
+    setSaving(false);
+    
+    if (error) {
+      toast.error("Failed to update profile. Please try again.");
+    } else {
+      toast.success("Profile updated successfully");
+    }
   };
 
-  const handleSaveNotifications = () => {
-    toast.success("Notification preferences saved");
+  const handleSaveNotifications = async () => {
+    setSaving(true);
+    const { error } = await updateNotificationPreferences({
+      email_notifications: emailNotifications,
+      application_updates: applicationUpdates,
+      new_opportunities: newOpportunities,
+      marketing_emails: marketingEmails,
+    });
+    setSaving(false);
+    
+    if (error) {
+      toast.error("Failed to save preferences. Please try again.");
+    } else {
+      toast.success("Notification preferences saved");
+    }
   };
 
-  const handleChangePassword = () => {
-    toast.info("Password reset email sent to your inbox");
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be less than 2MB");
+      return;
+    }
+
+    const { error } = await uploadAvatar(file);
+    
+    if (error) {
+      toast.error("Failed to upload avatar. Please try again.");
+    } else {
+      toast.success("Avatar updated successfully");
+    }
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleChangePassword = async () => {
+    const { error } = await sendPasswordReset();
+    
+    if (error) {
+      toast.error("Failed to send reset email. Please try again.");
+    } else {
+      toast.success("Password reset email sent to your inbox");
+    }
   };
 
   const handleDeleteAccount = () => {
     toast.error("Account deletion requires confirmation. Please contact support.");
   };
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <section className="pt-24 pb-12 md:pt-28">
+          <div className="container mx-auto px-4 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        </section>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -125,15 +221,34 @@ const Settings = () => {
                   <div className="flex items-center gap-6 mb-6">
                     <div className="relative">
                       <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                        {avatarUrl ? (
-                          <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        {profile?.avatar_url ? (
+                          <img 
+                            src={profile.avatar_url} 
+                            alt="Avatar" 
+                            className="w-full h-full object-cover" 
+                          />
                         ) : (
                           <User className="w-10 h-10 text-primary" />
                         )}
                       </div>
-                      <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors">
-                        <Camera className="w-4 h-4" />
+                      <button 
+                        onClick={handleAvatarClick}
+                        disabled={uploading}
+                        className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+                      >
+                        {uploading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Camera className="w-4 h-4" />
+                        )}
                       </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
                     </div>
                     <div>
                       <p className="font-medium text-foreground">Profile Photo</p>
@@ -177,8 +292,15 @@ const Settings = () => {
 
                   <Separator className="my-6" />
 
-                  <Button variant="hero" onClick={handleSaveProfile}>
-                    Save Changes
+                  <Button variant="hero" onClick={handleSaveProfile} disabled={saving}>
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
                   </Button>
                 </Card>
               </TabsContent>
@@ -256,8 +378,15 @@ const Settings = () => {
 
                   <Separator className="my-6" />
 
-                  <Button variant="hero" onClick={handleSaveNotifications}>
-                    Save Preferences
+                  <Button variant="hero" onClick={handleSaveNotifications} disabled={saving}>
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Preferences"
+                    )}
                   </Button>
                 </Card>
               </TabsContent>
