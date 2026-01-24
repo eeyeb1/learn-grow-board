@@ -897,4 +897,129 @@ When learning is real, boundaries are clear, and progression is possible, unpaid
     comments: 34,
     coverImage: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800",
   },
+  "building-portfolio": {
+    id: "building-portfolio",
+    title: "Building Your Portfolio from Scratch",
+    excerpt: "Turn your experience roles into impressive portfolio pieces. A portfolio isn't a reward for experience—it's a record of growth.",
+    content: `
+## Redefining What a Portfolio Is
+
+Starting a portfolio from nothing can feel heavier than starting from something imperfect. An empty page carries more pressure than a messy one. It raises questions you don't yet know how to answer: What should I include? What if I'm not ready? What if none of this counts?
+
+But a portfolio isn't a reward for experience. It's a record of growth.
+
+And everyone who has one started exactly where you are—without proof, without certainty, and without permission.
+
+A portfolio is often mistaken for a highlight reel. Polished work. Impressive outcomes. Finished products.
+
+In reality, a portfolio is evidence of how you think, learn, and solve problems.
+
+It doesn't need to prove mastery. It needs to show:
+
+- Curiosity
+- Intentional effort
+- Decision-making
+- Progress over time
+
+**A strong portfolio doesn't say "I'm an expert."
+It says "I'm capable, thoughtful, and improving."**
+
+## Starting With What You Have, Not What You Wish You Had
+
+The hardest part of building a portfolio is accepting that your first work won't look like your future work. That's not a flaw—it's the point.
+
+You don't need clients to begin. You need problems.
+
+Look for:
+
+- Things that frustrate you
+- Systems that could work better
+- Designs, products, or processes you'd improve
+- Questions you genuinely want to explore
+
+Your portfolio begins the moment you decide to engage with the world instead of waiting to be invited.
+
+## Creating Work That Feels Real
+
+The most valuable portfolio pieces solve realistic problems, even if they're self-initiated.
+
+That might mean:
+
+- Redesigning an existing product
+- Writing a case study for a hypothetical client
+- Building a small tool or framework
+- Documenting a learning project from start to finish
+
+What makes work feel real isn't payment—it's intention. When you treat a project seriously, others will too.
+
+## Showing Your Thinking, Not Just the Outcome
+
+Finished work is easy to judge. Thinking is harder—and more valuable.
+
+A strong portfolio explains:
+
+- Why you chose this problem
+- What options you considered
+- What constraints you worked within
+- What didn't work and why
+- What you would change next time
+
+This transparency builds trust. It invites understanding rather than comparison.
+
+**People aren't just evaluating what you made. They're evaluating how you arrived there.**
+
+## Letting Imperfect Work Live Publicly
+
+Waiting until your work is "good enough" is one of the fastest ways to stay invisible.
+
+Portfolios grow through iteration. Early work doesn't disqualify you—it contextualizes you. It shows range, honesty, and momentum.
+
+**Progress is far more compelling than polish.**
+
+## Organizing Your Portfolio With Intention
+
+A small, thoughtful portfolio is stronger than a large, unfocused one.
+
+Each piece should answer:
+
+- What skill does this demonstrate?
+- Why does this matter?
+- What does this say about me as a thinker or creator?
+
+Your portfolio is not an archive. It's a narrative.
+
+## Proof Beats Potential
+
+Many people talk about what they want to do. A portfolio shows what you've already done—even if it's early, small, or self-directed.
+
+That shift matters.
+
+**Proof lowers risk. And lowering risk is what opens doors.**
+
+## Growing the Portfolio as You Grow
+
+A portfolio is never finished. It evolves as you do.
+
+Old work will be replaced. Stronger thinking will emerge. Your voice will sharpen.
+
+That evolution is not a sign of inconsistency—it's evidence of development.
+
+## Final Reflection
+
+You don't build a portfolio after you're ready.
+You build it to become ready.
+
+The first piece won't feel impressive. The second will feel slightly better. And somewhere along the way, you'll realize the portfolio isn't just showing your work—it's shaping who you're becoming.
+
+**Start small. Start honestly. Start now.**
+    `,
+    author: "ExpBoard Team",
+    authorBio: "The ExpBoard team helps learners build compelling portfolios that showcase their potential and open doors to new opportunities.",
+    publishedAt: "Jan 12, 2024",
+    readTime: "7 min read",
+    category: "tutorials",
+    tags: ["Portfolio", "Career Growth", "Getting Started", "Personal Branding", "For Learners"],
+    comments: 28,
+    coverImage: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800",
+  },
 };
