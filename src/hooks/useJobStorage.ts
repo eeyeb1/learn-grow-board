@@ -228,11 +228,16 @@ export const useJobStorage = () => {
     async (jobId: string) => {
       if (!user) return;
 
-      await supabase
+      const { error } = await supabase
         .from("applications")
         .delete()
         .eq("user_id", user.id)
         .eq("job_id", jobId);
+
+      if (error) {
+        console.error("Error removing application:", error);
+        return;
+      }
 
       setApplied((prev) => prev.filter((a) => a.jobId !== jobId));
     },
