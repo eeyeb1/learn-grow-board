@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -157,8 +157,16 @@ const Jobs = () => {
   }, [dbJobs]);
 
   // Geocode job locations when we have radius-based search
+  // Use a ref to track if we've already geocoded for this search to prevent re-runs
+  const geocodedSearchRef = useRef<string | null>(null);
+  
   useEffect(() => {
-    if (searchCoords && radius !== -1 && allJobs.length > 0) {
+    const searchKey = `${searchCoords?.lat}-${searchCoords?.lng}-${radius}`;
+    
+    // Only geocode once per unique search coordinates + radius
+    if (searchCoords && radius !== -1 && allJobs.length > 0 && geocodedSearchRef.current !== searchKey) {
+      geocodedSearchRef.current = searchKey;
+      
       const locationsToGeocode = allJobs
         .map(job => job.location)
         .filter(loc => loc && loc.toLowerCase() !== "remote");
@@ -171,7 +179,7 @@ const Jobs = () => {
         setJobLocationCoords(coordsMap);
       });
     }
-  }, [searchCoords, radius, allJobs, geocodeMultipleLocations]);
+  }, [searchCoords, radius, allJobs.length, geocodeMultipleLocations]);
 
   // Build a combined job details map
   const allJobDetails = useMemo(() => {
