@@ -168,9 +168,6 @@ const BlogDetail = () => {
                   <Bookmark className="w-4 h-4" />
                 )}
               </Button>
-              <Button variant="ghost" size="icon" onClick={copyLink} title="Copy link">
-                <LinkIcon className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </div>
@@ -320,19 +317,6 @@ const BlogDetail = () => {
                     <MessageCircle className="w-4 h-4" />
                     {commentsCount} comments
                   </div>
-                  <Button
-                    variant={isSaved ? "default" : "outline"}
-                    className="gap-2 w-full justify-start"
-                    onClick={toggleSave}
-                    disabled={loading}
-                  >
-                    {isSaved ? (
-                      <BookmarkCheck className="w-4 h-4" />
-                    ) : (
-                      <Bookmark className="w-4 h-4" />
-                    )}
-                    {isSaved ? "Saved" : "Save Post"}
-                  </Button>
                 </div>
               </Card>
             </aside>
