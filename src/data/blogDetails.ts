@@ -478,4 +478,135 @@ Start wherever you can. Learn fast. Work hard. The rest will follow.
     comments: 37,
     coverImage: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800",
   },
+  "how-to-stand-out": {
+    id: "how-to-stand-out",
+    title: "How to Stand Out When You Have No Experience",
+    excerpt: "Learn strategies to highlight your potential and land your first opportunity. Experience isn't the starting point—proof is.",
+    content: `
+## Rethinking What "Experience" Really Means
+
+For a long time, I believed experience was something you had to be given. A job title. A contract. A formal "yes" from someone in charge. Without that permission, it felt like there was nothing I could do but wait.
+
+But over time, I realized that experience isn't actually the starting point. **Proof is.**
+
+When people say they want experience, what they're really asking for is reassurance—evidence that you can handle responsibility, solve problems, and learn when things get difficult. Once you understand that, the entire game changes.
+
+Standing out without experience isn't about pretending you're further along than you are. It's about removing doubt.
+
+## Experience vs. Employment
+
+Experience is often confused with employment. But employment is just one container for experience, not the definition of it.
+
+Experience is better understood as:
+
+- Problems you've solved
+- Skills you've applied in real situations
+- Decisions you've made and learned from
+
+That experience can come from personal projects, self-directed learning, volunteering, unpaid work, school assignments, side projects, or even unrelated jobs where you developed transferable skills. What matters is not where the work happened, but what you actually did.
+
+**The question shifts from "What jobs have I had?" to "What value have I created?"**
+
+## Creating Proof Instead of Waiting for Permission
+
+One of the biggest mistakes people make early on is waiting to be chosen. Waiting to be hired. Waiting to be validated.
+
+The people who stand out don't wait. They build first.
+
+They design projects that resemble the work they want to do. They solve problems that already exist. They create examples that demonstrate capability instead of talking about potential.
+
+This proof doesn't have to be perfect or paid. It just has to be real.
+
+A mock campaign, a case study, a redesign, a small tool, a written analysis—these things speak louder than resumes ever will.
+
+## Why Documentation Matters More Than Talent
+
+Doing the work is important. But showing your thinking is what makes people trust you.
+
+**Documentation turns effort into evidence.**
+
+When you clearly explain:
+
+- What the problem was
+- Why you approached it the way you did
+- What tools or methods you used
+- What worked, what didn't, and what you learned
+
+—you give others insight into how you think, not just what you made.
+
+That insight reduces uncertainty. And reducing uncertainty is how opportunities appear.
+
+## The Power of Framing Your Work
+
+Two people can do the same thing and be perceived very differently.
+
+One says, "I helped with social media."
+Another says, "I planned content, analyzed engagement, and adjusted strategy based on performance."
+
+The difference isn't exaggeration—it's clarity.
+
+Strong framing focuses on decisions, outcomes, and skills. Weak framing focuses on tasks. Learning to frame your work well is one of the fastest ways to appear more capable without changing anything you've actually done.
+
+## Borrowing Credibility While You Build Your Own
+
+When you're early, credibility doesn't always come from your own name. Sometimes it comes from association.
+
+Contributing to communities, collaborating with people slightly ahead of you, learning from reputable sources, or earning testimonials from anyone you've helped—all of these create trust signals. You don't need famous names. You need visible proof that others take you seriously.
+
+**Credibility compounds quietly.**
+
+## Why Specificity Beats Confidence
+
+Generic claims like "hard-working" or "fast learner" don't stand out. They blend in.
+
+Specificity, on the other hand, is memorable.
+
+Saying how you learned something, what you built, and why you made certain decisions communicates confidence without arrogance. It shows self-awareness and competence—two qualities that matter far more than buzzwords.
+
+## Turning Learning Speed Into an Advantage
+
+When experience is limited, learning speed becomes your strongest signal.
+
+People don't just hire skill—they hire trajectory.
+
+Showing how you approach unfamiliar problems, apply feedback, and improve over time tells a story of growth. And growth suggests future value.
+
+## The Effort Most People Avoid Is What Makes You Memorable
+
+Standing out often has less to do with talent and more to do with effort.
+
+Customized applications. Thoughtful follow-ups. Deep research. Personal explanations of why you care.
+
+Most people won't do these things. That's exactly why they work.
+
+**Effort signals reliability—and reliability is rare.**
+
+## Rewriting the Narrative
+
+The most important shift is internal.
+
+Instead of thinking, "I don't have experience," the story becomes:
+
+**"I'm early, but I'm already operating like someone in the role."**
+
+There's no apology in that. Just honesty, backed by action.
+
+## Final Reflection
+
+You don't stand out by waiting until you're ready.
+You stand out by acting like you belong while you're still learning.
+
+Experience is only one form of proof. Initiative, clarity, and execution are others—and often, they're louder.
+
+And the moment you stop waiting for permission is the moment things begin to change.
+    `,
+    author: "ExpBoard Team",
+    authorBio: "The ExpBoard team is dedicated to helping learners break into their careers through meaningful experience opportunities.",
+    publishedAt: "Jan 20, 2024",
+    readTime: "10 min read",
+    category: "career-tips",
+    tags: ["Career Growth", "Experience", "Job Search", "Getting Started", "Portfolio"],
+    comments: 15,
+    coverImage: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800",
+  },
 };

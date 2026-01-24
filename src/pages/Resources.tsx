@@ -11,24 +11,28 @@ const resources = [
     title: "How to Stand Out Without Experience",
     description: "Learn strategies to highlight your potential and land your first opportunity.",
     category: "For Learners",
+    link: "/blog/how-to-stand-out",
   },
   {
     icon: Users,
     title: "Mentoring Beginners Effectively",
     description: "A guide for companies on creating meaningful learning experiences.",
     category: "For Companies",
+    link: null,
   },
   {
     icon: Shield,
     title: "Understanding Free Experience vs. Exploitation",
     description: "Know your rights and what to expect from ethical experience opportunities.",
     category: "Guidelines",
+    link: null,
   },
   {
     icon: FileText,
     title: "Building Your Portfolio from Scratch",
     description: "Turn your experience roles into impressive portfolio pieces.",
     category: "For Learners",
+    link: null,
   },
 ];
 
@@ -77,11 +81,8 @@ const Resources = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            {resources.map((resource, index) => (
-              <Card
-                key={index}
-                className="p-6 hover:shadow-elevated transition-all duration-300 cursor-pointer group border-border/50 hover:border-primary/30"
-              >
+            {resources.map((resource, index) => {
+              const CardContent = (
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <resource.icon className="w-6 h-6 text-accent-foreground" />
@@ -98,8 +99,23 @@ const Resources = () => {
                     </p>
                   </div>
                 </div>
-              </Card>
-            ))}
+              );
+
+              return resource.link ? (
+                <Link key={index} to={resource.link}>
+                  <Card className="p-6 hover:shadow-elevated transition-all duration-300 cursor-pointer group border-border/50 hover:border-primary/30">
+                    {CardContent}
+                  </Card>
+                </Link>
+              ) : (
+                <Card
+                  key={index}
+                  className="p-6 hover:shadow-elevated transition-all duration-300 cursor-pointer group border-border/50 hover:border-primary/30"
+                >
+                  {CardContent}
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
