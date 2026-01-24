@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Mail, Lock, User, Phone, Chrome, Github, Linkedin, ArrowLeft, CheckCircle, Building2, Globe, Users } from "lucide-react";
+import { Loader2, Mail, Lock, User, Phone, Chrome, ArrowLeft, CheckCircle, Building2, Globe, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -134,9 +134,20 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    console.log(`Login with ${provider}`);
-    toast.info(`${provider} login coming soon!`);
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+      if (error) {
+        toast.error(error.message || "Failed to sign in with Google");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred. Please try again.");
+    }
   };
 
   const resetForm = () => {
@@ -362,30 +373,10 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
             type="button"
             variant="outline"
             className="w-full"
-            onClick={() => handleSocialLogin("Google")}
+            onClick={handleGoogleLogin}
           >
             <Chrome className="w-4 h-4 mr-2" />
             Continue with Google
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => handleSocialLogin("GitHub")}
-          >
-            <Github className="w-4 h-4 mr-2" />
-            Continue with GitHub
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => handleSocialLogin("LinkedIn")}
-          >
-            <Linkedin className="w-4 h-4 mr-2" />
-            Continue with LinkedIn
           </Button>
         </div>
 
