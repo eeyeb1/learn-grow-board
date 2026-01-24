@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import SearchBar from "@/components/SearchBar";
+import SearchBar, { LocationCoords } from "@/components/SearchBar";
 import FilterBar, { Filters } from "@/components/FilterBar";
 import JobCard from "@/components/JobCard";
 import JobListItem from "@/components/JobListItem";
@@ -15,6 +15,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { SlidersHorizontal, ChevronLeft, ChevronRight, LayoutGrid, Columns, Loader2, Sparkles } from "lucide-react";
 import { useJobs, Job } from "@/hooks/useJobs";
 import { useSemanticSearch } from "@/hooks/useSemanticSearch";
+import { useLocationGeocoding } from "@/hooks/useLocationGeocoding";
+import { calculateDistance, RadiusValue } from "@/utils/distance";
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100];
 
@@ -75,12 +77,18 @@ const Jobs = () => {
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [semanticMatchIds, setSemanticMatchIds] = useState<string[] | null>(null);
+  const [jobLocationCoords, setJobLocationCoords] = useState<Map<string, { lat: number; lng: number } | null>>(new Map());
   
   const { fetchJobs } = useJobs();
   const { searchJobs, loading: semanticLoading } = useSemanticSearch();
+  const { geocodeMultipleLocations, isGeocoding } = useLocationGeocoding();
   
   const query = searchParams.get("q") || "";
   const location = searchParams.get("location") || "";
+  const radius = parseInt(searchParams.get("radius") || "-1", 10) as RadiusValue;
+  const searchLat = searchParams.get("lat") ? parseFloat(searchParams.get("lat")!) : null;
+  const searchLng = searchParams.get("lng") ? parseFloat(searchParams.get("lng")!) : null;
+  const searchCoords: LocationCoords | null = searchLat && searchLng ? { lat: searchLat, lng: searchLng } : null;
 
   // Fetch jobs from database
   useEffect(() => {
@@ -95,10 +103,20 @@ const Jobs = () => {
     loadJobs();
   }, [fetchJobs]);
 
-  const handleSearch = useCallback(async (newQuery: string, newLocation: string) => {
+  const handleSearch = useCallback(async (
+    newQuery: string, 
+    newLocation: string, 
+    newRadius: RadiusValue,
+    newCoords: LocationCoords | null
+  ) => {
     const params = new URLSearchParams();
     if (newQuery) params.set("q", newQuery);
     if (newLocation) params.set("location", newLocation);
+    if (newRadius !== -1) params.set("radius", String(newRadius));
+    if (newCoords) {
+      params.set("lat", String(newCoords.lat));
+      params.set("lng", String(newCoords.lng));
+    }
     setSearchParams(params);
     setCurrentPage(1);
     
@@ -129,6 +147,23 @@ const Jobs = () => {
     // Put database jobs first, then sample jobs
     return [...transformedDbJobs, ...sampleJobs];
   }, [dbJobs]);
+
+  // Geocode job locations when we have radius-based search
+  useEffect(() => {
+    if (searchCoords && radius !== -1 && allJobs.length > 0) {
+      const locationsToGeocode = allJobs
+        .map(job => job.location)
+        .filter(loc => loc && loc.toLowerCase() !== "remote");
+      
+      geocodeMultipleLocations(locationsToGeocode).then(results => {
+        const coordsMap = new Map<string, { lat: number; lng: number } | null>();
+        results.forEach((coords, location) => {
+          coordsMap.set(location, coords ? { lat: coords.lat, lng: coords.lng } : null);
+        });
+        setJobLocationCoords(coordsMap);
+      });
+    }
+  }, [searchCoords, radius, allJobs, geocodeMultipleLocations]);
 
   // Build a combined job details map
   const allJobDetails = useMemo(() => {
@@ -172,10 +207,37 @@ const Jobs = () => {
       ));
     }
     
-    // Apply location filter
+    // Apply location filter with radius support
     if (location) {
       const locationLower = location.toLowerCase();
-      jobs = jobs.filter((job) => job.location.toLowerCase().includes(locationLower));
+      
+      // If we have coordinates and a radius, use distance-based filtering
+      if (searchCoords && radius !== -1 && locationLower !== "remote") {
+        jobs = jobs.filter((job) => {
+          // Always include remote jobs
+          if (job.locationType === "remote" || job.location.toLowerCase() === "remote") {
+            return true;
+          }
+          
+          // Check if we have geocoded coordinates for this job
+          const jobCoords = jobLocationCoords.get(job.location);
+          if (jobCoords) {
+            const distance = calculateDistance(
+              searchCoords.lat,
+              searchCoords.lng,
+              jobCoords.lat,
+              jobCoords.lng
+            );
+            return distance <= radius;
+          }
+          
+          // Fallback to text matching if no coords available
+          return job.location.toLowerCase().includes(locationLower);
+        });
+      } else {
+        // No radius - use text-based location filtering
+        jobs = jobs.filter((job) => job.location.toLowerCase().includes(locationLower));
+      }
     }
     
     // Apply other filters
@@ -203,7 +265,7 @@ const Jobs = () => {
         matchesDuration
       );
     });
-  }, [query, location, allJobs, filters, semanticMatchIds]);
+  }, [query, location, allJobs, filters, semanticMatchIds, searchCoords, radius, jobLocationCoords]);
 
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -253,7 +315,9 @@ const Jobs = () => {
           )}
           <SearchBar 
             initialQuery={query} 
-            initialLocation={location} 
+            initialLocation={location}
+            initialRadius={radius}
+            initialCoords={searchCoords}
             onSearch={handleSearch} 
           />
         </div>
