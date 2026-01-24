@@ -23,6 +23,40 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.log("Semantic search: Missing or invalid authorization header");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", matchingJobIds: [] }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify the JWT token
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    
+    // Create client with user's auth token to validate it
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.log("Semantic search: Invalid JWT token", claimsError?.message);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", matchingJobIds: [] }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`Semantic search: Authenticated user ${userId}`);
+
     const { query, location } = await req.json();
     
     if (!query || query.trim().length === 0) {
@@ -34,10 +68,8 @@ Deno.serve(async (req) => {
 
     console.log(`Semantic search request: query="${query}", location="${location}"`);
 
-    // Fetch all active jobs from database
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Fetch all active jobs from database using service role key
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: jobs, error: dbError } = await supabase
       .from("jobs")

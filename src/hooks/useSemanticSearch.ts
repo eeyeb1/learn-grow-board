@@ -15,6 +15,13 @@ export const useSemanticSearch = () => {
       return [];
     }
 
+    // Check if user is authenticated - semantic search requires auth
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.log("Semantic search requires authentication, falling back to standard search");
+      return [];
+    }
+
     setLoading(true);
     setError(null);
 
