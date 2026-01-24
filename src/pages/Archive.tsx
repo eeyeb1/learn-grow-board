@@ -7,13 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,14 +59,7 @@ interface Application {
 const Archive = () => {
   const { user, userType } = useAuth();
   const { isCompany, companyProfile, loading: profileLoading } = useCompanyProfile();
-  const {
-    favorites,
-    applied,
-    drafts,
-    deleteDraft,
-    removeFavorite,
-    removeApplied,
-  } = useJobStorage();
+  const { favorites, applied, drafts, deleteDraft, removeFavorite, removeApplied } = useJobStorage();
 
   const [companyApplications, setCompanyApplications] = useState<Application[]>([]);
   const [loadingApplications, setLoadingApplications] = useState(true);
@@ -85,10 +72,7 @@ const Archive = () => {
   const updateApplicationStatus = async (applicationId: string, newStatus: string) => {
     setUpdatingStatus(true);
     try {
-      const { error } = await supabase
-        .from("applications")
-        .update({ status: newStatus })
-        .eq("id", applicationId);
+      const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", applicationId);
 
       if (error) {
         console.error("Error updating status:", error);
@@ -98,16 +82,12 @@ const Archive = () => {
 
       // Update local state
       setCompanyApplications((prev) =>
-        prev.map((app) =>
-          app.id === applicationId ? { ...app, status: newStatus } : app
-        )
+        prev.map((app) => (app.id === applicationId ? { ...app, status: newStatus } : app)),
       );
 
       // Update selected application if it's the one being updated
       if (selectedApplication?.id === applicationId) {
-        setSelectedApplication((prev) =>
-          prev ? { ...prev, status: newStatus } : null
-        );
+        setSelectedApplication((prev) => (prev ? { ...prev, status: newStatus } : null));
       }
 
       toast.success(`Application marked as ${newStatus}`);
@@ -123,10 +103,7 @@ const Archive = () => {
   const deleteApplication = async (applicationId: string) => {
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from("applications")
-        .delete()
-        .eq("id", applicationId);
+      const { error } = await supabase.from("applications").delete().eq("id", applicationId);
 
       if (error) {
         console.error("Error deleting application:", error);
@@ -153,13 +130,10 @@ const Archive = () => {
   // Bulk delete applications
   const bulkDeleteApplications = async () => {
     if (selectedIds.size === 0) return;
-    
+
     setDeleting(true);
     try {
-      const { error } = await supabase
-        .from("applications")
-        .delete()
-        .in("id", Array.from(selectedIds));
+      const { error } = await supabase.from("applications").delete().in("id", Array.from(selectedIds));
 
       if (error) {
         console.error("Error bulk deleting applications:", error);
@@ -205,7 +179,7 @@ const Archive = () => {
     const fetchCompanyApplications = async () => {
       // Wait for profile to load
       if (profileLoading) return;
-      
+
       if (!isCompany || !companyProfile) {
         setLoadingApplications(false);
         return;
@@ -287,9 +261,7 @@ const Archive = () => {
         <Icon className="w-8 h-8 text-muted-foreground" />
       </div>
       <h3 className="text-lg font-medium text-foreground mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground max-w-sm mb-6">
-        {description}
-      </p>
+      <p className="text-sm text-muted-foreground max-w-sm mb-6">{description}</p>
       <Button variant="hero" asChild>
         <Link to="/jobs">Browse Opportunities</Link>
       </Button>
@@ -317,17 +289,10 @@ const Archive = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">
-                  Job no longer available
-                </p>
+                <p className="text-sm text-muted-foreground">Job no longer available</p>
                 <p className="text-xs text-muted-foreground">ID: {jobId}</p>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onRemove}
-                className="text-destructive hover:text-destructive"
-              >
+              <Button variant="ghost" size="sm" onClick={onRemove} className="text-destructive hover:text-destructive">
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
@@ -343,11 +308,7 @@ const Archive = () => {
             {/* Company Logo */}
             <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center shrink-0">
               {job.companyLogo ? (
-                <img
-                  src={job.companyLogo}
-                  alt={job.company}
-                  className="w-full h-full object-cover rounded-xl"
-                />
+                <img src={job.companyLogo} alt={job.company} className="w-full h-full object-cover rounded-xl" />
               ) : (
                 <Building2 className="w-6 h-6 text-muted-foreground" />
               )}
@@ -401,17 +362,8 @@ const Archive = () => {
                   </span>
                 </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-primary"
-                  asChild
-                >
-                  <Link
-                    to={
-                      type === "draft" ? `/jobs/${jobId}/apply` : `/jobs/${jobId}`
-                    }
-                  >
+                <Button variant="ghost" size="sm" className="text-primary" asChild>
+                  <Link to={type === "draft" ? `/jobs/${jobId}/apply` : `/jobs/${jobId}`}>
                     {type === "draft" ? "Continue" : "View"}
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </Link>
@@ -425,20 +377,20 @@ const Archive = () => {
   };
 
   // Application Card for company view
-  const ApplicationCard = ({ 
-    application, 
+  const ApplicationCard = ({
+    application,
     onClick,
     isSelected,
-    onToggleSelect 
-  }: { 
-    application: Application; 
+    onToggleSelect,
+  }: {
+    application: Application;
     onClick: () => void;
     isSelected: boolean;
     onToggleSelect: () => void;
   }) => {
     const formData = application.form_data as Record<string, unknown> | null;
-    const applicantName = formData?.fullName as string || "Unknown Applicant";
-    const applicantEmail = formData?.email as string || "";
+    const applicantName = (formData?.fullName as string) || "Unknown Applicant";
+    const applicantEmail = (formData?.email as string) || "";
 
     const getStatusStyles = (status: string) => {
       switch (status) {
@@ -454,13 +406,13 @@ const Archive = () => {
     };
 
     return (
-      <Card 
-        className={`group hover:shadow-card transition-all duration-200 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      <Card
+        className={`group hover:shadow-card transition-all duration-200 cursor-pointer ${isSelected ? "ring-2 ring-primary" : ""}`}
         onClick={onClick}
       >
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
-            <div 
+            <div
               className="shrink-0 pt-1"
               onClick={(e) => {
                 e.stopPropagation();
@@ -481,10 +433,7 @@ const Archive = () => {
                   </h3>
                   <p className="text-sm text-muted-foreground">{applicantEmail}</p>
                 </div>
-                <Badge
-                  variant="soft"
-                  className={`text-xs ${getStatusStyles(application.status)}`}
-                >
+                <Badge variant="soft" className={`text-xs ${getStatusStyles(application.status)}`}>
                   {application.status}
                 </Badge>
               </div>
@@ -496,9 +445,7 @@ const Archive = () => {
               </div>
 
               <div className="flex items-center justify-between mt-3">
-                <span className="text-xs text-muted-foreground">
-                  Applied {formatDate(application.submitted_at)}
-                </span>
+                <span className="text-xs text-muted-foreground">Applied {formatDate(application.submitted_at)}</span>
                 <Button variant="ghost" size="sm" className="text-primary">
                   <Eye className="w-4 h-4 mr-1" />
                   View Details
@@ -514,15 +461,15 @@ const Archive = () => {
   // Application Detail Modal
   const ApplicationDetailModal = () => {
     if (!selectedApplication) return null;
-    
+
     const formData = selectedApplication.form_data as Record<string, unknown> | null;
-    const applicantName = formData?.fullName as string || "Unknown Applicant";
-    const applicantEmail = formData?.email as string || "";
-    const applicantPhone = formData?.phone as string || "";
-    const experience = formData?.experience as string || "";
-    const motivation = formData?.motivation as string || "";
-    const portfolio = formData?.portfolio as string || "";
-    const coverLetter = formData?.coverLetter as string || "";
+    const applicantName = (formData?.fullName as string) || "Unknown Applicant";
+    const applicantEmail = (formData?.email as string) || "";
+    const applicantPhone = (formData?.phone as string) || "";
+    const experience = (formData?.experience as string) || "";
+    const motivation = (formData?.motivation as string) || "";
+    const portfolio = (formData?.portfolio as string) || "";
+    const coverLetter = (formData?.coverLetter as string) || "";
 
     return (
       <Dialog open={!!selectedApplication} onOpenChange={() => setSelectedApplication(null)}>
@@ -539,9 +486,7 @@ const Archive = () => {
                 </span>
               </div>
             </DialogTitle>
-            <DialogDescription>
-              Submitted on {formatDate(selectedApplication.submitted_at)}
-            </DialogDescription>
+            <DialogDescription>Submitted on {formatDate(selectedApplication.submitted_at)}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 mt-4">
@@ -569,7 +514,12 @@ const Archive = () => {
                 {portfolio && (
                   <p className="text-sm">
                     <span className="text-muted-foreground">Portfolio:</span>{" "}
-                    <a href={portfolio} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    <a
+                      href={portfolio}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
                       {portfolio}
                     </a>
                   </p>
@@ -626,10 +576,10 @@ const Archive = () => {
                     selectedApplication.status === "accepted"
                       ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                       : selectedApplication.status === "rejected"
-                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                      : selectedApplication.status === "reviewed"
-                      ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        : selectedApplication.status === "reviewed"
+                          ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                          : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                   }
                 >
                   {selectedApplication.status}
@@ -667,7 +617,7 @@ const Archive = () => {
                   <X className="w-4 h-4 mr-1" />
                   Reject
                 </Button>
-                
+
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
@@ -713,11 +663,9 @@ const Archive = () => {
       <main className="container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-              My Archive
-            </h1>
+            <h1 className="text-3xl font-display font-bold text-foreground mb-2">My Application</h1>
             <p className="text-muted-foreground">
-              {isCompany 
+              {isCompany
                 ? "View applications to your posted roles"
                 : "Track your saved jobs, application drafts, and submissions"}
             </p>
@@ -759,19 +707,13 @@ const Archive = () => {
                           onCheckedChange={toggleSelectAll}
                         />
                         <span className="text-sm text-muted-foreground">
-                          {selectedIds.size > 0 
-                            ? `${selectedIds.size} selected` 
-                            : "Select all"}
+                          {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
                         </span>
                       </div>
                       {selectedIds.size > 0 && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              disabled={deleting}
-                            >
+                            <Button size="sm" variant="destructive" disabled={deleting}>
                               {deleting ? (
                                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                               ) : (
@@ -784,7 +726,8 @@ const Archive = () => {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete {selectedIds.size} Application(s)</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete {selectedIds.size} application(s)? This action cannot be undone.
+                                Are you sure you want to delete {selectedIds.size} application(s)? This action cannot be
+                                undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -802,9 +745,9 @@ const Archive = () => {
                     </div>
 
                     {companyApplications.map((app) => (
-                      <ApplicationCard 
-                        key={app.id} 
-                        application={app} 
+                      <ApplicationCard
+                        key={app.id}
+                        application={app}
                         onClick={() => setSelectedApplication(app)}
                         isSelected={selectedIds.has(app.id)}
                         onToggleSelect={() => toggleSelection(app.id)}
@@ -945,7 +888,7 @@ const Archive = () => {
       </main>
 
       <Footer />
-      
+
       {/* Application Detail Modal */}
       <ApplicationDetailModal />
     </div>
