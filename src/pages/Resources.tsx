@@ -25,7 +25,7 @@ const resources = [
     title: "Understanding Free Experience vs. Exploitation",
     description: "Know your rights and what to expect from ethical experience opportunities.",
     category: "Guidelines",
-    link: null,
+    link: "/blog/experience-vs-exploitation",
   },
   {
     icon: FileText,
