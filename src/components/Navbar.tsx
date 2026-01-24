@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Menu, X, LogOut, FileText, User as UserIcon, ChevronDown, Settings } from "lucide-react";
+import { Briefcase, Menu, X, LogOut, FileText, User as UserIcon, ChevronDown, Settings, BookmarkCheck } from "lucide-react";
 import { useState } from "react";
 import AuthModal from "./AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -87,6 +87,12 @@ const Navbar = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/saved-posts" className="flex items-center gap-2 cursor-pointer">
+                      <BookmarkCheck className="w-4 h-4" />
+                      Saved Posts
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
                       <Settings className="w-4 h-4" />
                       Settings
@@ -146,18 +152,32 @@ const Navbar = () => {
                 </Link>
               ))}
               {user && (
-                <Link
-                  to="/archive"
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                    location.pathname === "/archive"
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <FileText className="w-4 h-4" />
-                  My Applications
-                </Link>
+                <>
+                  <Link
+                    to="/archive"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                      location.pathname === "/archive"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <FileText className="w-4 h-4" />
+                    My Applications
+                  </Link>
+                  <Link
+                    to="/saved-posts"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                      location.pathname === "/saved-posts"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <BookmarkCheck className="w-4 h-4" />
+                    Saved Posts
+                  </Link>
+                </>
               )}
               <div className="flex flex-col gap-2 mt-4 px-4">
                 {user ? (
