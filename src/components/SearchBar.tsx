@@ -488,28 +488,30 @@ const SearchBar = ({
       <div className="bg-card rounded-2xl shadow-elevated p-2 flex flex-col md:flex-row gap-2">
         {/* Keyword Search */}
         <div className="flex-1 relative" ref={queryRef}>
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
-          <Input
-            placeholder="Job title, skills, or keywords..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => setShowQuerySuggestions(true)}
-            onKeyDown={handleKeyDown}
-            className="pl-12 pr-10 border-0 shadow-none bg-transparent h-12 focus-visible:ring-0"
-          />
-          {query && (
-            <button
-              onClick={clearQuery}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors z-10"
-              aria-label="Clear search"
-            >
-              <X className="w-4 h-4 text-muted-foreground" />
-            </button>
-          )}
+          <div className="relative h-12 flex items-center">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+            <Input
+              placeholder="Job title, skills, or keywords..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setShowQuerySuggestions(true)}
+              onKeyDown={handleKeyDown}
+              className="pl-12 pr-10 border-0 shadow-none bg-transparent h-12 focus-visible:ring-0"
+            />
+            {query && (
+              <button
+                onClick={clearQuery}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors z-10"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
           
           {/* Query Suggestions Dropdown */}
           {showQuerySuggestions && filteredRoles.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 overflow-hidden">
+            <div className="absolute top-12 left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 overflow-hidden">
               <div className="py-1">
                 <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
                   {query.length > 0 ? "Suggested roles" : "Popular roles"}
