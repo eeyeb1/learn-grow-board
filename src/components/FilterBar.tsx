@@ -133,7 +133,7 @@ const FilterBar = ({ filters, onFiltersChange }: FilterBarProps) => {
             <ChevronDown className="w-4 h-4 ml-1" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-56 p-2" align="start">
+        <PopoverContent className="w-56 p-2 z-[60]" align="start">
           <div className="space-y-1">
             {options.map((option) => (
               <label
@@ -154,7 +154,7 @@ const FilterBar = ({ filters, onFiltersChange }: FilterBarProps) => {
   };
 
   return (
-    <div className="w-full py-4 border-b border-border bg-background/50">
+    <div className="w-full py-4 border-b border-border bg-background/50 relative z-20">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium text-muted-foreground mr-2">

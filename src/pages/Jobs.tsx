@@ -301,7 +301,7 @@ const Jobs = () => {
       <Navbar />
 
       {/* Header - Compact in split view */}
-      <section className={`pt-24 gradient-subtle ${viewMode === "split" ? "pb-4 md:pt-20" : "pb-8 md:pt-28"}`}>
+      <section className={`pt-24 gradient-subtle ${viewMode === "split" ? "pb-4 md:pt-20" : "pb-8 md:pt-28"} relative z-10`}>
         <div className="container mx-auto px-4">
           {viewMode === "grid" && (
             <div className="text-center mb-8">
