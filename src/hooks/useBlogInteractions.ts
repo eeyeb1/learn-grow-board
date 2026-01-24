@@ -15,10 +15,12 @@ interface BlogComment {
   user_id: string;
   blog_id: string;
   content: string;
+  parent_comment_id: string | null;
   created_at: string;
   updated_at: string;
   user_name?: string;
   user_avatar?: string;
+  replies?: BlogComment[];
 }
 
 interface SavedBlog {
@@ -60,12 +62,12 @@ export const useBlogInteractions = (blogId?: string) => {
         setIsLiked(userLiked || false);
       }
 
-      // Fetch comments with user info
+      // Fetch comments with user info (root comments only, then nest replies)
       const { data: commentsData } = await supabase
         .from("blog_comments")
         .select("*")
         .eq("blog_id", blogId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
 
       // Fetch user profiles for comments
       if (commentsData && commentsData.length > 0) {
@@ -83,9 +85,48 @@ export const useBlogInteractions = (blogId?: string) => {
           ...comment,
           user_name: profileMap.get(comment.user_id)?.full_name || "Anonymous",
           user_avatar: profileMap.get(comment.user_id)?.avatar_url || undefined,
+          replies: [] as BlogComment[],
         }));
 
-        setComments(commentsWithUsers);
+        // Organize into tree: root comments with nested replies
+        const rootComments: BlogComment[] = [];
+        const commentMap = new Map<string, BlogComment>();
+
+        // First pass: create map of all comments
+        commentsWithUsers.forEach((comment) => {
+          commentMap.set(comment.id, comment);
+        });
+
+        // Second pass: organize into tree
+        commentsWithUsers.forEach((comment) => {
+          if (comment.parent_comment_id) {
+            // This is a reply - find the root parent
+            let rootId = comment.parent_comment_id;
+            let parent = commentMap.get(rootId);
+            
+            // If parent has a parent, go to root
+            while (parent?.parent_comment_id) {
+              rootId = parent.parent_comment_id;
+              parent = commentMap.get(rootId);
+            }
+            
+            // Add to root's replies
+            if (parent) {
+              parent.replies = parent.replies || [];
+              parent.replies.push(comment);
+            }
+          } else {
+            // This is a root comment
+            rootComments.push(comment);
+          }
+        });
+
+        // Sort root comments by newest first, replies by oldest first
+        rootComments.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        setComments(rootComments);
       } else {
         setComments([]);
       }
@@ -222,8 +263,8 @@ export const useBlogInteractions = (blogId?: string) => {
     }
   };
 
-  // Add comment
-  const addComment = async (content: string) => {
+  // Add comment (supports replies via parentCommentId)
+  const addComment = async (content: string, parentCommentId?: string) => {
     if (!user) {
       toast.error("Please sign in to comment");
       return null;
@@ -232,9 +273,34 @@ export const useBlogInteractions = (blogId?: string) => {
     if (!blogId) return null;
 
     try {
+      // If replying to a reply, find the root comment
+      let rootParentId = parentCommentId;
+      if (parentCommentId) {
+        const findRoot = (comments: BlogComment[], id: string): string => {
+          for (const comment of comments) {
+            if (comment.id === id) {
+              return comment.parent_comment_id || id;
+            }
+            if (comment.replies) {
+              const found = comment.replies.find((r) => r.id === id);
+              if (found) {
+                return comment.id; // Return root comment id
+              }
+            }
+          }
+          return id;
+        };
+        rootParentId = findRoot(comments, parentCommentId);
+      }
+
       const { data, error } = await supabase
         .from("blog_comments")
-        .insert({ blog_id: blogId, user_id: user.id, content })
+        .insert({ 
+          blog_id: blogId, 
+          user_id: user.id, 
+          content,
+          parent_comment_id: rootParentId || null
+        })
         .select()
         .single();
 
@@ -251,10 +317,24 @@ export const useBlogInteractions = (blogId?: string) => {
         ...data,
         user_name: profile?.full_name || "Anonymous",
         user_avatar: profile?.avatar_url || undefined,
+        replies: [],
       };
 
-      setComments((prev) => [newComment, ...prev]);
-      toast.success("Comment added!");
+      if (rootParentId) {
+        // Add as reply to parent
+        setComments((prev) => 
+          prev.map((c) => 
+            c.id === rootParentId 
+              ? { ...c, replies: [...(c.replies || []), newComment] }
+              : c
+          )
+        );
+      } else {
+        // Add as root comment
+        setComments((prev) => [newComment, ...prev]);
+      }
+      
+      toast.success(rootParentId ? "Reply added!" : "Comment added!");
       return newComment;
     } catch (error) {
       console.error("Error adding comment:", error);
@@ -263,14 +343,27 @@ export const useBlogInteractions = (blogId?: string) => {
     }
   };
 
-  // Delete comment
+  // Delete comment (also deletes replies if root comment)
   const deleteComment = async (commentId: string) => {
     if (!user) return false;
 
     try {
       await supabase.from("blog_comments").delete().eq("id", commentId);
 
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      // Remove from state - could be root or reply
+      setComments((prev) => {
+        // First check if it's a root comment
+        const isRoot = prev.some((c) => c.id === commentId);
+        if (isRoot) {
+          return prev.filter((c) => c.id !== commentId);
+        }
+        // Otherwise it's a reply
+        return prev.map((c) => ({
+          ...c,
+          replies: c.replies?.filter((r) => r.id !== commentId) || [],
+        }));
+      });
+      
       toast.success("Comment deleted");
       return true;
     } catch (error) {
