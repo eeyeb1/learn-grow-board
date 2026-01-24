@@ -663,7 +663,7 @@ const Archive = () => {
       <main className="container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-display font-bold text-foreground mb-2">My Application</h1>
+            <h1 className="text-3xl font-display font-bold text-foreground mb-2">My Applications</h1>
             <p className="text-muted-foreground">
               {isCompany
                 ? "View applications to your posted roles"
