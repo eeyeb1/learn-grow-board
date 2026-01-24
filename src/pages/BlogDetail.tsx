@@ -4,10 +4,12 @@ import Footer from "@/components/Footer";
 import { blogDetails } from "@/data/blogDetails";
 import { sampleBlogs } from "@/data/sampleData";
 import BlogCard from "@/components/BlogCard";
+import BlogCommentSection from "@/components/BlogCommentSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useBlogInteractions } from "@/hooks/useBlogInteractions";
 import {
   ArrowLeft,
   Calendar,
@@ -16,16 +18,36 @@ import {
   User,
   Share2,
   Bookmark,
+  BookmarkCheck,
   ThumbsUp,
   Twitter,
   Linkedin,
   Facebook,
   Link as LinkIcon,
+  Heart,
+  Loader2,
 } from "lucide-react";
 
 const BlogDetail = () => {
   const { id } = useParams<{ id: string }>();
   const blog = id ? blogDetails[id] : null;
+
+  const {
+    isLiked,
+    isSaved,
+    likesCount,
+    comments,
+    commentsCount,
+    loading,
+    toggleLike,
+    toggleSave,
+    addComment,
+    deleteComment,
+    copyLink,
+    shareOnTwitter,
+    shareOnLinkedIn,
+    shareOnFacebook,
+  } = useBlogInteractions(id);
 
   if (!blog) {
     return (
@@ -133,11 +155,21 @@ const BlogDetail = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-2 ml-auto">
-              <Button variant="ghost" size="icon">
-                <Bookmark className="w-4 h-4" />
+              <Button
+                variant={isSaved ? "default" : "ghost"}
+                size="icon"
+                onClick={toggleSave}
+                disabled={loading}
+                title={isSaved ? "Remove from saved" : "Save post"}
+              >
+                {isSaved ? (
+                  <BookmarkCheck className="w-4 h-4" />
+                ) : (
+                  <Bookmark className="w-4 h-4" />
+                )}
               </Button>
-              <Button variant="ghost" size="icon">
-                <Share2 className="w-4 h-4" />
+              <Button variant="ghost" size="icon" onClick={copyLink} title="Copy link">
+                <LinkIcon className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -164,45 +196,55 @@ const BlogDetail = () => {
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-[1fr_300px] gap-8 max-w-6xl">
             {/* Main Content */}
-            <article className="prose prose-lg max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-a:text-primary">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: blog.content
-                    .split("\n")
-                    .map((line) => {
-                      if (line.startsWith("## ")) {
-                        return `<h2>${line.slice(3)}</h2>`;
-                      }
-                      if (line.startsWith("### ")) {
-                        return `<h3>${line.slice(4)}</h3>`;
-                      }
-                      if (line.startsWith("- ")) {
-                        return `<li>${line.slice(2)}</li>`;
-                      }
-                      if (line.startsWith("**") && line.endsWith("**")) {
-                        return `<p><strong>${line.slice(2, -2)}</strong></p>`;
-                      }
-                      if (line.match(/^\d+\. /)) {
-                        return `<li>${line.slice(line.indexOf(" ") + 1)}</li>`;
-                      }
-                      if (line.trim() === "") {
-                        return "";
-                      }
-                      return `<p>${line}</p>`;
-                    })
-                    .join(""),
-                }}
-              />
+            <div>
+              <article className="prose prose-lg max-w-none prose-headings:font-display prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground prose-a:text-primary">
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: blog.content
+                      .split("\n")
+                      .map((line) => {
+                        if (line.startsWith("## ")) {
+                          return `<h2>${line.slice(3)}</h2>`;
+                        }
+                        if (line.startsWith("### ")) {
+                          return `<h3>${line.slice(4)}</h3>`;
+                        }
+                        if (line.startsWith("- ")) {
+                          return `<li>${line.slice(2)}</li>`;
+                        }
+                        if (line.startsWith("**") && line.endsWith("**")) {
+                          return `<p><strong>${line.slice(2, -2)}</strong></p>`;
+                        }
+                        if (line.match(/^\d+\. /)) {
+                          return `<li>${line.slice(line.indexOf(" ") + 1)}</li>`;
+                        }
+                        if (line.trim() === "") {
+                          return "";
+                        }
+                        return `<p>${line}</p>`;
+                      })
+                      .join(""),
+                  }}
+                />
 
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mt-8 not-prose">
-                {blog.tags.map((tag) => (
-                  <Badge key={tag} variant="outline">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </article>
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2 mt-8 not-prose">
+                  {blog.tags.map((tag) => (
+                    <Badge key={tag} variant="outline">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </article>
+
+              {/* Comments Section */}
+              <Separator className="my-8" />
+              <BlogCommentSection
+                comments={comments}
+                onAddComment={addComment}
+                onDeleteComment={deleteComment}
+              />
+            </div>
 
             {/* Sidebar */}
             <aside className="space-y-6">
@@ -243,16 +285,16 @@ const BlogDetail = () => {
                   Share this post
                 </h3>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" onClick={shareOnTwitter} title="Share on Twitter">
                     <Twitter className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" onClick={shareOnLinkedIn} title="Share on LinkedIn">
                     <Linkedin className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" onClick={shareOnFacebook} title="Share on Facebook">
                     <Facebook className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" onClick={copyLink} title="Copy link">
                     <LinkIcon className="w-4 h-4" />
                   </Button>
                 </div>
@@ -260,17 +302,37 @@ const BlogDetail = () => {
 
               {/* Engagement Card */}
               <Card className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <ThumbsUp className="w-4 h-4" />
-                      Like
-                    </Button>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <MessageCircle className="w-4 h-4" />
-                      {blog.comments} comments
-                    </div>
+                <div className="flex flex-col gap-4">
+                  <Button
+                    variant={isLiked ? "default" : "ghost"}
+                    className="gap-2 w-full justify-start"
+                    onClick={toggleLike}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+                    )}
+                    {isLiked ? "Liked" : "Like"} ({likesCount})
+                  </Button>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground px-4">
+                    <MessageCircle className="w-4 h-4" />
+                    {commentsCount} comments
                   </div>
+                  <Button
+                    variant={isSaved ? "default" : "outline"}
+                    className="gap-2 w-full justify-start"
+                    onClick={toggleSave}
+                    disabled={loading}
+                  >
+                    {isSaved ? (
+                      <BookmarkCheck className="w-4 h-4" />
+                    ) : (
+                      <Bookmark className="w-4 h-4" />
+                    )}
+                    {isSaved ? "Saved" : "Save Post"}
+                  </Button>
                 </div>
               </Card>
             </aside>
