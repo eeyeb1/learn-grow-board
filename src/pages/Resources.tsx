@@ -32,7 +32,7 @@ const resources = [
     title: "Building Your Portfolio from Scratch",
     description: "Turn your experience roles into impressive portfolio pieces.",
     category: "For Learners",
-    link: null,
+    link: "/blog/building-portfolio",
   },
 ];
 
