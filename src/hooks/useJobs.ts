@@ -21,6 +21,7 @@ export interface Job {
   status: string;
   created_at: string;
   updated_at: string;
+  expires_at: string | null;
   company?: {
     company_name: string;
     company_description: string | null;
