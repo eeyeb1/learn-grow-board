@@ -3,8 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import JobCard from "@/components/JobCard";
-import CompanyCard from "@/components/CompanyCard";
-import { sampleJobs, sampleCompanies, stats } from "@/data/sampleData";
+import { sampleJobs, stats } from "@/data/sampleData";
 import { ArrowRight, Users, Building2, Award, Sparkles, BookOpen, Shield, Handshake } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-illustration.png";
@@ -216,32 +215,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Companies */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="font-display font-bold text-2xl md:text-3xl text-foreground">
-                Companies Offering Experience
-              </h2>
-              <p className="text-muted-foreground mt-1">
-                Learn from companies committed to helping you grow
-              </p>
-            </div>
-            <Button variant="ghost" asChild>
-              <Link to="/companies" className="text-primary">
-                View all <ArrowRight className="w-4 h-4 ml-1" />
-              </Link>
-            </Button>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {sampleCompanies.map((company) => (
-              <CompanyCard key={company.id} {...company} />
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Trust & Safety */}
       <section className="py-16 bg-accent/50">
