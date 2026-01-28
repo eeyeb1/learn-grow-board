@@ -121,7 +121,7 @@ const Resources = () => {
       </section>
 
       {/* FAQs */}
-      <section className="py-16 bg-accent/30">
+      <section id="faq" className="py-16 bg-accent/30">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center gap-3 mb-8">
