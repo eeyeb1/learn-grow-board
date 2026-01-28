@@ -11,7 +11,7 @@ const Footer = () => {
     ],
     resources: [
       { label: "How It Works", href: "/how-it-works" },
-      { label: "Success Stories", href: "/stories" },
+      { label: "Success Stories", href: "/blog" },
       { label: "Blog", href: "/blog" },
       { label: "FAQ", href: "/faq" },
     ],
