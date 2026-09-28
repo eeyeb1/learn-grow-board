@@ -69,7 +69,6 @@ type Audience = "candidates" | "employers";
 const HowItWorks = () => {
   const [audience, setAudience] = useState<Audience>("candidates");
   const steps = audience === "candidates" ? candidateSteps : employerSteps;
-  const stepPrefix = audience === "candidates" ? "01" : "02";
 
   return (
     <div className="min-h-screen bg-background">
@@ -139,7 +138,7 @@ const HowItWorks = () => {
                         <StepIcon className="w-5 h-5 text-primary-foreground" />
                       </div>
                       <span className="font-display text-3xl font-bold text-accent-foreground/30">
-                        {stepPrefix}{i + 1}
+                        0{i + 1}
                       </span>
                     </div>
                     <h2 className="font-display font-semibold text-lg text-foreground mb-2">
