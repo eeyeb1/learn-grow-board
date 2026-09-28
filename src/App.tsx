@@ -13,6 +13,7 @@ import SuccessStories from "./pages/SuccessStories";
 import Resources from "./pages/Resources";
 import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
+import HowItWorks from "./pages/HowItWorks";
 import Archive from "./pages/Archive";
 import Companies from "./pages/Companies";
 import SavedPosts from "./pages/SavedPosts";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:id" element={<BlogDetail />} />
             <Route path="/companies" element={<Companies />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/archive" element={<Archive />} />
             <Route path="/saved-posts" element={<SavedPosts />} />
             <Route path="/settings" element={<Settings />} />
