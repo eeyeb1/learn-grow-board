@@ -17,6 +17,7 @@ import Archive from "./pages/Archive";
 import SavedPosts from "./pages/SavedPosts";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
+import ScrollToNavigation from "./components/ScrollToNavigation";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToNavigation />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/jobs" element={<Jobs />} />
