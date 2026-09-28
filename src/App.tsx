@@ -13,6 +13,7 @@ import SuccessStories from "./pages/SuccessStories";
 import Resources from "./pages/Resources";
 import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
+import HowItWorks from "./pages/HowItWorks";
 import Archive from "./pages/Archive";
 import Companies from "./pages/Companies";
 import SavedPosts from "./pages/SavedPosts";
