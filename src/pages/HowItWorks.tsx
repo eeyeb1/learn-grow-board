@@ -222,7 +222,7 @@ const HowItWorks = () => {
               Give someone their first opportunity and meet emerging talent.
             </p>
             <Link to="/post-role">
-              <Button variant="warm" className="w-full sm:w-auto">
+              <Button variant="secondary" className="w-full sm:w-auto">
                 Become a Partner
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
