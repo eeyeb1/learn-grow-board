@@ -366,7 +366,7 @@ const About = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full sm:w-auto border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="w-full sm:w-auto !bg-transparent !text-primary-foreground !border-primary-foreground/50 hover:!bg-primary-foreground/15 hover:!text-primary-foreground"
                 >
                   Partner With Us
                 </Button>
