@@ -1,0 +1,1 @@
+- Centralize page-entry scroll handling inside the router so links and navigation buttons share consistent behavior while job-filter updates retain position.

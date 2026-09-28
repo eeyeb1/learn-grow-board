@@ -257,7 +257,7 @@ const SearchBar = ({
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const queryRef = useRef<HTMLDivElement>(null);
   const locationRef = useRef<HTMLDivElement>(null);
-  const locationDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync local state with props when they change (e.g., from URL)
   useEffect(() => {
