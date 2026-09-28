@@ -69,7 +69,6 @@ type Audience = "candidates" | "employers";
 const HowItWorks = () => {
   const [audience, setAudience] = useState<Audience>("candidates");
   const steps = audience === "candidates" ? candidateSteps : employerSteps;
-  const stepPrefix = audience === "candidates" ? "01" : "02";
 
   return (
     <div className="min-h-screen bg-background">
