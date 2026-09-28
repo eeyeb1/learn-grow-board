@@ -14,6 +14,7 @@ import Resources from "./pages/Resources";
 import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
 import Archive from "./pages/Archive";
+import Companies from "./pages/Companies";
 import SavedPosts from "./pages/SavedPosts";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
