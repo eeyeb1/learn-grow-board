@@ -526,8 +526,21 @@ const sections: Section[] = [
   },
 ];
 
-// Small helper so the toast hook stays at the page level.
-let useToastToast: (t: { title: string; description: string }) => void = () => {};
+const ContactButton = () => {
+  const { toast } = useToast();
+  return (
+    <Button variant="hero" onClick={() =>
+      toast({
+        title: "Contact form coming soon",
+        description:
+          "In-app contact is on the way. In the meantime, please reach out via the details listed in this section once they are confirmed.",
+      })
+    }>
+      <Mail className="w-4 h-4 mr-2" />
+      Contact Us
+    </Button>
+  );
+};
 
 const ReportButton = () => {
   const { toast } = useToast();
