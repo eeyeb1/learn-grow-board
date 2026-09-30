@@ -516,10 +516,7 @@ const sections: Section[] = [
           <li>Company registration number (if applicable): [REGISTRATION NUMBER]</li>
         </ul>
         <div className="pt-2">
-          <Button variant="hero" onClick={() => useToastToast(contactToast)}>
-            <Mail className="w-4 h-4 mr-2" />
-            Contact Us
-          </Button>
+          <ContactButton />
         </div>
       </>
     ),
@@ -582,23 +579,8 @@ const SectionHeading = ({
   </div>
 );
 
-const Bullets = ({ children }: { children: React.ReactNode }) => {
-  const items = Array.isArray(children) ? children : [children];
-  return (
-    <ul className="space-y-2.5 mb-4">
-      {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/80">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-          {item}
-        </li>
-      ))}
-    </ul>
-  );
-};
-
 const Terms = () => {
   const { toast } = useToast();
-  useToastToast = toast;
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
