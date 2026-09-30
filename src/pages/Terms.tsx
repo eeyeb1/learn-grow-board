@@ -522,7 +522,7 @@ const sections: Section[] = [
   },
 ];
 
-const ContactButton = () => {
+function ContactButton() {
   const { toast } = useToast();
   return (
     <Button variant="hero" onClick={() =>
@@ -538,7 +538,7 @@ const ContactButton = () => {
   );
 };
 
-const ReportButton = () => {
+function ReportButton() {
   const { toast } = useToast();
   return (
     <Button variant="outline" onClick={() =>
