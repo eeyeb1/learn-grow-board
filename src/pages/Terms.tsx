@@ -61,7 +61,6 @@ const reportableNote = (
   </>
 );
 
-const contactToast = { title: "Contact form coming soon", description: "In-app contact is on the way. In the meantime, please reach out via the details listed in this section once they are confirmed." };
 
 const sections: Section[] = [
   {
