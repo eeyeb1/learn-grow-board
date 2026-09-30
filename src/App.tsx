@@ -15,6 +15,7 @@ import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
 import HowItWorks from "./pages/HowItWorks";
 import Guidelines from "./pages/Guidelines";
+import Terms from "./pages/Terms";
 import About from "./pages/About";
 import Archive from "./pages/Archive";
 import Companies from "./pages/Companies";
