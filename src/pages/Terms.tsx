@@ -680,13 +680,8 @@ const Terms = () => {
             <Button variant="outline" asChild>
               <Link to="/guidelines">Community Guidelines</Link>
             </Button>
-            <Button variant="outline" onClick={() =>
-              toast({
-                title: "Cookie Policy coming soon",
-                description: "We're preparing our Cookie Policy and will publish it here.",
-              })
-            }>
-              Cookie Policy
+            <Button variant="outline" asChild>
+              <Link to="/privacy#cookies">Cookie Policy</Link>
             </Button>
             <Button variant="outline" onClick={() =>
               toast({
