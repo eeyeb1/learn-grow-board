@@ -13,6 +13,7 @@ import SuccessStories from "./pages/SuccessStories";
 import Resources from "./pages/Resources";
 import Blog from "./pages/Blog";
 import BlogDetail from "./pages/BlogDetail";
+import Privacy from "./pages/Privacy";
 import HowItWorks from "./pages/HowItWorks";
 import Guidelines from "./pages/Guidelines";
 import Terms from "./pages/Terms";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/guidelines" element={<Guidelines />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/about" element={<About />} />
             <Route path="/archive" element={<Archive />} />
             <Route path="/saved-posts" element={<SavedPosts />} />
