@@ -217,6 +217,11 @@ const JobDetailPanel = ({ job }: JobDetailPanelProps) => {
           </a>
         )}
       </div>
+
+      <AuthModal 
+        open={authModalOpen} 
+        onOpenChange={setAuthModalOpen} 
+      />
     </div>
   );
 };
