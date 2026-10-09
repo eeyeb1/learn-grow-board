@@ -5,7 +5,7 @@ const Footer = () => {
   const footerLinks = {
     platform: [
       { label: "Find Experience", href: "/jobs" },
-      { label: "Post a Role", href: "/post" },
+      { label: "Post a Role", href: "/post-role" },
       { label: "Companies", href: "/companies" },
       { label: "Resources", href: "/resources" },
     ],
