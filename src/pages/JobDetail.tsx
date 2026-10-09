@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,19 @@ const JobDetail = () => {
 
   const isFav = id ? isFavorite(id) : false;
   const alreadyApplied = id ? hasApplied(id) : false;
+
+  const navigate = useNavigate();
+
+  const handleApplyClick = () => {
+    if (!id) return;
+
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    navigate(`/jobs/${id}/apply`);
+  };
 
   const handleToggleFavorite = async () => {
     if (!id) return;
@@ -153,8 +166,8 @@ const JobDetail = () => {
                     Applied
                   </Button>
                 ) : (
-                  <Button variant="hero" size="lg" className="flex-1" asChild>
-                    <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
+                  <Button variant="hero" size="lg" className="flex-1" onClick={handleApplyClick}>
+                    Apply Now
                   </Button>
                 )}
                 <Button
@@ -291,8 +304,8 @@ const JobDetail = () => {
                       Applied
                     </Button>
                   ) : (
-                    <Button variant="hero" size="lg" className="flex-1" asChild>
-                      <Link to={`/jobs/${id}/apply`}>Apply Now</Link>
+                    <Button variant="hero" size="lg" className="flex-1" onClick={handleApplyClick}>
+                      Apply Now
                     </Button>
                   )}
                   <Button
