@@ -15,6 +15,7 @@ import {
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authInitialView, setAuthInitialView] = useState<"login" | "signup">("login");
   const { user, userType, signOut } = useAuth();
   const location = useLocation();
 
@@ -106,9 +107,14 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="ghost" size="sm" onClick={() => setAuthModalOpen(true)}>
-                Sign In
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" onClick={() => { setAuthInitialView("login"); setAuthModalOpen(true); }}>
+                  Sign In
+                </Button>
+                <Button variant="hero" size="sm" onClick={() => { setAuthInitialView("signup"); setAuthModalOpen(true); }}>
+                  Post a Role
+                </Button>
+              </>
             )}
             {/* Only show Post a Role for company users (not for applicants or when logged out) */}
             {isCompany && (
@@ -186,9 +192,14 @@ const Navbar = () => {
                     Sign Out
                   </Button>
                 ) : (
-                  <Button variant="ghost" className="justify-start" onClick={() => { setAuthModalOpen(true); setIsMenuOpen(false); }}>
-                    Sign In
-                  </Button>
+                  <>
+                    <Button variant="ghost" className="justify-start" onClick={() => { setAuthInitialView("login"); setAuthModalOpen(true); setIsMenuOpen(false); }}>
+                      Sign In
+                    </Button>
+                    <Button variant="hero" className="w-full" onClick={() => { setAuthInitialView("signup"); setAuthModalOpen(true); setIsMenuOpen(false); }}>
+                      Post a Role
+                    </Button>
+                  </>
                 )}
                 {isCompany && (
                   <Link to="/post-role" onClick={() => setIsMenuOpen(false)}>
@@ -201,7 +212,7 @@ const Navbar = () => {
         )}
       </div>
 
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} initialView={authInitialView} />
     </nav>
   );
 };

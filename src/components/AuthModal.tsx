@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,13 +13,14 @@ import { supabase } from "@/integrations/supabase/client";
 interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialView?: "login" | "signup";
 }
 
 type AuthMethod = "email" | "phone";
 type AuthView = "login" | "signup" | "forgot-password" | "reset-sent";
 type UserType = "applicant" | "company";
 
-const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
+const AuthModal = ({ open, onOpenChange, initialView = "login" }: AuthModalProps) => {
   const { signIn, signUp } = useAuth();
   const [view, setView] = useState<AuthView>("login");
   const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
@@ -37,6 +38,16 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [companyDescription, setCompanyDescription] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [companyIndustry, setCompanyIndustry] = useState("");
+
+  // Reset to the requested starting view whenever the modal opens
+  useEffect(() => {
+    if (open) {
+      setView(initialView);
+      setUserType(null);
+      setAuthMethod("email");
+      setCodeSent(false);
+    }
+  }, [open, initialView]);
 
   const isLogin = view === "login";
   const isSignup = view === "signup";
@@ -320,7 +331,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
             <button
               type="button"
               onClick={() => setUserType("company")}
-              className="group relative flex flex-col items-center p-6 rounded-xl border-2 border-border hover:border-primary transition-all bg-card hover:bg-primary/5"
+              className="shine-hover group relative flex flex-col items-center p-6 rounded-xl border-2 border-primary/60 hover:border-primary transition-all bg-card hover:bg-primary/5"
             >
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
                 <Building2 className="w-7 h-7 text-primary" />
