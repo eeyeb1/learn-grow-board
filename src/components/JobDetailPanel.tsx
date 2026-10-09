@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,14 +15,29 @@ import {
   Lightbulb,
   Heart
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { JobDetail } from "@/data/jobDetails";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthModal from "@/components/AuthModal";
 
 interface JobDetailPanelProps {
   job: JobDetail;
 }
 
 const JobDetailPanel = ({ job }: JobDetailPanelProps) => {
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleApplyClick = () => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+
+    navigate(`/jobs/${job.id}/apply`);
+  };
+
   const locationTypeLabels = {
     remote: "Remote",
     "on-site": "On-site",
@@ -96,8 +112,8 @@ const JobDetailPanel = ({ job }: JobDetailPanelProps) => {
 
       {/* Actions */}
       <div className="flex gap-2 mb-6">
-        <Button variant="hero" className="flex-1" asChild>
-          <Link to={`/jobs/${job.id}/apply`}>Apply Now</Link>
+        <Button variant="hero" className="flex-1" onClick={handleApplyClick}>
+          Apply Now
         </Button>
         <Link to={`/jobs/${job.id}`}>
           <Button variant="outline">
@@ -201,6 +217,11 @@ const JobDetailPanel = ({ job }: JobDetailPanelProps) => {
           </a>
         )}
       </div>
+
+      <AuthModal 
+        open={authModalOpen} 
+        onOpenChange={setAuthModalOpen} 
+      />
     </div>
   );
 };
