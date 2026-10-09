@@ -210,4 +210,32 @@
       transform: scale(1);
     }
   }
+
+  .shine-hover {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shine-hover::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.15), transparent);
+    transform: translateX(-150%) skewX(-20deg);
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .shine-hover:hover::after {
+    opacity: 1;
+    animation: shineSweep 1.4s ease-in-out infinite;
+  }
+
+  @keyframes shineSweep {
+    from { transform: translateX(-150%) skewX(-20deg); }
+    to { transform: translateX(450%) skewX(-20deg); }
+  }
 }
