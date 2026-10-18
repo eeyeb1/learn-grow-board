@@ -355,6 +355,12 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
             </button>
           </div>
 
+          {highlightCompany && (
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              Posting a role requires a Company / Organization account.
+            </p>
+          )}
+
           <div className="text-center mt-4">
             <button
               type="button"
