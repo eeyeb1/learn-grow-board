@@ -21,7 +21,7 @@ type AuthMethod = "email" | "phone";
 type AuthView = "login" | "signup" | "forgot-password" | "reset-sent";
 type UserType = "applicant" | "company";
 
-const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
+const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalProps) => {
   const { signIn, signUp } = useAuth();
   const [view, setView] = useState<AuthView>("login");
   const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
@@ -39,6 +39,14 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [companyDescription, setCompanyDescription] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [companyIndustry, setCompanyIndustry] = useState("");
+
+  // When opened from a "Post a Role" button, jump straight to signup with the company option highlighted
+  useEffect(() => {
+    if (open && highlightCompany) {
+      setView("signup");
+      setUserType(null);
+    }
+  }, [open, highlightCompany]);
 
   const isLogin = view === "login";
   const isSignup = view === "signup";
