@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,13 +13,15 @@ import { supabase } from "@/integrations/supabase/client";
 interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Open straight into signup and highlight the Company / Organization option (used by "Post a Role" buttons). */
+  highlightCompany?: boolean;
 }
 
 type AuthMethod = "email" | "phone";
 type AuthView = "login" | "signup" | "forgot-password" | "reset-sent";
 type UserType = "applicant" | "company";
 
-const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
+const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalProps) => {
   const { signIn, signUp } = useAuth();
   const [view, setView] = useState<AuthView>("login");
   const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
@@ -37,6 +39,14 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [companyDescription, setCompanyDescription] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [companyIndustry, setCompanyIndustry] = useState("");
+
+  // When opened from a "Post a Role" button, jump straight to signup with the company option highlighted
+  useEffect(() => {
+    if (open && highlightCompany) {
+      setView("signup");
+      setUserType(null);
+    }
+  }, [open, highlightCompany]);
 
   const isLogin = view === "login";
   const isSignup = view === "signup";
@@ -320,8 +330,21 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
             <button
               type="button"
               onClick={() => setUserType("company")}
-              className="group relative flex flex-col items-center p-6 rounded-xl border-2 border-border hover:border-primary transition-all bg-card hover:bg-primary/5"
+              className={`group relative flex flex-col items-center p-6 rounded-xl border-2 transition-all bg-card hover:bg-primary/5 overflow-hidden ${
+                highlightCompany
+                  ? "border-primary shadow-card"
+                  : "border-border hover:border-primary"
+              }`}
             >
+              {highlightCompany && (
+                <>
+                  {/* Sweeping highlight: guides users to the employer account needed to post a role */}
+                  <span className="pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-primary/25 to-transparent animate-employer-sweep" />
+                  <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wide bg-primary text-primary-foreground rounded-full px-2 py-0.5">
+                    For posting roles
+                  </span>
+                </>
+              )}
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
                 <Building2 className="w-7 h-7 text-primary" />
               </div>
@@ -331,6 +354,12 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               </p>
             </button>
           </div>
+
+          {highlightCompany && (
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              Posting a role requires a Company / Organization account.
+            </p>
+          )}
 
           <div className="text-center mt-4">
             <button

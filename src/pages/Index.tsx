@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import AuthModal from "@/components/AuthModal";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import JobCard from "@/components/JobCard";
@@ -9,6 +11,8 @@ import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-illustration.png";
 
 const Index = () => {
+  const [postRoleModalOpen, setPostRoleModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -80,8 +84,8 @@ const Index = () => {
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Link>
                 </Button>
-                <Button variant="outline-primary" size="xl" asChild>
-                  <Link to="/post">Post a Role</Link>
+                <Button variant="outline-primary" size="xl" onClick={() => setPostRoleModalOpen(true)}>
+                  Post a Role
                 </Button>
               </div>
 
@@ -278,15 +282,21 @@ const Index = () => {
             <Button
               size="xl"
               className="bg-background/20 text-primary-foreground border-2 border-primary-foreground hover:bg-background hover:text-foreground transition-colors"
-              asChild
+              onClick={() => setPostRoleModalOpen(true)}
             >
-              <Link to="/post">Post a Role</Link>
+              Post a Role
             </Button>
           </div>
         </div>
       </section>
 
       <Footer />
+
+      <AuthModal
+        open={postRoleModalOpen}
+        onOpenChange={setPostRoleModalOpen}
+        highlightCompany
+      />
     </div>
   );
 };
