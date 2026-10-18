@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+import AuthModal from "@/components/AuthModal";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import JobCard from "@/components/JobCard";

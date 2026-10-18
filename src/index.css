@@ -211,3 +211,14 @@
     }
   }
 }
+
+/* Sweeping highlight for the Employer/Company sign-up option (Post a Role prompt) */
+@keyframes employer-sweep {
+  0% { left: -50%; }
+  50% { left: 100%; }
+  100% { left: -50%; }
+}
+
+.animate-employer-sweep {
+  animation: employer-sweep 2.4s ease-in-out infinite;
+}
