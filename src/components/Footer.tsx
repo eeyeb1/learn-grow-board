@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Briefcase, Heart } from "lucide-react";
+import AuthModal from "@/components/AuthModal";
 
 const Footer = () => {
+  const [postRoleModalOpen, setPostRoleModalOpen] = useState(false);
+
   const footerLinks = {
     platform: [
       { label: "Find Experience", href: "/jobs" },
-      { label: "Post a Role", href: "/post" },
       { label: "Companies", href: "/companies" },
       { label: "Resources", href: "/resources" },
     ],
