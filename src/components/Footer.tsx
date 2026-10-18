@@ -60,6 +60,15 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setPostRoleModalOpen(true)}
+                  className="text-sm text-background/70 hover:text-background transition-colors"
+                >
+                  Post a Role
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -107,6 +116,12 @@ const Footer = () => {
           </p>
         </div>
       </div>
+
+      <AuthModal
+        open={postRoleModalOpen}
+        onOpenChange={setPostRoleModalOpen}
+        highlightCompany
+      />
     </footer>
   );
 };
