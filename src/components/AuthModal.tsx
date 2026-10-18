@@ -330,8 +330,21 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
             <button
               type="button"
               onClick={() => setUserType("company")}
-              className="group relative flex flex-col items-center p-6 rounded-xl border-2 border-border hover:border-primary transition-all bg-card hover:bg-primary/5"
+              className={`group relative flex flex-col items-center p-6 rounded-xl border-2 transition-all bg-card hover:bg-primary/5 overflow-hidden ${
+                highlightCompany
+                  ? "border-primary shadow-card"
+                  : "border-border hover:border-primary"
+              }`}
             >
+              {highlightCompany && (
+                <>
+                  {/* Sweeping highlight: guides users to the employer account needed to post a role */}
+                  <span className="pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-primary/25 to-transparent animate-employer-sweep" />
+                  <span className="absolute top-2 right-2 text-[10px] font-semibold uppercase tracking-wide bg-primary text-primary-foreground rounded-full px-2 py-0.5">
+                    For posting roles
+                  </span>
+                </>
+              )}
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
                 <Building2 className="w-7 h-7 text-primary" />
               </div>
