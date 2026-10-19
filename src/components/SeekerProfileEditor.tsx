@@ -523,6 +523,15 @@ function buildPreview(f: Form, d: D): PublicData {
       duties: r.duties, strengths: r.strengths, skills_demonstrated: r.skills_demonstrated, created_at: r.created_at,
       company: d.placements.find((x) => x.id === r.placement_id)?.company?.company_name ?? "",
     })) : [],
+    portfolio: f.show_portfolio ? d.portfolio.filter((i) => i.is_public && i.status === "active").map((i) => {
+      const pl = completed.find((x) => x.id === i.placement_id);
+      return {
+        id: i.id, title: i.title, description: i.description, task_summary: i.task_summary, outcomes: i.outcomes, skills: i.skills,
+        start: i.start_date?.slice(0, 7) ?? null, end: i.end_date?.slice(0, 7) ?? null, link_url: i.link_url,
+        file_kind: i.file_mime?.startsWith("image/") ? "image" as const : i.file_mime === "application/pdf" ? "pdf" as const : null,
+        company: pl?.company?.company_name ?? null, role_title: pl?.job?.title ?? null,
+      };
+    }) : [],
   };
 }
 
