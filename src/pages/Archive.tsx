@@ -622,12 +622,20 @@ const Archive = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => updateApplicationStatus(selectedApplication.id, "completed")}
-                  disabled={updatingStatus || selectedApplication.status !== "accepted"}
-                  title="Mark this placement as finished"
+                  disabled={!["accepted", "completed"].includes(selectedApplication.status)}
+                  title="Activate, complete and manage this placement"
+                  onClick={async () => {
+                    const { data } = await supabase
+                      .from("placements")
+                      .select("id")
+                      .eq("application_id", selectedApplication.id)
+                      .maybeSingle();
+                    if (data) window.location.assign(`/placements/${data.id}`);
+                    else toast.error("No placement found for this application");
+                  }}
                 >
                   <CheckCircle2 className="w-4 h-4 mr-1" />
-                  Mark Completed
+                  Manage placement
                 </Button>
 
                 <AlertDialog>

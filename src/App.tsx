@@ -27,6 +27,7 @@ import ScrollToNavigation from "./components/ScrollToNavigation";
 import Dashboard from "./pages/Dashboard";
 import HourApprovals from "./pages/HourApprovals";
 import PublicProfile from "./pages/PublicProfile";
+import PlacementDetail from "./pages/PlacementDetail";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/:section" element={<Dashboard />} />
             <Route path="/hour-approvals" element={<HourApprovals />} />
+            <Route path="/placements/:id" element={<PlacementDetail />} />
             <Route path="/p/:slug" element={<PublicProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
