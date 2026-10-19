@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatHours, HourEntry, Placement, PLACEMENT_SELECT } from "@/hooks/useSeekerDashboard";
 import { StatusBadge } from "@/pages/Dashboard";
 import PlacementSkillsPanel from "@/components/PlacementSkillsPanel";
+import { EmployerReferencePanel } from "@/components/references";
 import { toast } from "sonner";
 import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, History, Loader2, MessageSquare, Printer, Target, Trash2, UserCheck, Wrench } from "lucide-react";
 
@@ -29,7 +30,7 @@ interface PlacementEvent { id: string; actor_role: string; action: string; from_
 const fmt = (d: string | null) => (d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "To be confirmed");
 const ACTION_LABEL: Record<string, string> = {
   created: "Placement created", reinstated: "Placement reinstated", activate: "Placement activated",
-  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated", skill_verified: "Skill confirmed", skill_revoked: "Skill confirmation removed",
+  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated", skill_verified: "Skill confirmed", reference_submitted: "Reference submitted", reference_edited: "Reference edited", reference_withdrawn: "Reference withdrawn", reference_approved: "Reference approved for public profile", reference_unapproved: "Reference removed from public profile", reference_reported: "Reference reported", reference_hidden: "Reference hidden by moderator", reference_report_dismissed: "Reference report dismissed", reference_restored: "Reference restored by moderator", skill_revoked: "Skill confirmation removed",
 };
 
 const detailsSchema = z.object({
@@ -359,60 +360,9 @@ const ManagePanel = ({ placement, onChange }: { placement: Placement; onChange: 
         <div className="space-y-1.5"><Label htmlFor="lo">Learning objectives (one per line)</Label><Textarea id="lo" rows={3} value={f.objectives} onChange={(e) => setF({ ...f, objectives: e.target.value })} /></div>
         <div className="space-y-1.5"><Label htmlFor="fb">Feedback for the seeker</Label><Textarea id="fb" rows={3} maxLength={3000} value={f.feedback} onChange={(e) => setF({ ...f, feedback: e.target.value })} /></div>
         <Button onClick={saveDetails} disabled={busy}>{busy && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}Save details</Button>
-        {placement.status === "completed" && <ReferenceForm placementId={placement.id} />}
+        {placement.status === "completed" && <EmployerReferencePanel placementId={placement.id} companyName={placement.company?.company_name} />}
       </CardContent>
     </Card>
-  );
-};
-
-const refSchema = z.object({
-  author_name: z.string().trim().min(2, "Add your name").max(100),
-  author_role: z.string().trim().max(100),
-  content: z.string().trim().min(10, "Reference must be at least 10 characters").max(2000, "Reference must be 2000 characters or fewer"),
-});
-
-const ReferenceForm = ({ placementId }: { placementId: string }) => {
-  const { user } = useAuth();
-  const [refs, setRefs] = useState<{ id: string; author_name: string; author_role: string | null; content: string; seeker_approved: boolean }[]>([]);
-  const [f, setF] = useState({ author_name: "", author_role: "", content: "" });
-  const [busy, setBusy] = useState(false);
-  const load = useCallback(async () => {
-    const { data } = await supabase.from("placement_references").select("id, author_name, author_role, content, seeker_approved").eq("placement_id", placementId).order("created_at");
-    setRefs(data ?? []);
-  }, [placementId]);
-  useEffect(() => { load(); }, [load]);
-  const submit = async () => {
-    const parsed = refSchema.safeParse(f);
-    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
-    setBusy(true);
-    const { error } = await supabase.from("placement_references").insert({
-      placement_id: placementId, author_id: user!.id,
-      author_name: parsed.data.author_name, author_role: parsed.data.author_role || null, content: parsed.data.content,
-    });
-    setBusy(false);
-    if (error) return toast.error("Couldn't save reference");
-    setF({ author_name: "", author_role: "", content: "" }); toast.success("Reference sent — the seeker decides whether to show it"); load();
-  };
-  return (
-    <div className="border-t border-border pt-5 space-y-3">
-      <p className="font-medium text-foreground">Write a reference</p>
-      <p className="text-xs text-muted-foreground">Don't include contact details. The seeker must approve it before it appears on their public profile.</p>
-      {refs.map((r) => (
-        <div key={r.id} className="rounded-lg border border-border p-3 text-sm">
-          <p className="text-foreground whitespace-pre-line">{r.content}</p>
-          <div className="flex items-center justify-between mt-1">
-            <p className="text-xs text-muted-foreground">— {r.author_name}{r.author_role ? `, ${r.author_role}` : ""}</p>
-            <Badge variant="soft">{r.seeker_approved ? "Approved by seeker" : "Awaiting seeker approval"}</Badge>
-          </div>
-        </div>
-      ))}
-      <div className="grid sm:grid-cols-2 gap-3">
-        <Input placeholder="Your name" maxLength={100} value={f.author_name} onChange={(e) => setF({ ...f, author_name: e.target.value })} />
-        <Input placeholder="Your role (optional)" maxLength={100} value={f.author_role} onChange={(e) => setF({ ...f, author_role: e.target.value })} />
-      </div>
-      <Textarea rows={4} maxLength={2000} placeholder="What did they do well?" value={f.content} onChange={(e) => setF({ ...f, content: e.target.value })} />
-      <Button size="sm" onClick={submit} disabled={busy}>Submit reference</Button>
-    </div>
   );
 };
 

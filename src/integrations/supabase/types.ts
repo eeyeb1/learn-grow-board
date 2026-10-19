@@ -398,36 +398,70 @@ export type Database = {
           author_id: string
           author_name: string
           author_role: string | null
+          company_id: string | null
           content: string
           created_at: string
+          duties: string | null
           id: string
+          improvement_areas: string | null
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_note: string | null
           placement_id: string
           seeker_approved: boolean
+          skills_demonstrated: string | null
+          status: string
+          strengths: string | null
           updated_at: string
         }
         Insert: {
           author_id: string
           author_name: string
           author_role?: string | null
+          company_id?: string | null
           content: string
           created_at?: string
+          duties?: string | null
           id?: string
+          improvement_areas?: string | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_note?: string | null
           placement_id: string
           seeker_approved?: boolean
+          skills_demonstrated?: string | null
+          status?: string
+          strengths?: string | null
           updated_at?: string
         }
         Update: {
           author_id?: string
           author_name?: string
           author_role?: string | null
+          company_id?: string | null
           content?: string
           created_at?: string
+          duties?: string | null
           id?: string
+          improvement_areas?: string | null
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_note?: string | null
           placement_id?: string
           seeker_approved?: boolean
+          skills_demonstrated?: string | null
+          status?: string
+          strengths?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "placement_references_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "placement_references_placement_id_fkey"
             columns: ["placement_id"]
@@ -663,6 +697,53 @@ export type Database = {
         }
         Relationships: []
       }
+      reference_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reference_id: string
+          reporter_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reference_id: string
+          reporter_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reference_id?: string
+          reporter_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reference_reports_reference_id_fkey"
+            columns: ["reference_id"]
+            isOneToOne: false
+            referencedRelation: "placement_references"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_blogs: {
         Row: {
           blog_id: string
@@ -767,6 +848,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _ref_actor_role: { Args: { _placement_id: string }; Returns: string }
+      _ref_check: {
+        Args: { _label: string; _max: number; _min: number; _v: string }
+        Returns: string
+      }
       can_manage_placement: {
         Args: { _placement_id: string; _uid: string }
         Returns: boolean
@@ -785,14 +871,42 @@ export type Database = {
         Args: { _application_id: string; _user_id: string }
         Returns: boolean
       }
+      moderate_reference_report: {
+        Args: { _decision: string; _note: string; _report_id: string }
+        Returns: undefined
+      }
       placement_action: {
         Args: { _action: string; _note?: string; _placement_id: string }
         Returns: undefined
       }
+      report_reference: {
+        Args: { _details: string; _id: string; _reason: string }
+        Returns: string
+      }
+      restore_reference: {
+        Args: { _id: string; _note: string }
+        Returns: undefined
+      }
       revoke_skill_verification: { Args: { _id: string }; Returns: undefined }
+      set_reference_approval: {
+        Args: { _approved: boolean; _id: string }
+        Returns: undefined
+      }
       set_skill_visibility: {
         Args: { _id: string; _visible: boolean }
         Returns: undefined
+      }
+      submit_reference: {
+        Args: {
+          _author_name: string
+          _author_role: string
+          _duties: string
+          _improvements: string
+          _placement_id: string
+          _skills: string
+          _strengths: string
+        }
+        Returns: string
       }
       update_placement_details: {
         Args: {
@@ -807,6 +921,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_reference: {
+        Args: {
+          _author_name: string
+          _author_role: string
+          _duties: string
+          _id: string
+          _improvements: string
+          _skills: string
+          _strengths: string
+        }
+        Returns: undefined
+      }
       verify_placement_skill: {
         Args: {
           _category: string
@@ -817,6 +943,7 @@ export type Database = {
         }
         Returns: string
       }
+      withdraw_reference: { Args: { _id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

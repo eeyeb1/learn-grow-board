@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { categoryLabel } from "@/lib/skills";
+import { ReferenceBody, ReportReferenceButton, STATUS_LABEL } from "@/components/references";
 import { EmployerVerifiedBadge, SelfReportedBadge } from "@/components/PlacementSkillsPanel";
 import { Camera, Copy, ExternalLink, Eye, EyeOff, Globe, Share2, ShieldCheck, Loader2, Lock, Plus, Trash2, X, Lightbulb } from "lucide-react";
 
@@ -462,21 +463,25 @@ const ReferencesCard = ({ d }: { d: D }) => {
   return (
     <Card>
       <CardHeader><CardTitle>References</CardTitle>
-        <p className="text-sm text-muted-foreground">Only references you approve can appear on your public profile.</p></CardHeader>
+        <p className="text-sm text-muted-foreground">Feedback from your supervisors is private to you. Only references you approve can appear on your public profile — areas to develop are never shown. Report anything abusive or inaccurate.</p></CardHeader>
       <CardContent className="space-y-3">
         {d.references.map((r) => {
           const company = d.placements.find((x) => x.id === r.placement_id)?.company?.company_name;
           return (
             <div key={r.id} className="rounded-lg border border-border p-3 space-y-2">
-              <p className="text-sm text-foreground whitespace-pre-line">{r.content}</p>
-              <p className="text-xs text-muted-foreground">— {r.author_name}{r.author_role ? `, ${r.author_role}` : ""}{company ? ` · ${company}` : ""}</p>
-              <div className="flex items-center gap-2">
+              <ReferenceBody r={r} company={company} showPrivate />
+              {r.status !== "published" ? (
+                <Badge variant="soft">{STATUS_LABEL[r.status]}</Badge>
+              ) : (
+              <div className="flex flex-wrap items-center gap-2">
                 <Switch checked={r.seeker_approved} aria-label="Approve reference for public profile" onCheckedChange={async (v) => {
                   const { error } = await d.setReferenceApproval(r.id, v);
                   if (error) toast.error("Couldn't update reference");
                 }} />
                 <span className="text-sm text-foreground">{r.seeker_approved ? "Approved to show" : "Not approved"}</span>
+                <span className="ml-auto"><ReportReferenceButton referenceId={r.id} /></span>
               </div>
+              )}
             </div>
           );
         })}
@@ -511,8 +516,9 @@ function buildPreview(f: Form, d: D): PublicData {
       start: x.start_date?.slice(0, 7) ?? null, end: x.end_date?.slice(0, 7) ?? null,
       verified_minutes: f.show_hours ? minutesFor(x.application_id) : null,
     })) : [],
-    references: f.show_references ? d.references.filter((r) => r.seeker_approved).map((r) => ({
+    references: f.show_references ? d.references.filter((r) => r.seeker_approved && r.status === "published" && completed.some((x) => x.id === r.placement_id)).map((r) => ({
       author_name: r.author_name, author_role: r.author_role, content: r.content,
+      duties: r.duties, strengths: r.strengths, skills_demonstrated: r.skills_demonstrated, created_at: r.created_at,
       company: d.placements.find((x) => x.id === r.placement_id)?.company?.company_name ?? "",
     })) : [],
   };

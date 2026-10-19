@@ -1,3 +1,4 @@
+import { REFERENCE_SELECT, StructuredReference } from "@/components/references";
 import { SkillVerification } from "@/lib/skills";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,15 +94,7 @@ export interface PublicProfileSettings {
   show_references: boolean;
 }
 
-export interface PlacementReference {
-  id: string;
-  placement_id: string;
-  author_name: string;
-  author_role: string | null;
-  content: string;
-  seeker_approved: boolean;
-  created_at: string;
-}
+export type PlacementReference = StructuredReference;
 
 export const profileUrl = (slug: string) => `${window.location.origin}/profile/${slug}`;
 
@@ -188,7 +181,7 @@ export const useSeekerDashboard = () => {
       setPlacements((plc.data ?? []) as unknown as Placement[]);
       const plcIds = (plc.data ?? []).map((x: { id: string }) => x.id);
       if (plcIds.length) {
-        const refs = await supabase.from("placement_references").select("id, placement_id, author_name, author_role, content, seeker_approved, created_at").in("placement_id", plcIds).order("created_at", { ascending: false });
+        const refs = await supabase.from("placement_references").select(REFERENCE_SELECT).in("placement_id", plcIds).order("created_at", { ascending: false });
         if (refs.error) throw refs.error;
         setReferences((refs.data ?? []) as PlacementReference[]);
         const sv = await supabase.from("skill_verifications").select("*").eq("user_id", user.id).order("verified_at", { ascending: false });
@@ -235,7 +228,7 @@ export const useSeekerDashboard = () => {
   };
 
   const setReferenceApproval = async (id: string, approved: boolean) => {
-    const { error } = await supabase.from("placement_references").update({ seeker_approved: approved }).eq("id", id);
+    const { error } = await supabase.rpc("set_reference_approval", { _id: id, _approved: approved });
     if (error) return { error: error.message };
     setReferences((r) => r.map((x) => (x.id === id ? { ...x, seeker_approved: approved } : x)));
     return { error: null };

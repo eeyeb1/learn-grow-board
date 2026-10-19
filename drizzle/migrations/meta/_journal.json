@@ -43,6 +43,13 @@
       "when": 1792423159564,
       "tag": "0005_skill_verifications",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792423425802,
+      "tag": "0006_structured_references_moderation",
+      "breakpoints": true
     }
   ]
 }
