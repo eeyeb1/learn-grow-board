@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSeekerDashboard, formatHours, DashApplication, HourEntry, PublicProfileSettings } from "@/hooks/useSeekerDashboard";
+import { useSeekerDashboard, formatHours, DashApplication, HourEntry, Placement } from "@/hooks/useSeekerDashboard";
 import { toast } from "sonner";
 import SeekerProfileEditor from "@/components/SeekerProfileEditor";
 import {
@@ -40,6 +40,9 @@ const statusStyle: Record<string, string> = {
   accepted: "bg-primary/10 text-primary",
   completed: "bg-primary text-primary-foreground",
   rejected: "bg-destructive/10 text-destructive",
+  cancelled: "bg-muted text-muted-foreground",
+  upcoming: "bg-accent text-accent-foreground",
+  active: "bg-primary/10 text-primary",
   pending: "bg-accent text-accent-foreground",
   approved: "bg-primary/10 text-primary",
 };
@@ -259,43 +262,53 @@ const Applications = ({ d }: { d: D }) => (
   </Card>
 );
 
-const placementMinutes = (d: D, appId: string) =>
-  d.hours.filter((h) => h.application_id === appId && h.status === "approved").reduce((s, h) => s + h.minutes, 0);
+const PLACEMENT_GROUPS: { status: Placement["status"]; title: string; empty: string }[] = [
+  { status: "active", title: "Active", empty: "No active placements. Your employer activates a placement when it starts." },
+  { status: "upcoming", title: "Accepted & upcoming", empty: "When an employer accepts your application, the placement appears here." },
+  { status: "completed", title: "Completed", empty: "Your employer marks a placement completed when it ends." },
+];
+
+const fmtDate = (d: string | null) => (d ? new Date(d + "T00:00:00").toLocaleDateString() : null);
 
 const Experiences = ({ d }: { d: D }) => (
   <>
-    <Card>
-      <CardHeader><CardTitle>Active placements</CardTitle></CardHeader>
-      <CardContent>
-        {d.activePlacements.length === 0 ? (
-          <Empty icon={Briefcase} title="No active placements" text="When an employer accepts your application, the placement appears here and you can start logging hours." />
-        ) : d.activePlacements.map((a) => (
-          <div key={a.id} className="flex items-center justify-between gap-3 py-3 border-b border-border last:border-0">
-            <div className="min-w-0">
-              <p className="font-medium text-foreground truncate">{a.job?.title ?? "Placement"}</p>
-              <p className="text-xs text-muted-foreground">{a.job?.company ?? ""} · {formatHours(placementMinutes(d, a.id))} verified</p>
-            </div>
-            <Link to="/dashboard/hours"><Button size="sm" variant="outline">Log hours</Button></Link>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-    <Card>
-      <CardHeader><CardTitle>Completed experiences</CardTitle></CardHeader>
-      <CardContent>
-        {d.completed.length === 0 ? (
-          <Empty icon={Award} title="No completed experiences yet" text="Your employer marks a placement as completed when it ends. Completed experiences can be shown on your public profile." />
-        ) : d.completed.map((a) => (
-          <div key={a.id} className="flex items-center justify-between gap-3 py-3 border-b border-border last:border-0">
-            <div className="min-w-0">
-              <p className="font-medium text-foreground truncate">{a.job?.title ?? "Experience"}</p>
-              <p className="text-xs text-muted-foreground">{a.job?.company ?? ""}</p>
-            </div>
-            <Badge variant="soft" className="bg-primary/10 text-primary">{formatHours(placementMinutes(d, a.id))} verified</Badge>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <div>
+      <h1 className="font-display text-2xl font-bold text-foreground">My Experiences</h1>
+      <p className="text-sm text-muted-foreground">Placements are created automatically when an employer accepts your application.</p>
+    </div>
+    {PLACEMENT_GROUPS.map((g) => {
+      const list = d.placements.filter((p) => p.status === g.status);
+      return (
+        <Card key={g.status}>
+          <CardHeader><CardTitle className="text-lg">{g.title} <span className="text-muted-foreground font-normal">({list.length})</span></CardTitle></CardHeader>
+          <CardContent>
+            {list.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-2">{g.empty}</p>
+            ) : list.map((p) => {
+              const appHours = d.hours.filter((h) => h.application_id === p.application_id);
+              const verified = appHours.filter((h) => h.status === "approved").reduce((s, h) => s + h.minutes, 0);
+              const pending = appHours.filter((h) => h.status === "pending").reduce((s, h) => s + h.minutes, 0);
+              const dates = [fmtDate(p.start_date), fmtDate(p.end_date)].filter(Boolean).join(" – ") || "Dates to be confirmed";
+              return (
+                <Link key={p.id} to={`/placements/${p.id}`} className="block py-3 border-b border-border last:border-0 group">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground truncate group-hover:text-primary">{p.job?.title ?? "Role"}</p>
+                      <p className="text-xs text-muted-foreground">{p.company?.company_name ?? "Company"} · {dates}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{formatHours(verified)} verified · {formatHours(pending)} pending</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <StatusBadge status={p.status} />
+                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </CardContent>
+        </Card>
+      );
+    })}
   </>
 );
 
@@ -325,9 +338,9 @@ const HourRow = ({ h, d }: { h: HourEntry; d: D }) => {
 };
 
 const Hours = ({ d }: { d: D }) => {
-  const eligible = d.activePlacements.filter((a) => a.job?.inDatabase);
+  const eligible = d.activePlacements;
   const today = new Date().toISOString().slice(0, 10);
-  const [appId, setAppId] = useState(eligible[0]?.id ?? "");
+  const [appId, setAppId] = useState(eligible[0]?.application_id ?? "");
   const [date, setDate] = useState(today);
   const [hrs, setHrs] = useState("");
   const [mins, setMins] = useState("0");
@@ -368,7 +381,7 @@ const Hours = ({ d }: { d: D }) => {
         </CardHeader>
         <CardContent>
           {eligible.length === 0 ? (
-            <Empty icon={Briefcase} title="No active placement to log against" text="You can log hours once an employer on the platform has accepted your application." />
+            <Empty icon={Briefcase} title="No active placement to log against" text="You can log hours once your employer has activated your placement." />
           ) : (
             <form onSubmit={submit} className="grid sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2 space-y-1.5">
@@ -376,7 +389,7 @@ const Hours = ({ d }: { d: D }) => {
                 <Select value={appId} onValueChange={setAppId}>
                   <SelectTrigger><SelectValue placeholder="Choose a placement" /></SelectTrigger>
                   <SelectContent>
-                    {eligible.map((a) => <SelectItem key={a.id} value={a.id}>{a.job?.title} — {a.job?.company}</SelectItem>)}
+                    {eligible.map((p) => <SelectItem key={p.id} value={p.application_id}>{p.job?.title} — {p.company?.company_name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -418,4 +431,5 @@ const Hours = ({ d }: { d: D }) => {
   );
 };
 
+export { StatusBadge };
 export default Dashboard;
