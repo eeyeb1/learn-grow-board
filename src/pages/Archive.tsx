@@ -619,6 +619,16 @@ const Archive = () => {
                   <X className="w-4 h-4 mr-1" />
                   Reject
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => updateApplicationStatus(selectedApplication.id, "completed")}
+                  disabled={updatingStatus || selectedApplication.status !== "accepted"}
+                  title="Mark this placement as finished"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                  Mark Completed
+                </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
