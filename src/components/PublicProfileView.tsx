@@ -120,7 +120,13 @@ const PublicProfileView = ({ data }: { data: PublicData }) => {
             {data.references.map((r, i) => (
               <blockquote key={i} className="border-l-2 border-primary pl-4">
                 <Quote className="w-4 h-4 text-primary mb-1" />
-                <p className="text-foreground whitespace-pre-line">{r.content}</p>
+                {r.duties || r.strengths ? (
+                  <div className="space-y-1.5">
+                    {([["Duties", r.duties], ["Strengths", r.strengths], ["Skills demonstrated", r.skills_demonstrated]] as const).filter(([, v]) => v).map(([k, v]) => (
+                      <div key={k}><p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{k}</p><p className="text-foreground whitespace-pre-line">{v}</p></div>
+                    ))}
+                  </div>
+                ) : <p className="text-foreground whitespace-pre-line">{r.content}</p>}
                 <footer className="text-xs text-muted-foreground mt-1">— {r.author_name}{r.author_role ? `, ${r.author_role}` : ""} · {r.company}</footer>
               </blockquote>
             ))}
