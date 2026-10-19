@@ -13,12 +13,12 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSeekerDashboard, formatHours, DashApplication, HourEntry, Placement } from "@/hooks/useSeekerDashboard";
+import { useSeekerDashboard, formatHours, profileUrl, shareProfile, DashApplication, HourEntry, Placement } from "@/hooks/useSeekerDashboard";
 import { toast } from "sonner";
 import SeekerProfileEditor from "@/components/SeekerProfileEditor";
 import {
   LayoutDashboard, Search, FileText, Award, Clock, Globe, Settings as SettingsIcon,
-  CheckCircle2, Briefcase, Hourglass, Heart, AlertCircle, ArrowRight, Trash2, Copy, Loader2, ExternalLink,
+  CheckCircle2, Briefcase, Share2, Hourglass, Heart, AlertCircle, ArrowRight, Trash2, Copy, Loader2, ExternalLink,
 } from "lucide-react";
 
 type Section = "overview" | "applications" | "experiences" | "hours" | "profile";
@@ -178,6 +178,28 @@ const Overview = ({ d, firstName }: { d: D; firstName: string }) => {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Globe className="w-5 h-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="font-medium text-foreground">Public profile · {d.publicProfile?.is_public ? "Published" : "Private"}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {d.publicProfile?.is_public ? profileUrl(d.publicProfile.slug) : "Publish your profile to share your verified experience."}
+              </p>
+            </div>
+          </div>
+          {d.publicProfile?.is_public ? (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={async () => { await navigator.clipboard.writeText(profileUrl(d.publicProfile!.slug)); toast.success("Link copied"); }}><Copy className="w-4 h-4 mr-1" />Copy link</Button>
+              <Button size="sm" onClick={() => shareProfile(d.publicProfile!.slug)}><Share2 className="w-4 h-4 mr-1" />Share profile</Button>
+            </div>
+          ) : (
+            <Link to="/dashboard/profile"><Button size="sm" variant="outline">Set up & publish</Button></Link>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid xl:grid-cols-2 gap-6">
         <Card>
