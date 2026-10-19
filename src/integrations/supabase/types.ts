@@ -640,6 +640,142 @@ export type Database = {
           },
         ]
       }
+      portfolio_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string | null
+          file_mime: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          is_public: boolean
+          link_url: string | null
+          outcomes: string | null
+          permission_confirmed: boolean
+          permission_confirmed_at: string | null
+          placement_id: string | null
+          skills: string[]
+          start_date: string | null
+          status: string
+          task_summary: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          file_mime?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          is_public?: boolean
+          link_url?: string | null
+          outcomes?: string | null
+          permission_confirmed?: boolean
+          permission_confirmed_at?: string | null
+          placement_id?: string | null
+          skills?: string[]
+          start_date?: string | null
+          status?: string
+          task_summary?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          file_mime?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          is_public?: boolean
+          link_url?: string | null
+          outcomes?: string | null
+          permission_confirmed?: boolean
+          permission_confirmed_at?: string | null
+          placement_id?: string | null
+          skills?: string[]
+          start_date?: string | null
+          status?: string
+          task_summary?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_items_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_removal_requests: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          item_id: string | null
+          item_title: string
+          owner_id: string
+          placement_id: string | null
+          reason: string
+          requester_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          item_id?: string | null
+          item_title: string
+          owner_id: string
+          placement_id?: string | null
+          reason: string
+          requester_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          item_id?: string | null
+          item_title?: string
+          owner_id?: string
+          placement_id?: string | null
+          reason?: string
+          requester_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_removal_requests_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           application_updates: boolean | null
@@ -709,6 +845,7 @@ export type Database = {
           show_interests: boolean
           show_links: boolean
           show_location: boolean
+          show_portfolio: boolean
           show_references: boolean
           show_self_skills: boolean
           show_summary: boolean
@@ -742,6 +879,7 @@ export type Database = {
           show_interests?: boolean
           show_links?: boolean
           show_location?: boolean
+          show_portfolio?: boolean
           show_references?: boolean
           show_self_skills?: boolean
           show_summary?: boolean
@@ -775,6 +913,7 @@ export type Database = {
           show_interests?: boolean
           show_links?: boolean
           show_location?: boolean
+          show_portfolio?: boolean
           show_references?: boolean
           show_self_skills?: boolean
           show_summary?: boolean
@@ -974,6 +1113,14 @@ export type Database = {
       report_reference: {
         Args: { _details: string; _id: string; _reason: string }
         Returns: string
+      }
+      request_portfolio_removal: {
+        Args: { _details: string; _item_id: string; _reason: string }
+        Returns: string
+      }
+      resolve_portfolio_removal: {
+        Args: { _decision: string; _note: string; _request_id: string }
+        Returns: undefined
       }
       restore_reference: {
         Args: { _id: string; _note: string }

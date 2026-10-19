@@ -22,8 +22,9 @@ import { StatusBadge } from "@/pages/Dashboard";
 import PlacementSkillsPanel from "@/components/PlacementSkillsPanel";
 import { EmployerReferencePanel } from "@/components/references";
 import CertificatePanel from "@/components/CertificatePanel";
+import { PlacementPortfolioPanel } from "@/components/portfolio";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, History, Loader2, MessageSquare, Target, Trash2, UserCheck, Wrench } from "lucide-react";
+import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, FolderOpen, History, Loader2, MessageSquare, Target, Trash2, UserCheck, Wrench } from "lucide-react";
 
 interface DiaryEntry { id: string; entry_date: string; content: string }
 interface PlacementEvent { id: string; actor_role: string; action: string; from_status: string | null; to_status: string | null; note: string | null; created_at: string }
@@ -31,7 +32,7 @@ interface PlacementEvent { id: string; actor_role: string; action: string; from_
 const fmt = (d: string | null) => (d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "To be confirmed");
 const ACTION_LABEL: Record<string, string> = {
   created: "Placement created", reinstated: "Placement reinstated", activate: "Placement activated",
-  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated", skill_verified: "Skill confirmed", reference_submitted: "Reference submitted", reference_edited: "Reference edited", reference_withdrawn: "Reference withdrawn", reference_approved: "Reference approved for public profile", reference_unapproved: "Reference removed from public profile", reference_reported: "Reference reported", reference_hidden: "Reference hidden by moderator", reference_report_dismissed: "Reference report dismissed", reference_restored: "Reference restored by moderator", certificate_issued: "Certificate issued", certificate_revoked: "Certificate revoked", certificate_reissued: "Certificate reissued", skill_revoked: "Skill confirmation removed",
+  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated", skill_verified: "Skill confirmed", reference_submitted: "Reference submitted", reference_edited: "Reference edited", reference_withdrawn: "Reference withdrawn", reference_approved: "Reference approved for public profile", reference_unapproved: "Reference removed from public profile", reference_reported: "Reference reported", reference_hidden: "Reference hidden by moderator", reference_report_dismissed: "Reference report dismissed", reference_restored: "Reference restored by moderator", certificate_issued: "Certificate issued", certificate_revoked: "Certificate revoked", certificate_reissued: "Certificate reissued", skill_revoked: "Skill confirmation removed", portfolio_removal_requested: "Portfolio item removal requested", portfolio_removed: "Portfolio item removed by moderator", portfolio_request_dismissed: "Portfolio removal request dismissed",
 };
 
 const detailsSchema = z.object({
@@ -156,6 +157,7 @@ const PlacementDetail = () => {
                 <TabsTrigger value="skills"><Wrench className="w-4 h-4 mr-1" />Skills</TabsTrigger>
                 {isSeeker && <TabsTrigger value="diary"><BookOpen className="w-4 h-4 mr-1" />Diary</TabsTrigger>}
                 <TabsTrigger value="feedback"><MessageSquare className="w-4 h-4 mr-1" />Feedback</TabsTrigger>
+                <TabsTrigger value="portfolio"><FolderOpen className="w-4 h-4 mr-1" />Portfolio</TabsTrigger>
                 <TabsTrigger value="certificate"><Award className="w-4 h-4 mr-1" />Certificate</TabsTrigger>
                 <TabsTrigger value="history"><History className="w-4 h-4 mr-1" />History</TabsTrigger>
               </TabsList>
@@ -196,6 +198,10 @@ const PlacementDetail = () => {
                     <p className="text-foreground whitespace-pre-line">{placement.employer_feedback}</p>
                   ) : <p className="text-sm text-muted-foreground">No feedback from the employer yet.</p>}
                 </CardContent></Card>
+              </TabsContent>
+
+              <TabsContent value="portfolio">
+                <PlacementPortfolioPanel placementId={placement.id} isSeeker={isSeeker} canManage={canManage} />
               </TabsContent>
 
               <TabsContent value="certificate">

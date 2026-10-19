@@ -16,13 +16,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSeekerDashboard, formatHours, profileUrl, shareProfile, DashApplication, HourEntry, Placement } from "@/hooks/useSeekerDashboard";
 import { toast } from "sonner";
 import SeekerProfileEditor from "@/components/SeekerProfileEditor";
+import { PortfolioManager } from "@/components/portfolio";
 import {
   LayoutDashboard, Search, FileText, Award, Clock, Globe, Settings as SettingsIcon,
-  CheckCircle2, Briefcase, Share2, Hourglass, Heart, AlertCircle, ArrowRight, Trash2, Copy, Loader2, ExternalLink,
+  CheckCircle2, FolderOpen, Briefcase, Share2, Hourglass, Heart, AlertCircle, ArrowRight, Trash2, Copy, Loader2, ExternalLink,
 } from "lucide-react";
 
-type Section = "overview" | "applications" | "experiences" | "hours" | "profile";
-const SECTIONS: Section[] = ["overview", "applications", "experiences", "hours", "profile"];
+type Section = "overview" | "applications" | "experiences" | "hours" | "portfolio" | "profile";
+const SECTIONS: Section[] = ["overview", "applications", "experiences", "hours", "portfolio", "profile"];
 
 const navItems = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, end: true },
@@ -30,6 +31,7 @@ const navItems = [
   { to: "/dashboard/applications", label: "Applications", icon: FileText },
   { to: "/dashboard/experiences", label: "My Experiences", icon: Award },
   { to: "/dashboard/hours", label: "Hours & Verification", icon: Clock },
+  { to: "/dashboard/portfolio", label: "Portfolio", icon: FolderOpen },
   { to: "/dashboard/profile", label: "My Profile", icon: Globe },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -132,6 +134,7 @@ const Dashboard = () => {
               {section === "applications" && <Applications d={d} />}
               {section === "experiences" && <Experiences d={d} />}
               {section === "hours" && <Hours d={d} />}
+              {section === "portfolio" && <PortfolioManager items={d.portfolio} requests={d.removalRequests} placements={d.placements} published={!!d.publicProfile?.is_public} onChange={d.reload} />}
               {section === "profile" && <SeekerProfileEditor d={d} />}
             </>
           )}

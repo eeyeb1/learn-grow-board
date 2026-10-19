@@ -125,6 +125,7 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
     show_hours: p?.show_hours ?? true,
     show_verified_skills: p?.show_verified_skills ?? true,
     show_references: p?.show_references ?? false,
+    show_portfolio: p?.show_portfolio ?? true,
   });
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -343,7 +344,8 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
             <VisibilityRow label="Interests, industries & work preference" checked={form.show_interests} onChange={(v) => set("show_interests", v)} />
             <VisibilityRow label="Education level" checked={form.show_education} onChange={(v) => set("show_education", v)} />
             <VisibilityRow label="Availability" checked={form.show_availability} onChange={(v) => set("show_availability", v)} />
-            <VisibilityRow label="Portfolio links" checked={form.show_links} onChange={(v) => set("show_links", v)} />
+            <VisibilityRow label="Published portfolio items" checked={form.show_portfolio} onChange={(v) => set("show_portfolio", v)} />
+            <VisibilityRow label="Links" checked={form.show_links} onChange={(v) => set("show_links", v)} />
             <VisibilityRow label={form.is_minor ? "Profile photo (hidden for under-18s)" : "Profile photo"} checked={form.show_avatar && !form.is_minor} disabled={form.is_minor} onChange={(v) => set("show_avatar", v)} />
             <VisibilityRow label={form.is_minor ? "General location (hidden for under-18s)" : "General location"} checked={form.show_location && !form.is_minor} disabled={form.is_minor} onChange={(v) => set("show_location", v)} />
           </div>
@@ -521,6 +523,15 @@ function buildPreview(f: Form, d: D): PublicData {
       duties: r.duties, strengths: r.strengths, skills_demonstrated: r.skills_demonstrated, created_at: r.created_at,
       company: d.placements.find((x) => x.id === r.placement_id)?.company?.company_name ?? "",
     })) : [],
+    portfolio: f.show_portfolio ? d.portfolio.filter((i) => i.is_public && i.status === "active").map((i) => {
+      const pl = completed.find((x) => x.id === i.placement_id);
+      return {
+        id: i.id, title: i.title, description: i.description, task_summary: i.task_summary, outcomes: i.outcomes, skills: i.skills,
+        start: i.start_date?.slice(0, 7) ?? null, end: i.end_date?.slice(0, 7) ?? null, link_url: i.link_url,
+        file_kind: i.file_mime?.startsWith("image/") ? "image" as const : i.file_mime === "application/pdf" ? "pdf" as const : null,
+        company: pl?.company?.company_name ?? null, role_title: pl?.job?.title ?? null,
+      };
+    }) : [],
   };
 }
 

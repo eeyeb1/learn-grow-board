@@ -2,3 +2,5 @@ project_id = "lipcbcvacnmhhwgkbffj"
 
 [functions.semantic-job-search]
 verify_jwt = false
+[functions.portfolio-file]
+verify_jwt = false
