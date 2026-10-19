@@ -1,3 +1,4 @@
+import { SkillVerification } from "@/lib/skills";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -161,6 +162,7 @@ export const useSeekerDashboard = () => {
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [references, setReferences] = useState<PlacementReference[]>([]);
+  const [skillVerifications, setSkillVerifications] = useState<SkillVerification[]>([]);
   const [publicProfile, setPublicProfile] = useState<PublicProfileSettings | null>(null);
 
   const load = useCallback(async () => {
@@ -189,7 +191,10 @@ export const useSeekerDashboard = () => {
         const refs = await supabase.from("placement_references").select("id, placement_id, author_name, author_role, content, seeker_approved, created_at").in("placement_id", plcIds).order("created_at", { ascending: false });
         if (refs.error) throw refs.error;
         setReferences((refs.data ?? []) as PlacementReference[]);
-      } else setReferences([]);
+        const sv = await supabase.from("skill_verifications").select("*").eq("user_id", user.id).order("verified_at", { ascending: false });
+        if (sv.error) throw sv.error;
+        setSkillVerifications((sv.data ?? []) as SkillVerification[]);
+      } else { setReferences([]); setSkillVerifications([]); }
       setHours((hrs.data ?? []) as HourEntry[]);
       if (sum.data) setSummary(sum.data as unknown as HoursSummary);
       setProfile(prof.data ?? null);
@@ -236,6 +241,13 @@ export const useSeekerDashboard = () => {
     return { error: null };
   };
 
+  const setSkillVisibility = async (id: string, visible: boolean) => {
+    setSkillVerifications((x) => x.map((i) => (i.id === id ? { ...i, show_on_profile: visible } : i)));
+    const { error } = await supabase.rpc("set_skill_visibility", { _id: id, _visible: visible });
+    if (error) { await load(); return { error: error.message }; }
+    return { error: null };
+  };
+
   const activePlacements = placements.filter((p) => p.status === "active");
   const completed = placements.filter((p) => p.status === "completed");
 
@@ -260,6 +272,6 @@ export const useSeekerDashboard = () => {
     loading, error, reload: load,
     applications, placements, activePlacements, completed, saved, hours, summary, profile, publicProfile,
     completionChecks, completion,
-    logHours, deleteHours, savePublicProfile, references, setReferenceApproval,
+    logHours, deleteHours, savePublicProfile, references, setReferenceApproval, skillVerifications, setSkillVisibility,
   };
 };
