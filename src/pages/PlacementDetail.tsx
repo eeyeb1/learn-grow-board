@@ -21,8 +21,9 @@ import { formatHours, HourEntry, Placement, PLACEMENT_SELECT } from "@/hooks/use
 import { StatusBadge } from "@/pages/Dashboard";
 import PlacementSkillsPanel from "@/components/PlacementSkillsPanel";
 import { EmployerReferencePanel } from "@/components/references";
+import CertificatePanel from "@/components/CertificatePanel";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, History, Loader2, MessageSquare, Printer, Target, Trash2, UserCheck, Wrench } from "lucide-react";
+import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, History, Loader2, MessageSquare, Target, Trash2, UserCheck, Wrench } from "lucide-react";
 
 interface DiaryEntry { id: string; entry_date: string; content: string }
 interface PlacementEvent { id: string; actor_role: string; action: string; from_status: string | null; to_status: string | null; note: string | null; created_at: string }
@@ -30,7 +31,7 @@ interface PlacementEvent { id: string; actor_role: string; action: string; from_
 const fmt = (d: string | null) => (d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "To be confirmed");
 const ACTION_LABEL: Record<string, string> = {
   created: "Placement created", reinstated: "Placement reinstated", activate: "Placement activated",
-  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated", skill_verified: "Skill confirmed", reference_submitted: "Reference submitted", reference_edited: "Reference edited", reference_withdrawn: "Reference withdrawn", reference_approved: "Reference approved for public profile", reference_unapproved: "Reference removed from public profile", reference_reported: "Reference reported", reference_hidden: "Reference hidden by moderator", reference_report_dismissed: "Reference report dismissed", reference_restored: "Reference restored by moderator", skill_revoked: "Skill confirmation removed",
+  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated", skill_verified: "Skill confirmed", reference_submitted: "Reference submitted", reference_edited: "Reference edited", reference_withdrawn: "Reference withdrawn", reference_approved: "Reference approved for public profile", reference_unapproved: "Reference removed from public profile", reference_reported: "Reference reported", reference_hidden: "Reference hidden by moderator", reference_report_dismissed: "Reference report dismissed", reference_restored: "Reference restored by moderator", certificate_issued: "Certificate issued", certificate_revoked: "Certificate revoked", certificate_reissued: "Certificate reissued", skill_revoked: "Skill confirmation removed",
 };
 
 const detailsSchema = z.object({

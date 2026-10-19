@@ -27,6 +27,7 @@ import ScrollToNavigation from "./components/ScrollToNavigation";
 import Dashboard from "./pages/Dashboard";
 import HourApprovals from "./pages/HourApprovals";
 import ReferenceModeration from "./pages/ReferenceModeration";
+import VerifyCertificate from "./pages/VerifyCertificate";
 import PublicProfile from "./pages/PublicProfile";
 import PlacementDetail from "./pages/PlacementDetail";
 
@@ -64,6 +65,8 @@ const App = () => (
             <Route path="/hour-approvals" element={<HourApprovals />} />
             <Route path="/moderation/references" element={<ReferenceModeration />} />
             <Route path="/placements/:id" element={<PlacementDetail />} />
+            <Route path="/verify" element={<VerifyCertificate />} />
+            <Route path="/verify/:code" element={<VerifyCertificate />} />
             <Route path="/profile/:username" element={<PublicProfile />} />
             <Route path="/p/:username" element={<PublicProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
