@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Menu, X, LogOut, FileText, User as UserIcon, ChevronDown, Settings, BookmarkCheck } from "lucide-react";
+import { Briefcase, Menu, X, LogOut, FileText, User as UserIcon, ChevronDown, Settings, BookmarkCheck, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import AuthModal from "./AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -80,6 +80,12 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-background border border-border z-50">
+                  <DropdownMenuItem asChild>
+                    <Link to={isCompany ? "/hour-approvals" : "/dashboard"} className="flex items-center gap-2 cursor-pointer">
+                      <LayoutDashboard className="w-4 h-4" />
+                      {isCompany ? "Hour Approvals" : "Dashboard"}
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/archive" className="flex items-center gap-2 cursor-pointer">
                       <FileText className="w-4 h-4" />

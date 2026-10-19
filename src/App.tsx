@@ -24,6 +24,9 @@ import SavedPosts from "./pages/SavedPosts";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import ScrollToNavigation from "./components/ScrollToNavigation";
+import Dashboard from "./pages/Dashboard";
+import HourApprovals from "./pages/HourApprovals";
+import PublicProfile from "./pages/PublicProfile";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +57,10 @@ const App = () => (
             <Route path="/archive" element={<Archive />} />
             <Route path="/saved-posts" element={<SavedPosts />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/:section" element={<Dashboard />} />
+            <Route path="/hour-approvals" element={<HourApprovals />} />
+            <Route path="/p/:slug" element={<PublicProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
