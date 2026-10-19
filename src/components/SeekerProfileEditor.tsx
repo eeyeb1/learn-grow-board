@@ -10,9 +10,15 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useSeekerDashboard, PublicProfileSettings } from "@/hooks/useSeekerDashboard";
+import { useSeekerDashboard, PublicProfileSettings, profileUrl, shareProfile } from "@/hooks/useSeekerDashboard";
+import PublicProfileView, { PublicData } from "@/components/PublicProfileView";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Camera, Copy, ExternalLink, Loader2, Lock, Plus, Trash2, X, Lightbulb } from "lucide-react";
+import { Camera, Copy, ExternalLink, Eye, EyeOff, Globe, Share2, ShieldCheck, Loader2, Lock, Plus, Trash2, X, Lightbulb } from "lucide-react";
 
 type D = ReturnType<typeof useSeekerDashboard>;
 type Form = Omit<PublicProfileSettings, "user_id">;
@@ -75,10 +81,10 @@ const TagInput = ({ id, label, values, onChange, placeholder, max }: { id: strin
   );
 };
 
-const VisibilityRow = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) => (
+const VisibilityRow = ({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) => (
   <div className="flex items-center justify-between py-2">
-    <span className="text-sm text-foreground">{label}</span>
-    <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
+    <span className={`text-sm ${disabled ? "text-muted-foreground" : "text-foreground"}`}>{label}</span>
+    <Switch checked={checked} disabled={disabled} onCheckedChange={onChange} aria-label={label} />
   </div>
 );
 
@@ -107,13 +113,26 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
     show_education: p?.show_education ?? false,
     show_availability: p?.show_availability ?? false,
     show_links: p?.show_links ?? true,
+    is_minor: p?.is_minor ?? false,
+    guardian_acknowledged: p?.guardian_acknowledged ?? false,
+    show_summary: p?.show_summary ?? true,
+    show_self_skills: p?.show_self_skills ?? true,
+    show_interests: p?.show_interests ?? true,
+    show_experiences: p?.show_experiences ?? true,
+    show_hours: p?.show_hours ?? true,
+    show_verified_skills: p?.show_verified_skills ?? true,
+    show_references: p?.show_references ?? false,
   });
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
-  const url = `${window.location.origin}/p/${p?.slug ?? form.slug}`;
+  const url = profileUrl(p?.slug ?? form.slug);
+  const published = !!p?.is_public;
   const missing = d.completionChecks.filter((c) => !c.done);
 
-  const save = async () => {
+  const save = async (publish?: boolean) => {
+    const isPublic = publish ?? published;
+    if (isPublic && form.is_minor && !form.guardian_acknowledged) return toast.error("Please confirm the under-18 safeguard before publishing");
+    if (publish && !form.display_name?.trim()) return toast.error("Add a display name before publishing");
     const parsed = schema.safeParse({
       ...form,
       display_name: form.display_name ?? "", headline: form.headline ?? "", bio: form.bio ?? "",
@@ -133,9 +152,11 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
       education_level: v.education_level || null,
       work_preference: form.work_preference || null,
       links: v.links as { label: string; url: string }[],
+      is_public: isPublic,
     });
     setBusy(false);
-    error ? toast.error(error) : toast.success("Profile saved");
+    if (error) return toast.error(error);
+    toast.success(publish === true ? "Profile published" : publish === false ? "Profile unpublished — it's private again" : "Profile saved");
   };
 
   const onPhoto = async (file?: File) => {
@@ -279,43 +300,180 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Public profile & visibility</CardTitle>
-          <p className="text-sm text-muted-foreground">Your public page shows your display name, headline, bio, skills, interests, industries and work preference, plus verified hours and completed experiences. Choose what else to share.</p>
+          <CardTitle className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" />Age & safeguarding</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex items-center justify-between rounded-lg border border-border p-3">
-            <div>
-              <p className="font-medium text-foreground">Make my profile public</p>
-              <p className="text-xs text-muted-foreground">Off by default. Anyone with the link can view it when on.</p>
-            </div>
-            <Switch checked={form.is_public} onCheckedChange={(v) => set("is_public", v)} aria-label="Make my profile public" />
+          <label className="flex items-start gap-3 text-sm text-foreground">
+            <Checkbox checked={form.is_minor} onCheckedChange={(v) => {
+              const minor = !!v;
+              setForm((f) => ({ ...f, is_minor: minor, ...(minor ? { show_avatar: false, show_location: false, show_links: false, show_references: false } : { guardian_acknowledged: false }) }));
+            }} />
+            <span>I am under 18<span className="block text-xs text-muted-foreground">We use stronger privacy defaults: your photo and location are never shown publicly and portfolio links start hidden. We don't ask for your date of birth.</span></span>
+          </label>
+          {form.is_minor && (
+            <label className="flex items-start gap-3 text-sm text-foreground rounded-lg bg-accent/50 p-3">
+              <Checkbox checked={form.guardian_acknowledged} onCheckedChange={(v) => set("guardian_acknowledged", !!v)} />
+              <span>A parent, guardian or teacher knows I'm sharing this profile, and I understand anyone with the link can see it.</span>
+            </label>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Section privacy</CardTitle>
+          <p className="text-sm text-muted-foreground">Choose what appears on your public profile. Contact details, date of birth, exact address, diary entries, pending hours and application history are never shown.</p>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs font-medium text-primary uppercase tracking-wide mt-1">Employer verified</p>
+          <div className="divide-y divide-border">
+            <VisibilityRow label="Total verified hours" checked={form.show_hours} onChange={(v) => set("show_hours", v)} />
+            <VisibilityRow label="Completed placements" checked={form.show_experiences} onChange={(v) => set("show_experiences", v)} />
+            <VisibilityRow label="Employer-confirmed skills" checked={form.show_verified_skills} onChange={(v) => set("show_verified_skills", v)} />
+            <VisibilityRow label="Approved references" checked={form.show_references} onChange={(v) => set("show_references", v)} />
           </div>
-          {p?.is_public && (
-            <div className="flex gap-2">
-              <Input readOnly value={url} aria-label="Public profile link" />
-              <Button variant="outline" size="icon" aria-label="Copy link" onClick={() => { navigator.clipboard.writeText(url); toast.success("Link copied"); }}><Copy className="w-4 h-4" /></Button>
-              <a href={url} target="_blank" rel="noreferrer"><Button variant="outline" size="icon" aria-label="Open profile"><ExternalLink className="w-4 h-4" /></Button></a>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mt-4">Self-reported</p>
+          <div className="divide-y divide-border">
+            <VisibilityRow label="Personal summary (bio)" checked={form.show_summary} onChange={(v) => set("show_summary", v)} />
+            <VisibilityRow label="My skills" checked={form.show_self_skills} onChange={(v) => set("show_self_skills", v)} />
+            <VisibilityRow label="Interests, industries & work preference" checked={form.show_interests} onChange={(v) => set("show_interests", v)} />
+            <VisibilityRow label="Education level" checked={form.show_education} onChange={(v) => set("show_education", v)} />
+            <VisibilityRow label="Availability" checked={form.show_availability} onChange={(v) => set("show_availability", v)} />
+            <VisibilityRow label="Portfolio links" checked={form.show_links} onChange={(v) => set("show_links", v)} />
+            <VisibilityRow label={form.is_minor ? "Profile photo (hidden for under-18s)" : "Profile photo"} checked={form.show_avatar && !form.is_minor} disabled={form.is_minor} onChange={(v) => set("show_avatar", v)} />
+            <VisibilityRow label={form.is_minor ? "General location (hidden for under-18s)" : "General location"} checked={form.show_location && !form.is_minor} disabled={form.is_minor} onChange={(v) => set("show_location", v)} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <ReferencesCard d={d} />
+
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2"><Eye className="w-5 h-5 text-primary" />Live preview</CardTitle>
+          <Badge variant="soft">{published ? "Published" : "Private"}</Badge>
+        </CardHeader>
+        <CardContent className="bg-muted/40 rounded-b-lg pt-6">
+          <PublicProfileView data={buildPreview(form, d)} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Publish</CardTitle>
+          <p className="text-sm text-muted-foreground">Your profile stays private until you publish it. You can unpublish at any time.</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="slug">Username</Label>
+            <div className="flex items-center rounded-md border border-input bg-background px-3 text-sm text-muted-foreground">
+              <span className="whitespace-nowrap">/profile/</span>
+              <input id="slug" className="flex-1 bg-transparent py-2 text-foreground outline-none" value={form.slug} maxLength={40}
+                onChange={(e) => set("slug", e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} />
+            </div>
+            {published && form.slug !== p?.slug && <p className="text-xs text-destructive">Changing your username will break links you've already shared.</p>}
+          </div>
+          {published && (
+            <div className="flex flex-wrap gap-2">
+              <Input readOnly value={url} aria-label="Public profile link" className="flex-1 min-w-[200px]" />
+              <Button variant="outline" onClick={async () => { await navigator.clipboard.writeText(url); toast.success("Link copied"); }}><Copy className="w-4 h-4 mr-1" />Copy link</Button>
+              <Button variant="outline" onClick={async () => { await shareProfile(p!.slug); }}><Share2 className="w-4 h-4 mr-1" />Share</Button>
+              <a href={url} target="_blank" rel="noreferrer"><Button variant="ghost" size="icon" aria-label="Open profile"><ExternalLink className="w-4 h-4" /></Button></a>
             </div>
           )}
-          <div className="space-y-1.5">
-            <Label htmlFor="slug">Profile link</Label>
-            <Input id="slug" value={form.slug} maxLength={40} onChange={(e) => set("slug", e.target.value.toLowerCase())} />
-          </div>
-          <div className="divide-y divide-border">
-            <VisibilityRow label="Show profile photo" checked={form.show_avatar} onChange={(v) => set("show_avatar", v)} />
-            <VisibilityRow label="Show general location" checked={form.show_location} onChange={(v) => set("show_location", v)} />
-            <VisibilityRow label="Show education level" checked={form.show_education} onChange={(v) => set("show_education", v)} />
-            <VisibilityRow label="Show availability" checked={form.show_availability} onChange={(v) => set("show_availability", v)} />
-            <VisibilityRow label="Show portfolio links" checked={form.show_links} onChange={(v) => set("show_links", v)} />
+          <div className="flex flex-wrap gap-2">
+            {published ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild><Button variant="outline" disabled={busy}><EyeOff className="w-4 h-4 mr-1" />Unpublish</Button></AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader><AlertDialogTitle>Unpublish your profile?</AlertDialogTitle>
+                    <AlertDialogDescription>Your link will stop working straight away. Your details are kept so you can publish again later.</AlertDialogDescription></AlertDialogHeader>
+                  <AlertDialogFooter><AlertDialogCancel>Keep published</AlertDialogCancel><AlertDialogAction onClick={() => save(false)}>Unpublish</AlertDialogAction></AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <AlertDialog>
+                <AlertDialogTrigger asChild><Button disabled={busy}><Globe className="w-4 h-4 mr-1" />Publish profile</Button></AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader><AlertDialogTitle>Publish your profile?</AlertDialogTitle>
+                    <AlertDialogDescription>Anyone with your link will be able to see exactly what's in the live preview. It won't be listed in search engines.</AlertDialogDescription></AlertDialogHeader>
+                  <AlertDialogFooter><AlertDialogCancel>Not yet</AlertDialogCancel><AlertDialogAction onClick={() => save(true)}>Publish</AlertDialogAction></AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </CardContent>
       </Card>
 
       <div className="sticky bottom-4 flex justify-end">
-        <Button onClick={save} disabled={busy} className="shadow-elevated">{busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Save profile</Button>
+        <Button onClick={() => save()} disabled={busy} className="shadow-elevated">{busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Save changes</Button>
       </div>
     </div>
   );
 };
+
+const ReferencesCard = ({ d }: { d: D }) => {
+  if (d.references.length === 0) {
+    return (
+      <Card><CardHeader><CardTitle>References</CardTitle>
+        <p className="text-sm text-muted-foreground">Employers can write you a reference once a placement is completed. You choose which ones to show.</p>
+      </CardHeader></Card>
+    );
+  }
+  return (
+    <Card>
+      <CardHeader><CardTitle>References</CardTitle>
+        <p className="text-sm text-muted-foreground">Only references you approve can appear on your public profile.</p></CardHeader>
+      <CardContent className="space-y-3">
+        {d.references.map((r) => {
+          const company = d.placements.find((x) => x.id === r.placement_id)?.company?.company_name;
+          return (
+            <div key={r.id} className="rounded-lg border border-border p-3 space-y-2">
+              <p className="text-sm text-foreground whitespace-pre-line">{r.content}</p>
+              <p className="text-xs text-muted-foreground">— {r.author_name}{r.author_role ? `, ${r.author_role}` : ""}{company ? ` · ${company}` : ""}</p>
+              <div className="flex items-center gap-2">
+                <Switch checked={r.seeker_approved} aria-label="Approve reference for public profile" onCheckedChange={async (v) => {
+                  const { error } = await d.setReferenceApproval(r.id, v);
+                  if (error) toast.error("Couldn't update reference");
+                }} />
+                <span className="text-sm text-foreground">{r.seeker_approved ? "Approved to show" : "Not approved"}</span>
+              </div>
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+};
+
+function buildPreview(f: Form, d: D): PublicData {
+  const completed = d.placements.filter((x) => x.status === "completed");
+  const minutesFor = (appId: string) => d.hours.filter((h) => h.application_id === appId && h.status === "approved").reduce((s, h) => s + h.minutes, 0);
+  return {
+    display_name: f.display_name || null,
+    headline: f.headline || null,
+    bio: f.show_summary ? f.bio || null : null,
+    skills: f.show_self_skills ? f.skills : [],
+    career_interests: f.show_interests ? f.career_interests : [],
+    preferred_industries: f.show_interests ? f.preferred_industries : [],
+    work_preference: f.show_interests ? f.work_preference || null : null,
+    location: f.show_location && !f.is_minor ? f.location || null : null,
+    education_level: f.show_education ? f.education_level || null : null,
+    availability: f.show_availability ? f.availability || null : null,
+    links: f.show_links ? f.links.filter((l) => l.url.startsWith("https://") && l.label) : [],
+    avatar_url: f.show_avatar && !f.is_minor ? d.profile?.avatar_url ?? null : null,
+    verified_minutes: f.show_hours ? d.summary.verified_minutes : null,
+    verified_skills: f.show_verified_skills ? [...new Set(completed.flatMap((x) => x.confirmed_skills))].sort() : [],
+    experiences: f.show_experiences ? completed.map((x) => ({
+      title: x.job?.title ?? "Role", company: x.company?.company_name ?? "",
+      start: x.start_date?.slice(0, 7) ?? null, end: x.end_date?.slice(0, 7) ?? null,
+      verified_minutes: f.show_hours ? minutesFor(x.application_id) : null,
+    })) : [],
+    references: f.show_references ? d.references.filter((r) => r.seeker_approved).map((r) => ({
+      author_name: r.author_name, author_role: r.author_role, content: r.content,
+      company: d.placements.find((x) => x.id === r.placement_id)?.company?.company_name ?? "",
+    })) : [],
+  };
+}
 
 export default SeekerProfileEditor;
