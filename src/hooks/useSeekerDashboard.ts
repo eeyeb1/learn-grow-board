@@ -48,6 +48,17 @@ export interface PublicProfileSettings {
   bio: string | null;
   skills: string[];
   show_avatar: boolean;
+  career_interests: string[];
+  education_level: string | null;
+  preferred_industries: string[];
+  location: string | null;
+  work_preference: string | null;
+  availability: string | null;
+  links: { label: string; url: string }[];
+  show_location: boolean;
+  show_education: boolean;
+  show_availability: boolean;
+  show_links: boolean;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -121,7 +132,7 @@ export const useSeekerDashboard = () => {
       setHours((hrs.data ?? []) as HourEntry[]);
       if (sum.data) setSummary(sum.data as unknown as HoursSummary);
       setProfile(prof.data ?? null);
-      setPublicProfile((pub.data as PublicProfileSettings) ?? null);
+      setPublicProfile((pub.data as unknown as PublicProfileSettings) ?? null);
     } catch (e) {
       console.error("Dashboard load failed:", e);
       setError("We couldn't load your dashboard. Please try again.");
@@ -151,7 +162,7 @@ export const useSeekerDashboard = () => {
 
   const savePublicProfile = async (values: Omit<PublicProfileSettings, "user_id">) => {
     if (!user) return { error: "Not signed in" };
-    const { error } = await supabase.from("public_profiles").upsert({ ...values, user_id: user.id, slug: values.slug.toLowerCase() });
+    const { error } = await supabase.from("public_profiles").upsert({ ...values, user_id: user.id, slug: values.slug.toLowerCase() } as never);
     if (error) return { error: error.code === "23505" ? "That link is already taken — try another." : error.message };
     await load();
     return { error: null };
@@ -166,6 +177,13 @@ export const useSeekerDashboard = () => {
     { label: "Write a headline", done: !!publicProfile?.headline },
     { label: "Add a short bio", done: !!publicProfile?.bio },
     { label: "List your skills", done: (publicProfile?.skills?.length ?? 0) > 0 },
+    { label: "Add career interests", done: (publicProfile?.career_interests?.length ?? 0) > 0 },
+    { label: "Choose preferred industries", done: (publicProfile?.preferred_industries?.length ?? 0) > 0 },
+    { label: "Set your education level", done: !!publicProfile?.education_level },
+    { label: "Add your general location", done: !!publicProfile?.location },
+    { label: "Set remote / in-person preference", done: !!publicProfile?.work_preference },
+    { label: "Share your availability", done: !!publicProfile?.availability },
+    { label: "Add a portfolio link", done: (publicProfile?.links?.length ?? 0) > 0 },
     { label: "Apply for an opportunity", done: applications.length > 0 },
   ];
   const completion = Math.round((completionChecks.filter((c) => c.done).length / completionChecks.length) * 100);

@@ -358,40 +358,73 @@ export type Database = {
       }
       public_profiles: {
         Row: {
+          availability: string | null
           bio: string | null
+          career_interests: string[]
           created_at: string
           display_name: string | null
+          education_level: string | null
           headline: string | null
           is_public: boolean
+          links: Json
+          location: string | null
+          preferred_industries: string[]
+          show_availability: boolean
           show_avatar: boolean
+          show_education: boolean
+          show_links: boolean
+          show_location: boolean
           skills: string[]
           slug: string
           updated_at: string
           user_id: string
+          work_preference: string | null
         }
         Insert: {
+          availability?: string | null
           bio?: string | null
+          career_interests?: string[]
           created_at?: string
           display_name?: string | null
+          education_level?: string | null
           headline?: string | null
           is_public?: boolean
+          links?: Json
+          location?: string | null
+          preferred_industries?: string[]
+          show_availability?: boolean
           show_avatar?: boolean
+          show_education?: boolean
+          show_links?: boolean
+          show_location?: boolean
           skills?: string[]
           slug: string
           updated_at?: string
           user_id: string
+          work_preference?: string | null
         }
         Update: {
+          availability?: string | null
           bio?: string | null
+          career_interests?: string[]
           created_at?: string
           display_name?: string | null
+          education_level?: string | null
           headline?: string | null
           is_public?: boolean
+          links?: Json
+          location?: string | null
+          preferred_industries?: string[]
+          show_availability?: boolean
           show_avatar?: boolean
+          show_education?: boolean
+          show_links?: boolean
+          show_location?: boolean
           skills?: string[]
           slug?: string
           updated_at?: string
           user_id?: string
+          work_preference?: string | null
         }
         Relationships: []
       }
