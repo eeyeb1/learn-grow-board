@@ -127,6 +127,96 @@ export type Database = {
         }
         Relationships: []
       }
+      certificates: {
+        Row: {
+          approved_minutes: number
+          code: string
+          company_id: string
+          company_name: string
+          created_at: string
+          end_date: string | null
+          id: string
+          issued_at: string
+          placement_id: string
+          revocation_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          role_title: string
+          seeker_name: string
+          show_hours: boolean
+          show_name: boolean
+          show_skills: boolean
+          skills: string[]
+          start_date: string | null
+          updated_at: string
+          user_id: string
+          verification_enabled: boolean
+        }
+        Insert: {
+          approved_minutes?: number
+          code: string
+          company_id: string
+          company_name: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          issued_at?: string
+          placement_id: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_title: string
+          seeker_name: string
+          show_hours?: boolean
+          show_name?: boolean
+          show_skills?: boolean
+          skills?: string[]
+          start_date?: string | null
+          updated_at?: string
+          user_id: string
+          verification_enabled?: boolean
+        }
+        Update: {
+          approved_minutes?: number
+          code?: string
+          company_id?: string
+          company_name?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          issued_at?: string
+          placement_id?: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_title?: string
+          seeker_name?: string
+          show_hours?: boolean
+          show_name?: boolean
+          show_skills?: boolean
+          skills?: string[]
+          start_date?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificates_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: true
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_profiles: {
         Row: {
           company_description: string | null
@@ -848,6 +938,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _new_certificate_code: { Args: never; Returns: string }
       _ref_actor_role: { Args: { _placement_id: string }; Returns: string }
       _ref_check: {
         Args: { _label: string; _max: number; _min: number; _v: string }
@@ -871,6 +962,7 @@ export type Database = {
         Args: { _application_id: string; _user_id: string }
         Returns: boolean
       }
+      issue_certificate: { Args: { _placement_id: string }; Returns: string }
       moderate_reference_report: {
         Args: { _decision: string; _note: string; _report_id: string }
         Returns: undefined
@@ -887,7 +979,21 @@ export type Database = {
         Args: { _id: string; _note: string }
         Returns: undefined
       }
+      revoke_certificate: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
       revoke_skill_verification: { Args: { _id: string }; Returns: undefined }
+      set_certificate_privacy: {
+        Args: {
+          _id: string
+          _show_hours: boolean
+          _show_name: boolean
+          _show_skills: boolean
+          _verification_enabled: boolean
+        }
+        Returns: undefined
+      }
       set_reference_approval: {
         Args: { _approved: boolean; _id: string }
         Returns: undefined
@@ -933,6 +1039,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      verify_certificate: { Args: { _code: string }; Returns: Json }
       verify_placement_skill: {
         Args: {
           _category: string
