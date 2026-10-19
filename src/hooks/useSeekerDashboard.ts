@@ -32,6 +32,26 @@ export interface HourEntry {
   created_at: string;
 }
 
+export interface Placement {
+  id: string;
+  application_id: string;
+  status: "upcoming" | "active" | "completed" | "cancelled";
+  start_date: string | null;
+  end_date: string | null;
+  learning_objectives: string[];
+  supervisor_name: string | null;
+  supervisor_contact: string | null;
+  confirmed_skills: string[];
+  employer_feedback: string | null;
+  certificate_issued_at: string | null;
+  created_at: string;
+  job: { id: string; title: string; skills: string[] | null; location: string | null } | null;
+  company: { company_name: string } | null;
+}
+
+export const PLACEMENT_SELECT =
+  "id, application_id, status, start_date, end_date, learning_objectives, supervisor_name, supervisor_contact, confirmed_skills, employer_feedback, certificate_issued_at, created_at, job:jobs(id, title, skills, location), company:company_profiles(company_name)";
+
 export interface HoursSummary {
   verified_minutes: number;
   pending_minutes: number;
@@ -108,6 +128,7 @@ export const useSeekerDashboard = () => {
   const [hours, setHours] = useState<HourEntry[]>([]);
   const [summary, setSummary] = useState<HoursSummary>({ verified_minutes: 0, pending_minutes: 0, pending_count: 0, rejected_count: 0 });
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const [placements, setPlacements] = useState<Placement[]>([]);
   const [publicProfile, setPublicProfile] = useState<PublicProfileSettings | null>(null);
 
   const load = useCallback(async () => {
@@ -115,20 +136,22 @@ export const useSeekerDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const [apps, favs, hrs, sum, prof, pub] = await Promise.all([
+      const [apps, favs, hrs, sum, prof, pub, plc] = await Promise.all([
         supabase.from("applications").select("id, job_id, status, submitted_at").eq("user_id", user.id).order("submitted_at", { ascending: false }),
         supabase.from("favorites").select("job_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("hour_entries").select("*").eq("user_id", user.id).order("work_date", { ascending: false }),
         supabase.rpc("get_my_hours_summary"),
         supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).maybeSingle(),
         supabase.from("public_profiles").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.from("placements").select(PLACEMENT_SELECT).eq("user_id", user.id).order("created_at", { ascending: false }),
       ]);
-      const firstError = [apps, favs, hrs, sum, prof, pub].find((r) => r.error)?.error;
+      const firstError = [apps, favs, hrs, sum, prof, pub, plc].find((r) => r.error)?.error;
       if (firstError) throw firstError;
 
       const jobMap = await resolveJobs([...(apps.data ?? []).map((a) => a.job_id), ...(favs.data ?? []).map((f) => f.job_id)]);
       setApplications((apps.data ?? []).map((a) => ({ ...a, job: jobMap[a.job_id] ?? null })));
       setSaved((favs.data ?? []).map((f) => jobMap[f.job_id]).filter(Boolean) as DashJob[]);
+      setPlacements((plc.data ?? []) as unknown as Placement[]);
       setHours((hrs.data ?? []) as HourEntry[]);
       if (sum.data) setSummary(sum.data as unknown as HoursSummary);
       setProfile(prof.data ?? null);
@@ -168,8 +191,8 @@ export const useSeekerDashboard = () => {
     return { error: null };
   };
 
-  const activePlacements = applications.filter((a) => a.status === "accepted");
-  const completed = applications.filter((a) => a.status === "completed");
+  const activePlacements = placements.filter((p) => p.status === "active");
+  const completed = placements.filter((p) => p.status === "completed");
 
   const completionChecks = [
     { label: "Add your name", done: !!profile?.full_name },
@@ -190,7 +213,7 @@ export const useSeekerDashboard = () => {
 
   return {
     loading, error, reload: load,
-    applications, activePlacements, completed, saved, hours, summary, profile, publicProfile,
+    applications, placements, activePlacements, completed, saved, hours, summary, profile, publicProfile,
     completionChecks, completion,
     logHours, deleteHours, savePublicProfile,
   };
