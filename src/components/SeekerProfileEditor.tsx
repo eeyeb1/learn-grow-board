@@ -242,6 +242,7 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
         <CardHeader><CardTitle>Interests & skills</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <TagInput id="ci" label="Career interests" values={form.career_interests} onChange={(v) => set("career_interests", v)} placeholder="e.g. Marketing — press Enter" max={15} />
+          <div className="flex items-center gap-2 -mb-1"><SelfReportedBadge /><span className="text-xs text-muted-foreground">Skills you add yourself</span></div>
           <TagInput id="sk" label="Skills" values={form.skills} onChange={(v) => set("skills", v)} placeholder="e.g. Excel — press Enter" max={30} />
           <TagInput id="pi" label="Preferred industries" values={form.preferred_industries} onChange={(v) => set("preferred_industries", v)} placeholder="e.g. Healthcare — press Enter" max={15} />
           <div className="space-y-1.5">
@@ -348,6 +349,7 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
         </CardContent>
       </Card>
 
+      <VerifiedSkillsCard d={d} />
       <ReferencesCard d={d} />
 
       <Card>
