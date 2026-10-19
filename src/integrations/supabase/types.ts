@@ -184,6 +184,59 @@ export type Database = {
         }
         Relationships: []
       }
+      hour_entries: {
+        Row: {
+          application_id: string
+          created_at: string
+          description: string
+          id: string
+          minutes: number
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          work_date: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          description: string
+          id?: string
+          minutes: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          work_date: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          minutes?: number
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hour_entries_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           company_id: string
@@ -303,6 +356,45 @@ export type Database = {
         }
         Relationships: []
       }
+      public_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          headline: string | null
+          is_public: boolean
+          show_avatar: boolean
+          skills: string[]
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          headline?: string | null
+          is_public?: boolean
+          show_avatar?: boolean
+          skills?: string[]
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          headline?: string | null
+          is_public?: boolean
+          show_avatar?: boolean
+          skills?: string[]
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_blogs: {
         Row: {
           blog_id: string
@@ -329,7 +421,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_my_hours_summary: { Args: never; Returns: Json }
+      get_public_profile: { Args: { _slug: string }; Returns: Json }
+      is_placement_employer: {
+        Args: { _application_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
