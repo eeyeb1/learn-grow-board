@@ -15,6 +15,13 @@
       "when": 1792421305800,
       "tag": "0001_seeker_profile_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792421967903,
+      "tag": "0002_placements_with_audit",
+      "breakpoints": true
     }
   ]
 }

@@ -311,6 +311,167 @@ export type Database = {
           },
         ]
       }
+      placement_diary: {
+        Row: {
+          content: string
+          created_at: string
+          entry_date: string
+          id: string
+          placement_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          entry_date?: string
+          id?: string
+          placement_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          entry_date?: string
+          id?: string
+          placement_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placement_diary_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      placement_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string
+          created_at: string
+          from_status: string | null
+          id: string
+          note: string | null
+          placement_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          placement_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          placement_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placement_events_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      placements: {
+        Row: {
+          application_id: string
+          certificate_issued_at: string | null
+          company_id: string
+          confirmed_skills: string[]
+          created_at: string
+          employer_feedback: string | null
+          end_date: string | null
+          id: string
+          job_id: string
+          learning_objectives: string[]
+          start_date: string | null
+          status: string
+          supervisor_contact: string | null
+          supervisor_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          certificate_issued_at?: string | null
+          company_id: string
+          confirmed_skills?: string[]
+          created_at?: string
+          employer_feedback?: string | null
+          end_date?: string | null
+          id?: string
+          job_id: string
+          learning_objectives?: string[]
+          start_date?: string | null
+          status?: string
+          supervisor_contact?: string | null
+          supervisor_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          certificate_issued_at?: string | null
+          company_id?: string
+          confirmed_skills?: string[]
+          created_at?: string
+          employer_feedback?: string | null
+          end_date?: string | null
+          id?: string
+          job_id?: string
+          learning_objectives?: string[]
+          start_date?: string | null
+          status?: string
+          supervisor_contact?: string | null
+          supervisor_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placements_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "placements_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           application_updates: boolean | null
@@ -449,20 +610,67 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      can_manage_placement: {
+        Args: { _placement_id: string; _uid: string }
+        Returns: boolean
+      }
       get_my_hours_summary: { Args: never; Returns: Json }
+      get_placement_hours: { Args: { _placement_id: string }; Returns: Json }
       get_public_profile: { Args: { _slug: string }; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_placement_employer: {
         Args: { _application_id: string; _user_id: string }
         Returns: boolean
       }
+      placement_action: {
+        Args: { _action: string; _note?: string; _placement_id: string }
+        Returns: undefined
+      }
+      update_placement_details: {
+        Args: {
+          _confirmed_skills: string[]
+          _employer_feedback: string
+          _end_date: string
+          _learning_objectives: string[]
+          _placement_id: string
+          _start_date: string
+          _supervisor_contact: string
+          _supervisor_name: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -589,6 +797,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
