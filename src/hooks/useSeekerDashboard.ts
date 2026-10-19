@@ -1,5 +1,6 @@
 import { REFERENCE_SELECT, StructuredReference } from "@/components/references";
 import { SkillVerification } from "@/lib/skills";
+import { PortfolioItem, RemovalRequest } from "@/lib/portfolio";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -92,6 +93,7 @@ export interface PublicProfileSettings {
   show_hours: boolean;
   show_verified_skills: boolean;
   show_references: boolean;
+  show_portfolio: boolean;
 }
 
 export type PlacementReference = StructuredReference;
@@ -156,6 +158,8 @@ export const useSeekerDashboard = () => {
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [references, setReferences] = useState<PlacementReference[]>([]);
   const [skillVerifications, setSkillVerifications] = useState<SkillVerification[]>([]);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [removalRequests, setRemovalRequests] = useState<RemovalRequest[]>([]);
   const [publicProfile, setPublicProfile] = useState<PublicProfileSettings | null>(null);
 
   const load = useCallback(async () => {
@@ -163,7 +167,7 @@ export const useSeekerDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const [apps, favs, hrs, sum, prof, pub, plc] = await Promise.all([
+      const [apps, favs, hrs, sum, prof, pub, plc, pf, rr] = await Promise.all([
         supabase.from("applications").select("id, job_id, status, submitted_at").eq("user_id", user.id).order("submitted_at", { ascending: false }),
         supabase.from("favorites").select("job_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("hour_entries").select("*").eq("user_id", user.id).order("work_date", { ascending: false }),
@@ -171,8 +175,10 @@ export const useSeekerDashboard = () => {
         supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).maybeSingle(),
         supabase.from("public_profiles").select("*").eq("user_id", user.id).maybeSingle(),
         supabase.from("placements").select(PLACEMENT_SELECT).eq("user_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("portfolio_items").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("portfolio_removal_requests").select("*").eq("owner_id", user.id).order("created_at", { ascending: false }),
       ]);
-      const firstError = [apps, favs, hrs, sum, prof, pub, plc].find((r) => r.error)?.error;
+      const firstError = [apps, favs, hrs, sum, prof, pub, plc, pf, rr].find((r) => r.error)?.error;
       if (firstError) throw firstError;
 
       const jobMap = await resolveJobs([...(apps.data ?? []).map((a) => a.job_id), ...(favs.data ?? []).map((f) => f.job_id)]);
@@ -188,6 +194,8 @@ export const useSeekerDashboard = () => {
         if (sv.error) throw sv.error;
         setSkillVerifications((sv.data ?? []) as SkillVerification[]);
       } else { setReferences([]); setSkillVerifications([]); }
+      setPortfolio((pf.data ?? []) as PortfolioItem[]);
+      setRemovalRequests((rr.data ?? []) as RemovalRequest[]);
       setHours((hrs.data ?? []) as HourEntry[]);
       if (sum.data) setSummary(sum.data as unknown as HoursSummary);
       setProfile(prof.data ?? null);
@@ -265,6 +273,6 @@ export const useSeekerDashboard = () => {
     loading, error, reload: load,
     applications, placements, activePlacements, completed, saved, hours, summary, profile, publicProfile,
     completionChecks, completion,
-    logHours, deleteHours, savePublicProfile, references, setReferenceApproval, skillVerifications, setSkillVisibility,
+    logHours, deleteHours, savePublicProfile, references, setReferenceApproval, skillVerifications, setSkillVisibility, portfolio, removalRequests,
   };
 };

@@ -125,6 +125,7 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
     show_hours: p?.show_hours ?? true,
     show_verified_skills: p?.show_verified_skills ?? true,
     show_references: p?.show_references ?? false,
+    show_portfolio: p?.show_portfolio ?? true,
   });
   const [busy, setBusy] = useState(false);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -343,7 +344,8 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
             <VisibilityRow label="Interests, industries & work preference" checked={form.show_interests} onChange={(v) => set("show_interests", v)} />
             <VisibilityRow label="Education level" checked={form.show_education} onChange={(v) => set("show_education", v)} />
             <VisibilityRow label="Availability" checked={form.show_availability} onChange={(v) => set("show_availability", v)} />
-            <VisibilityRow label="Portfolio links" checked={form.show_links} onChange={(v) => set("show_links", v)} />
+            <VisibilityRow label="Published portfolio items" checked={form.show_portfolio} onChange={(v) => set("show_portfolio", v)} />
+            <VisibilityRow label="Links" checked={form.show_links} onChange={(v) => set("show_links", v)} />
             <VisibilityRow label={form.is_minor ? "Profile photo (hidden for under-18s)" : "Profile photo"} checked={form.show_avatar && !form.is_minor} disabled={form.is_minor} onChange={(v) => set("show_avatar", v)} />
             <VisibilityRow label={form.is_minor ? "General location (hidden for under-18s)" : "General location"} checked={form.show_location && !form.is_minor} disabled={form.is_minor} onChange={(v) => set("show_location", v)} />
           </div>

@@ -2,6 +2,8 @@ import { PublicVerifiedSkill, categoryLabel } from "@/lib/skills";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatHours } from "@/hooks/useSeekerDashboard";
+import { PublicPortfolioItem } from "@/lib/portfolio";
+import { PublicPortfolioList } from "@/components/portfolio";
 import { Award, BadgeCheck, Quote, User } from "lucide-react";
 
 export interface PublicData {
@@ -21,6 +23,7 @@ export interface PublicData {
   verified_minutes: number | null;
   verified_skills: PublicVerifiedSkill[];
   experiences: { title: string; company: string; start: string | null; end: string | null; verified_minutes: number | null }[];
+  portfolio?: PublicPortfolioItem[];
   references: { author_name: string; author_role: string | null; content: string; company: string; duties?: string | null; strengths?: string | null; skills_demonstrated?: string | null; created_at?: string }[];
 }
 
@@ -160,8 +163,14 @@ const PublicProfileView = ({ data }: { data: PublicData }) => {
         </Section>
       )}
 
-      {safeLinks.length > 0 && (
+      {(data.portfolio?.length ?? 0) > 0 && (
         <Section title="Portfolio" tag={<SelfReported />}>
+          <PublicPortfolioList items={data.portfolio!} />
+        </Section>
+      )}
+
+      {safeLinks.length > 0 && (
+        <Section title="Links" tag={<SelfReported />}>
           <ul className="space-y-1.5">{safeLinks.map((l) => (
             <li key={l.url}><a href={l.url} target="_blank" rel="noopener noreferrer nofollow ugc" className="text-primary hover:underline text-sm">{l.label}</a></li>
           ))}</ul>

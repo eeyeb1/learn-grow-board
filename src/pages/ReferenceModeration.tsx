@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { REFERENCE_SELECT, REPORT_REASONS, ReferenceBody, STATUS_LABEL, StructuredReference } from "@/components/references";
 import { toast } from "sonner";
+import { PortfolioRemovalQueue } from "@/components/portfolio";
 import { ShieldCheck } from "lucide-react";
 
 interface Report { id: string; reference_id: string; reason: string; details: string | null; status: string; created_at: string; resolution_note: string | null; resolved_at: string | null }
@@ -94,6 +95,7 @@ const ReferenceModeration = () => {
             </CardContent></Card>
           );
         })}
+        {isAdmin && <PortfolioRemovalQueue />}
       </div>
       <Footer />
     </div>
