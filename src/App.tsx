@@ -26,6 +26,7 @@ import Settings from "./pages/Settings";
 import ScrollToNavigation from "./components/ScrollToNavigation";
 import Dashboard from "./pages/Dashboard";
 import HourApprovals from "./pages/HourApprovals";
+import ReferenceModeration from "./pages/ReferenceModeration";
 import PublicProfile from "./pages/PublicProfile";
 import PlacementDetail from "./pages/PlacementDetail";
 
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/:section" element={<Dashboard />} />
             <Route path="/hour-approvals" element={<HourApprovals />} />
+            <Route path="/moderation/references" element={<ReferenceModeration />} />
             <Route path="/placements/:id" element={<PlacementDetail />} />
             <Route path="/profile/:username" element={<PublicProfile />} />
             <Route path="/p/:username" element={<PublicProfile />} />

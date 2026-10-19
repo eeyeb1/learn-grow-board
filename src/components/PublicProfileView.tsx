@@ -21,7 +21,7 @@ export interface PublicData {
   verified_minutes: number | null;
   verified_skills: PublicVerifiedSkill[];
   experiences: { title: string; company: string; start: string | null; end: string | null; verified_minutes: number | null }[];
-  references: { author_name: string; author_role: string | null; content: string; company: string }[];
+  references: { author_name: string; author_role: string | null; content: string; company: string; duties?: string | null; strengths?: string | null; skills_demonstrated?: string | null; created_at?: string }[];
 }
 
 const WORK_PREF: Record<string, string> = { remote: "Remote", in_person: "In person", hybrid: "Hybrid", any: "Open to any" };
