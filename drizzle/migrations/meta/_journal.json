@@ -22,6 +22,13 @@
       "when": 1792421967903,
       "tag": "0002_placements_with_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792421985352,
+      "tag": "0003_jobs_visible_for_placements",
+      "breakpoints": true
     }
   ]
 }
