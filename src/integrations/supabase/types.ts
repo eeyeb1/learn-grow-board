@@ -684,6 +684,66 @@ export type Database = {
         }
         Relationships: []
       }
+      skill_verifications: {
+        Row: {
+          category: string
+          company_id: string
+          created_at: string
+          example: string | null
+          id: string
+          placement_id: string
+          show_on_profile: boolean
+          skill: string
+          user_id: string
+          verified_at: string
+          verified_by: string
+          verifier_name: string
+        }
+        Insert: {
+          category: string
+          company_id: string
+          created_at?: string
+          example?: string | null
+          id?: string
+          placement_id: string
+          show_on_profile?: boolean
+          skill: string
+          user_id: string
+          verified_at?: string
+          verified_by: string
+          verifier_name: string
+        }
+        Update: {
+          category?: string
+          company_id?: string
+          created_at?: string
+          example?: string | null
+          id?: string
+          placement_id?: string
+          show_on_profile?: boolean
+          skill?: string
+          user_id?: string
+          verified_at?: string
+          verified_by?: string
+          verifier_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_verifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_verifications_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -729,6 +789,11 @@ export type Database = {
         Args: { _action: string; _note?: string; _placement_id: string }
         Returns: undefined
       }
+      revoke_skill_verification: { Args: { _id: string }; Returns: undefined }
+      set_skill_visibility: {
+        Args: { _id: string; _visible: boolean }
+        Returns: undefined
+      }
       update_placement_details: {
         Args: {
           _confirmed_skills: string[]
@@ -741,6 +806,16 @@ export type Database = {
           _supervisor_name: string
         }
         Returns: undefined
+      }
+      verify_placement_skill: {
+        Args: {
+          _category: string
+          _directly_observed: boolean
+          _example: string
+          _placement_id: string
+          _skill: string
+        }
+        Returns: string
       }
     }
     Enums: {

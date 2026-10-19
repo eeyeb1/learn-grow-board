@@ -36,6 +36,13 @@
       "when": 1792422608992,
       "tag": "0004_public_profile_sections_references",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792423159564,
+      "tag": "0005_skill_verifications",
+      "breakpoints": true
     }
   ]
 }

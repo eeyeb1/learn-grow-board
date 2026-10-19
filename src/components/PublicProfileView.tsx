@@ -1,3 +1,4 @@
+import { PublicVerifiedSkill, categoryLabel } from "@/lib/skills";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatHours } from "@/hooks/useSeekerDashboard";
@@ -18,7 +19,7 @@ export interface PublicData {
   links: { label: string; url: string }[];
   avatar_url: string | null;
   verified_minutes: number | null;
-  verified_skills: string[];
+  verified_skills: PublicVerifiedSkill[];
   experiences: { title: string; company: string; start: string | null; end: string | null; verified_minutes: number | null }[];
   references: { author_name: string; author_role: string | null; content: string; company: string }[];
 }
@@ -28,12 +29,12 @@ const month = (ym: string | null) => (ym ? new Date(ym + "-01T00:00:00").toLocal
 
 const Verified = () => (
   <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium">
-    <BadgeCheck className="w-3.5 h-3.5" /> Employer verified
+    <BadgeCheck className="w-3.5 h-3.5" /> Employer Verified
   </span>
 );
 const SelfReported = () => (
   <span className="inline-flex items-center gap-1 rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-xs font-medium">
-    <User className="w-3.5 h-3.5" /> Self-reported
+    <User className="w-3.5 h-3.5" /> Self Reported
   </span>
 );
 
@@ -103,7 +104,13 @@ const PublicProfileView = ({ data }: { data: PublicData }) => {
 
       {data.verified_skills.length > 0 && (
         <Section title="Employer-confirmed skills" tag={<Verified />}>
-          <div className="flex flex-wrap gap-2">{data.verified_skills.map((s) => <Badge key={s} variant="soft" className="bg-primary/10 text-primary">{s}</Badge>)}</div>
+          <div className="space-y-3">{data.verified_skills.map((s, i) => (
+            <div key={i}>
+              <p className="text-foreground font-medium flex flex-wrap items-center gap-2"><BadgeCheck className="w-4 h-4 text-primary" />{s.skill}<Badge variant="soft">{categoryLabel(s.category)}</Badge></p>
+              {s.example && <p className="text-sm text-muted-foreground mt-0.5">“{s.example}”</p>}
+              <p className="text-xs text-muted-foreground">Confirmed by {s.company} · {new Date(s.verified_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</p>
+            </div>
+          ))}</div>
         </Section>
       )}
 

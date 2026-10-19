@@ -18,6 +18,8 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { categoryLabel } from "@/lib/skills";
+import { EmployerVerifiedBadge, SelfReportedBadge } from "@/components/PlacementSkillsPanel";
 import { Camera, Copy, ExternalLink, Eye, EyeOff, Globe, Share2, ShieldCheck, Loader2, Lock, Plus, Trash2, X, Lightbulb } from "lucide-react";
 
 type D = ReturnType<typeof useSeekerDashboard>;
@@ -240,6 +242,7 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
         <CardHeader><CardTitle>Interests & skills</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <TagInput id="ci" label="Career interests" values={form.career_interests} onChange={(v) => set("career_interests", v)} placeholder="e.g. Marketing — press Enter" max={15} />
+          <div className="flex items-center gap-2 -mb-1"><SelfReportedBadge /><span className="text-xs text-muted-foreground">Skills you add yourself</span></div>
           <TagInput id="sk" label="Skills" values={form.skills} onChange={(v) => set("skills", v)} placeholder="e.g. Excel — press Enter" max={30} />
           <TagInput id="pi" label="Preferred industries" values={form.preferred_industries} onChange={(v) => set("preferred_industries", v)} placeholder="e.g. Healthcare — press Enter" max={15} />
           <div className="space-y-1.5">
@@ -346,6 +349,7 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
         </CardContent>
       </Card>
 
+      <VerifiedSkillsCard d={d} />
       <ReferencesCard d={d} />
 
       <Card>
@@ -412,6 +416,41 @@ const SeekerProfileEditor = ({ d }: { d: D }) => {
   );
 };
 
+const VerifiedSkillsCard = ({ d }: { d: D }) => {
+  const placementName = (id: string) => {
+    const p = d.placements.find((x) => x.id === id);
+    return p ? `${p.job?.title ?? "Placement"} · ${p.company?.company_name ?? ""}` : "";
+  };
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">Skills <EmployerVerifiedBadge /></CardTitle>
+        <p className="text-sm text-muted-foreground">Skills your supervisors confirmed they directly observed. Choose which appear on your public profile (completed placements only).</p>
+      </CardHeader>
+      <CardContent>
+        {d.skillVerifications.length === 0 ? (
+          <div className="rounded-lg bg-muted/50 p-6 text-center">
+            <p className="text-sm font-medium text-foreground">No skills confirmed yet</p>
+            <p className="text-xs text-muted-foreground mt-1">When a supervisor confirms a skill on one of your placements, it will appear here. Your own skills above stay marked as Self Reported.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {d.skillVerifications.map((s) => (
+              <div key={s.id} className="flex items-start justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground">{s.skill} <Badge variant="soft" className="ml-1">{categoryLabel(s.category)}</Badge></p>
+                  <p className="text-xs text-muted-foreground">{placementName(s.placement_id)} · Verified by {s.verifier_name} on {new Date(s.verified_at).toLocaleDateString()}</p>
+                </div>
+                <Switch checked={s.show_on_profile} aria-label={`Show ${s.skill} publicly`} onCheckedChange={async (v) => { const r = await d.setSkillVisibility(s.id, v); if (r.error) toast.error("Couldn't update visibility"); }} />
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
 const ReferencesCard = ({ d }: { d: D }) => {
   if (d.references.length === 0) {
     return (
@@ -463,7 +502,10 @@ function buildPreview(f: Form, d: D): PublicData {
     links: f.show_links ? f.links.filter((l) => l.url.startsWith("https://") && l.label) : [],
     avatar_url: f.show_avatar && !f.is_minor ? d.profile?.avatar_url ?? null : null,
     verified_minutes: f.show_hours ? d.summary.verified_minutes : null,
-    verified_skills: f.show_verified_skills ? [...new Set(completed.flatMap((x) => x.confirmed_skills))].sort() : [],
+    verified_skills: f.show_verified_skills ? d.skillVerifications.filter((sv) => sv.show_on_profile && completed.some((x) => x.id === sv.placement_id)).map((sv) => ({
+      skill: sv.skill, category: sv.category, example: sv.example, verified_at: sv.verified_at,
+      company: completed.find((x) => x.id === sv.placement_id)?.company?.company_name ?? "",
+    })) : [],
     experiences: f.show_experiences ? completed.map((x) => ({
       title: x.job?.title ?? "Role", company: x.company?.company_name ?? "",
       start: x.start_date?.slice(0, 7) ?? null, end: x.end_date?.slice(0, 7) ?? null,

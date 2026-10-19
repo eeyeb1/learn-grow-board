@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { formatHours, HourEntry, Placement, PLACEMENT_SELECT } from "@/hooks/useSeekerDashboard";
 import { StatusBadge } from "@/pages/Dashboard";
+import PlacementSkillsPanel from "@/components/PlacementSkillsPanel";
 import { toast } from "sonner";
 import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, History, Loader2, MessageSquare, Printer, Target, Trash2, UserCheck, Wrench } from "lucide-react";
 
@@ -28,7 +29,7 @@ interface PlacementEvent { id: string; actor_role: string; action: string; from_
 const fmt = (d: string | null) => (d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "To be confirmed");
 const ACTION_LABEL: Record<string, string> = {
   created: "Placement created", reinstated: "Placement reinstated", activate: "Placement activated",
-  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated",
+  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated", skill_verified: "Skill confirmed", skill_revoked: "Skill confirmation removed",
 };
 
 const detailsSchema = z.object({
@@ -178,18 +179,7 @@ const PlacementDetail = () => {
               </TabsContent>
 
               <TabsContent value="skills">
-                <Card><CardContent className="p-6 space-y-4">
-                  <div>
-                    <p className="font-medium text-foreground mb-2">Confirmed by your employer</p>
-                    {placement.confirmed_skills.length === 0 ? <p className="text-sm text-muted-foreground">No skills confirmed yet.</p> :
-                      <div className="flex flex-wrap gap-2">{placement.confirmed_skills.map((s) => <Badge key={s} className="bg-primary/10 text-primary" variant="soft">{s}</Badge>)}</div>}
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground mb-2">Listed for this opportunity</p>
-                    {(placement.job?.skills ?? []).length === 0 ? <p className="text-sm text-muted-foreground">No skills listed.</p> :
-                      <div className="flex flex-wrap gap-2">{placement.job!.skills!.map((s) => <Badge key={s} variant="soft">{s}</Badge>)}</div>}
-                  </div>
-                </CardContent></Card>
+                <PlacementSkillsPanel placementId={placement.id} status={placement.status} canManage={canManage} isSeeker={isSeeker} listedSkills={placement.job?.skills ?? []} />
               </TabsContent>
 
               {isSeeker && (
@@ -367,7 +357,6 @@ const ManagePanel = ({ placement, onChange }: { placement: Placement; onChange: 
           <div className="space-y-1.5"><Label htmlFor="sc">Supervisor work contact</Label><Input id="sc" maxLength={200} placeholder="Work email or office line — not personal" value={f.supervisor_contact} onChange={(e) => setF({ ...f, supervisor_contact: e.target.value })} /></div>
         </div>
         <div className="space-y-1.5"><Label htmlFor="lo">Learning objectives (one per line)</Label><Textarea id="lo" rows={3} value={f.objectives} onChange={(e) => setF({ ...f, objectives: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label htmlFor="cs">Confirmed skills (comma separated)</Label><Input id="cs" value={f.skills} onChange={(e) => setF({ ...f, skills: e.target.value })} /></div>
         <div className="space-y-1.5"><Label htmlFor="fb">Feedback for the seeker</Label><Textarea id="fb" rows={3} maxLength={3000} value={f.feedback} onChange={(e) => setF({ ...f, feedback: e.target.value })} /></div>
         <Button onClick={saveDetails} disabled={busy}>{busy && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}Save details</Button>
         {placement.status === "completed" && <ReferenceForm placementId={placement.id} />}
