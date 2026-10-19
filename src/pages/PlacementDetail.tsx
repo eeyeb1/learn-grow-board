@@ -21,8 +21,9 @@ import { formatHours, HourEntry, Placement, PLACEMENT_SELECT } from "@/hooks/use
 import { StatusBadge } from "@/pages/Dashboard";
 import PlacementSkillsPanel from "@/components/PlacementSkillsPanel";
 import { EmployerReferencePanel } from "@/components/references";
+import CertificatePanel from "@/components/CertificatePanel";
 import { toast } from "sonner";
-import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, History, Loader2, MessageSquare, Printer, Target, Trash2, UserCheck, Wrench } from "lucide-react";
+import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, History, Loader2, MessageSquare, Target, Trash2, UserCheck, Wrench } from "lucide-react";
 
 interface DiaryEntry { id: string; entry_date: string; content: string }
 interface PlacementEvent { id: string; actor_role: string; action: string; from_status: string | null; to_status: string | null; note: string | null; created_at: string }
@@ -30,7 +31,7 @@ interface PlacementEvent { id: string; actor_role: string; action: string; from_
 const fmt = (d: string | null) => (d ? new Date(d + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "To be confirmed");
 const ACTION_LABEL: Record<string, string> = {
   created: "Placement created", reinstated: "Placement reinstated", activate: "Placement activated",
-  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated", skill_verified: "Skill confirmed", reference_submitted: "Reference submitted", reference_edited: "Reference edited", reference_withdrawn: "Reference withdrawn", reference_approved: "Reference approved for public profile", reference_unapproved: "Reference removed from public profile", reference_reported: "Reference reported", reference_hidden: "Reference hidden by moderator", reference_report_dismissed: "Reference report dismissed", reference_restored: "Reference restored by moderator", skill_revoked: "Skill confirmation removed",
+  complete: "Placement marked completed", cancel: "Placement cancelled", cancelled: "Placement cancelled", details_updated: "Placement details updated", skill_verified: "Skill confirmed", reference_submitted: "Reference submitted", reference_edited: "Reference edited", reference_withdrawn: "Reference withdrawn", reference_approved: "Reference approved for public profile", reference_unapproved: "Reference removed from public profile", reference_reported: "Reference reported", reference_hidden: "Reference hidden by moderator", reference_report_dismissed: "Reference report dismissed", reference_restored: "Reference restored by moderator", certificate_issued: "Certificate issued", certificate_revoked: "Certificate revoked", certificate_reissued: "Certificate reissued", skill_revoked: "Skill confirmation removed",
 };
 
 const detailsSchema = z.object({
@@ -198,26 +199,7 @@ const PlacementDetail = () => {
               </TabsContent>
 
               <TabsContent value="certificate">
-                {placement.status === "completed" && placement.certificate_issued_at ? (
-                  <div className="space-y-3">
-                    <Button size="sm" variant="outline" className="print:hidden" onClick={() => window.print()}><Printer className="w-4 h-4 mr-1" />Print or save as PDF</Button>
-                          <Card className="border-2 border-primary/30" id="certificate">
-                <CardContent className="p-10 text-center space-y-3">
-                  <Award className="w-10 h-10 text-primary mx-auto" />
-                  <p className="uppercase tracking-widest text-xs text-muted-foreground">Certificate of Work Experience</p>
-                  <p className="text-muted-foreground">This confirms that the work experience placement</p>
-                  <p className="font-display text-2xl font-bold text-foreground">{placement.job?.title}</p>
-                  <p className="text-muted-foreground">at <span className="text-foreground font-medium">{placement.company?.company_name}</span></p>
-                  <p className="text-muted-foreground">from {fmt(placement.start_date)} to {fmt(placement.end_date)}</p>
-                  <p className="text-foreground">was completed with <strong>{formatHours(totals.verified_minutes)}</strong> of employer-verified hours.</p>
-                  <p className="text-xs text-muted-foreground pt-4">Issued {new Date(placement.certificate_issued_at).toLocaleDateString()} · Reference {placement.id.slice(0, 8).toUpperCase()} · ExpBoard</p>
-                </CardContent>
-              </Card>
-            
-                  </div>
-                ) : (
-                  <Card><CardContent className="p-6 text-sm text-muted-foreground">A certificate becomes available once your employer marks this placement as completed.</CardContent></Card>
-                )}
+                <CertificatePanel placementId={placement.id} status={placement.status} isSeeker={isSeeker} canManage={canManage} onChange={load} />
               </TabsContent>
 
               <TabsContent value="history">

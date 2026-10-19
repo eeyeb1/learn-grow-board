@@ -50,6 +50,13 @@
       "when": 1792423425802,
       "tag": "0006_structured_references_moderation",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792425772340,
+      "tag": "0007_certificates",
+      "breakpoints": true
     }
   ]
 }
