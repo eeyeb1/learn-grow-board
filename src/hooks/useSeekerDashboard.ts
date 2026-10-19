@@ -35,6 +35,7 @@ export interface HourEntry {
 export interface Placement {
   id: string;
   application_id: string;
+  user_id: string;
   status: "upcoming" | "active" | "completed" | "cancelled";
   start_date: string | null;
   end_date: string | null;
@@ -50,7 +51,7 @@ export interface Placement {
 }
 
 export const PLACEMENT_SELECT =
-  "id, application_id, status, start_date, end_date, learning_objectives, supervisor_name, supervisor_contact, confirmed_skills, employer_feedback, certificate_issued_at, created_at, job:jobs(id, title, skills, location), company:company_profiles(company_name)";
+  "id, application_id, user_id, status, start_date, end_date, learning_objectives, supervisor_name, supervisor_contact, confirmed_skills, employer_feedback, certificate_issued_at, created_at, job:jobs(id, title, skills, location), company:company_profiles(company_name)";
 
 export interface HoursSummary {
   verified_minutes: number;

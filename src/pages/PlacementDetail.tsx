@@ -145,10 +145,10 @@ const PlacementDetail = () => {
               </CardContent>
             </Card>
 
-            {canManage && <ManagePanel placement={placement} onChange={load} />}
+            {canManage && !isSeeker && <ManagePanel placement={placement} onChange={load} />}
 
-            <Tabs defaultValue="hours" className="print:hidden">
-              <TabsList className="flex-wrap h-auto">
+            <Tabs defaultValue="hours">
+              <TabsList className="flex-wrap h-auto print:hidden">
                 <TabsTrigger value="hours"><Clock className="w-4 h-4 mr-1" />Hours Log</TabsTrigger>
                 <TabsTrigger value="skills"><Wrench className="w-4 h-4 mr-1" />Skills</TabsTrigger>
                 {isSeeker && <TabsTrigger value="diary"><BookOpen className="w-4 h-4 mr-1" />Diary</TabsTrigger>}
@@ -209,7 +209,20 @@ const PlacementDetail = () => {
               <TabsContent value="certificate">
                 {placement.status === "completed" && placement.certificate_issued_at ? (
                   <div className="space-y-3">
-                    <Button size="sm" variant="outline" onClick={() => window.print()}><Printer className="w-4 h-4 mr-1" />Print or save as PDF</Button>
+                    <Button size="sm" variant="outline" className="print:hidden" onClick={() => window.print()}><Printer className="w-4 h-4 mr-1" />Print or save as PDF</Button>
+                          <Card className="border-2 border-primary/30" id="certificate">
+                <CardContent className="p-10 text-center space-y-3">
+                  <Award className="w-10 h-10 text-primary mx-auto" />
+                  <p className="uppercase tracking-widest text-xs text-muted-foreground">Certificate of Work Experience</p>
+                  <p className="text-muted-foreground">This confirms that the work experience placement</p>
+                  <p className="font-display text-2xl font-bold text-foreground">{placement.job?.title}</p>
+                  <p className="text-muted-foreground">at <span className="text-foreground font-medium">{placement.company?.company_name}</span></p>
+                  <p className="text-muted-foreground">from {fmt(placement.start_date)} to {fmt(placement.end_date)}</p>
+                  <p className="text-foreground">was completed with <strong>{formatHours(totals.verified_minutes)}</strong> of employer-verified hours.</p>
+                  <p className="text-xs text-muted-foreground pt-4">Issued {new Date(placement.certificate_issued_at).toLocaleDateString()} · Reference {placement.id.slice(0, 8).toUpperCase()} · ExpBoard</p>
+                </CardContent>
+              </Card>
+            
                   </div>
                 ) : (
                   <Card><CardContent className="p-6 text-sm text-muted-foreground">A certificate becomes available once your employer marks this placement as completed.</CardContent></Card>
@@ -229,20 +242,6 @@ const PlacementDetail = () => {
               </TabsContent>
             </Tabs>
 
-            {placement.status === "completed" && placement.certificate_issued_at && (
-              <Card className="border-2 border-primary/30 hidden print:block [.certificate-visible_&]:block" id="certificate">
-                <CardContent className="p-10 text-center space-y-3">
-                  <Award className="w-10 h-10 text-primary mx-auto" />
-                  <p className="uppercase tracking-widest text-xs text-muted-foreground">Certificate of Work Experience</p>
-                  <p className="text-muted-foreground">This confirms that the work experience placement</p>
-                  <p className="font-display text-2xl font-bold text-foreground">{placement.job?.title}</p>
-                  <p className="text-muted-foreground">at <span className="text-foreground font-medium">{placement.company?.company_name}</span></p>
-                  <p className="text-muted-foreground">from {fmt(placement.start_date)} to {fmt(placement.end_date)}</p>
-                  <p className="text-foreground">was completed with <strong>{formatHours(totals.verified_minutes)}</strong> of employer-verified hours.</p>
-                  <p className="text-xs text-muted-foreground pt-4">Issued {new Date(placement.certificate_issued_at).toLocaleDateString()} · Reference {placement.id.slice(0, 8).toUpperCase()} · ExpBoard</p>
-                </CardContent>
-              </Card>
-            )}
           </div>
         )}
       </div>
