@@ -16,6 +16,13 @@ interface PublicData {
   bio: string | null;
   skills: string[];
   avatar_url: string | null;
+  career_interests: string[];
+  preferred_industries: string[];
+  work_preference: string | null;
+  location: string | null;
+  education_level: string | null;
+  availability: string | null;
+  links: { label: string; url: string }[];
   verified_minutes: number;
   experiences: { title: string; company: string; industry: string | null; verified_minutes: number }[];
 }
@@ -77,6 +84,32 @@ const PublicProfile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {(data.location || data.work_preference || data.education_level || data.availability) && (
+              <Card><CardContent className="p-6 grid sm:grid-cols-2 gap-3 text-sm">
+                {data.location && <div><p className="text-muted-foreground">Location</p><p className="text-foreground">{data.location}</p></div>}
+                {data.work_preference && <div><p className="text-muted-foreground">Work preference</p><p className="text-foreground">{({ remote: "Remote", in_person: "In person", hybrid: "Hybrid", any: "Open to any" } as Record<string, string>)[data.work_preference]}</p></div>}
+                {data.education_level && <div><p className="text-muted-foreground">Education</p><p className="text-foreground">{data.education_level}</p></div>}
+                {data.availability && <div><p className="text-muted-foreground">Availability</p><p className="text-foreground">{data.availability}</p></div>}
+              </CardContent></Card>
+            )}
+
+            {[["Career interests", data.career_interests], ["Preferred industries", data.preferred_industries]].map(([t, list]) =>
+              (list as string[]).length > 0 && (
+                <Card key={t as string}><CardContent className="p-6">
+                  <h2 className="font-semibold text-foreground mb-3">{t as string}</h2>
+                  <div className="flex flex-wrap gap-2">{(list as string[]).map((s) => <Badge key={s} variant="soft">{s}</Badge>)}</div>
+                </CardContent></Card>
+              ))}
+
+            {data.links.length > 0 && (
+              <Card><CardContent className="p-6">
+                <h2 className="font-semibold text-foreground mb-3">Links</h2>
+                <ul className="space-y-1.5">{data.links.filter((l) => l.url.startsWith("https://")).map((l) => (
+                  <li key={l.url}><a href={l.url} target="_blank" rel="noopener noreferrer nofollow" className="text-primary hover:underline text-sm">{l.label}</a></li>
+                ))}</ul>
+              </CardContent></Card>
+            )}
 
             {data.skills.length > 0 && (
               <Card><CardContent className="p-6">

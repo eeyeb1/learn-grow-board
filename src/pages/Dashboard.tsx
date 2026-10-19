@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/contexts/AuthContext";
 import { useSeekerDashboard, formatHours, DashApplication, HourEntry, PublicProfileSettings } from "@/hooks/useSeekerDashboard";
 import { toast } from "sonner";
+import SeekerProfileEditor from "@/components/SeekerProfileEditor";
 import {
   LayoutDashboard, Search, FileText, Award, Clock, Globe, Settings as SettingsIcon,
   CheckCircle2, Briefcase, Hourglass, Heart, AlertCircle, ArrowRight, Trash2, Copy, Loader2, ExternalLink,
@@ -29,7 +30,7 @@ const navItems = [
   { to: "/dashboard/applications", label: "Applications", icon: FileText },
   { to: "/dashboard/experiences", label: "My Experiences", icon: Award },
   { to: "/dashboard/hours", label: "Hours & Verification", icon: Clock },
-  { to: "/dashboard/profile", label: "Public Profile", icon: Globe },
+  { to: "/dashboard/profile", label: "My Profile", icon: Globe },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
 
@@ -128,7 +129,7 @@ const Dashboard = () => {
               {section === "applications" && <Applications d={d} />}
               {section === "experiences" && <Experiences d={d} />}
               {section === "hours" && <Hours d={d} />}
-              {section === "profile" && <PublicProfileEditor d={d} />}
+              {section === "profile" && <SeekerProfileEditor d={d} />}
             </>
           )}
         </main>
@@ -414,86 +415,6 @@ const Hours = ({ d }: { d: D }) => {
         </CardContent>
       </Card>
     </>
-  );
-};
-
-const PublicProfileEditor = ({ d }: { d: D }) => {
-  const p = d.publicProfile;
-  const defaultSlug = (d.profile?.full_name || "me").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) + "-" + Math.random().toString(36).slice(2, 6);
-  const [form, setForm] = useState<Omit<PublicProfileSettings, "user_id">>({
-    slug: p?.slug ?? defaultSlug,
-    is_public: p?.is_public ?? false,
-    display_name: p?.display_name ?? d.profile?.full_name ?? "",
-    headline: p?.headline ?? "",
-    bio: p?.bio ?? "",
-    skills: p?.skills ?? [],
-    show_avatar: p?.show_avatar ?? false,
-  });
-  const [skillsText, setSkillsText] = useState((p?.skills ?? []).join(", "));
-  const [busy, setBusy] = useState(false);
-  const url = `${window.location.origin}/p/${p?.slug ?? form.slug}`;
-
-  const save = async () => {
-    if (!/^[a-z0-9-]{3,40}$/.test(form.slug)) return toast.error("Link can use 3–40 lowercase letters, numbers and dashes");
-    setBusy(true);
-    const skills = skillsText.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 30);
-    const { error } = await d.savePublicProfile({ ...form, skills });
-    setBusy(false);
-    error ? toast.error(error) : toast.success("Public profile saved");
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Public profile</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Only what you enter here is shown, plus your verified hours and completed experiences. Your email, phone, applications and pending hours are never shown.
-        </p>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between rounded-lg border border-border p-3">
-          <div>
-            <p className="font-medium text-foreground">Make my profile public</p>
-            <p className="text-xs text-muted-foreground">Anyone with the link can view it.</p>
-          </div>
-          <Switch checked={form.is_public} onCheckedChange={(v) => setForm({ ...form, is_public: v })} />
-        </div>
-        {p?.is_public && (
-          <div className="flex gap-2">
-            <Input readOnly value={url} />
-            <Button variant="outline" size="icon" aria-label="Copy link" onClick={() => { navigator.clipboard.writeText(url); toast.success("Link copied"); }}><Copy className="w-4 h-4" /></Button>
-            <a href={url} target="_blank" rel="noreferrer"><Button variant="outline" size="icon" aria-label="Open profile"><ExternalLink className="w-4 h-4" /></Button></a>
-          </div>
-        )}
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="slug">Profile link</Label>
-            <Input id="slug" value={form.slug} maxLength={40} onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase() })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="dn">Display name</Label>
-            <Input id="dn" maxLength={80} value={form.display_name ?? ""} onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="hl">Headline</Label>
-          <Input id="hl" maxLength={120} value={form.headline ?? ""} onChange={(e) => setForm({ ...form, headline: e.target.value })} placeholder="e.g. Aspiring data analyst" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="bio">Bio</Label>
-          <Textarea id="bio" maxLength={1000} rows={4} value={form.bio ?? ""} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="skills">Skills (comma separated)</Label>
-          <Input id="skills" value={skillsText} onChange={(e) => setSkillsText(e.target.value)} placeholder="Excel, Customer service, Figma" />
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch id="sa" checked={form.show_avatar} onCheckedChange={(v) => setForm({ ...form, show_avatar: v })} />
-          <Label htmlFor="sa">Show my profile photo</Label>
-        </div>
-        <Button onClick={save} disabled={busy}>{busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Save public profile</Button>
-      </CardContent>
-    </Card>
   );
 };
 
