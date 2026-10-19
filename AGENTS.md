@@ -1,3 +1,4 @@
 - Centralize page-entry scroll handling inside the router so links and navigation buttons share consistent behavior while job-filter updates retain position.
 - Verified hours are computed only in database functions (get_my_hours_summary, get_public_profile) from approved hour_entries; a trigger forces new/edited seeker entries to pending so the client can never self-verify.
 - Public seeker profiles are read only via the get_public_profile RPC, which returns opt-in fields only; never expose public_profiles or profiles rows to anon directly.
+- Placements are created only by a trigger when an employer accepts an application; status changes and detail edits go through audited SECURITY DEFINER RPCs (placement_action, update_placement_details) that write placement_events — there are no client write policies on placements.
