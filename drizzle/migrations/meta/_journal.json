@@ -29,6 +29,13 @@
       "when": 1792421985352,
       "tag": "0003_jobs_visible_for_placements",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792422608992,
+      "tag": "0004_public_profile_sections_references",
+      "breakpoints": true
     }
   ]
 }

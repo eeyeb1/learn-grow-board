@@ -80,7 +80,37 @@ export interface PublicProfileSettings {
   show_education: boolean;
   show_availability: boolean;
   show_links: boolean;
+  is_minor: boolean;
+  guardian_acknowledged: boolean;
+  published_at?: string | null;
+  show_summary: boolean;
+  show_self_skills: boolean;
+  show_interests: boolean;
+  show_experiences: boolean;
+  show_hours: boolean;
+  show_verified_skills: boolean;
+  show_references: boolean;
 }
+
+export interface PlacementReference {
+  id: string;
+  placement_id: string;
+  author_name: string;
+  author_role: string | null;
+  content: string;
+  seeker_approved: boolean;
+  created_at: string;
+}
+
+export const profileUrl = (slug: string) => `${window.location.origin}/profile/${slug}`;
+
+export const shareProfile = async (slug: string) => {
+  const url = profileUrl(slug);
+  if (navigator.share) {
+    try { await navigator.share({ title: "My work experience profile", url }); return; } catch { /* cancelled */ }
+  }
+  await navigator.clipboard.writeText(url);
+};
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -130,6 +160,7 @@ export const useSeekerDashboard = () => {
   const [summary, setSummary] = useState<HoursSummary>({ verified_minutes: 0, pending_minutes: 0, pending_count: 0, rejected_count: 0 });
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const [placements, setPlacements] = useState<Placement[]>([]);
+  const [references, setReferences] = useState<PlacementReference[]>([]);
   const [publicProfile, setPublicProfile] = useState<PublicProfileSettings | null>(null);
 
   const load = useCallback(async () => {
@@ -153,6 +184,12 @@ export const useSeekerDashboard = () => {
       setApplications((apps.data ?? []).map((a) => ({ ...a, job: jobMap[a.job_id] ?? null })));
       setSaved((favs.data ?? []).map((f) => jobMap[f.job_id]).filter(Boolean) as DashJob[]);
       setPlacements((plc.data ?? []) as unknown as Placement[]);
+      const plcIds = (plc.data ?? []).map((x: { id: string }) => x.id);
+      if (plcIds.length) {
+        const refs = await supabase.from("placement_references").select("id, placement_id, author_name, author_role, content, seeker_approved, created_at").in("placement_id", plcIds).order("created_at", { ascending: false });
+        if (refs.error) throw refs.error;
+        setReferences((refs.data ?? []) as PlacementReference[]);
+      } else setReferences([]);
       setHours((hrs.data ?? []) as HourEntry[]);
       if (sum.data) setSummary(sum.data as unknown as HoursSummary);
       setProfile(prof.data ?? null);
@@ -192,6 +229,13 @@ export const useSeekerDashboard = () => {
     return { error: null };
   };
 
+  const setReferenceApproval = async (id: string, approved: boolean) => {
+    const { error } = await supabase.from("placement_references").update({ seeker_approved: approved }).eq("id", id);
+    if (error) return { error: error.message };
+    setReferences((r) => r.map((x) => (x.id === id ? { ...x, seeker_approved: approved } : x)));
+    return { error: null };
+  };
+
   const activePlacements = placements.filter((p) => p.status === "active");
   const completed = placements.filter((p) => p.status === "completed");
 
@@ -216,6 +260,6 @@ export const useSeekerDashboard = () => {
     loading, error, reload: load,
     applications, placements, activePlacements, completed, saved, hours, summary, profile, publicProfile,
     completionChecks, completion,
-    logHours, deleteHours, savePublicProfile,
+    logHours, deleteHours, savePublicProfile, references, setReferenceApproval,
   };
 };

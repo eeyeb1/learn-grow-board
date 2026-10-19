@@ -393,6 +393,50 @@ export type Database = {
           },
         ]
       }
+      placement_references: {
+        Row: {
+          author_id: string
+          author_name: string
+          author_role: string | null
+          content: string
+          created_at: string
+          id: string
+          placement_id: string
+          seeker_approved: boolean
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          author_role?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          placement_id: string
+          seeker_approved?: boolean
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          author_role?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          placement_id?: string
+          seeker_approved?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placement_references_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       placements: {
         Row: {
           application_id: string
@@ -525,16 +569,26 @@ export type Database = {
           created_at: string
           display_name: string | null
           education_level: string | null
+          guardian_acknowledged: boolean
           headline: string | null
+          is_minor: boolean
           is_public: boolean
           links: Json
           location: string | null
           preferred_industries: string[]
+          published_at: string | null
           show_availability: boolean
           show_avatar: boolean
           show_education: boolean
+          show_experiences: boolean
+          show_hours: boolean
+          show_interests: boolean
           show_links: boolean
           show_location: boolean
+          show_references: boolean
+          show_self_skills: boolean
+          show_summary: boolean
+          show_verified_skills: boolean
           skills: string[]
           slug: string
           updated_at: string
@@ -548,16 +602,26 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           education_level?: string | null
+          guardian_acknowledged?: boolean
           headline?: string | null
+          is_minor?: boolean
           is_public?: boolean
           links?: Json
           location?: string | null
           preferred_industries?: string[]
+          published_at?: string | null
           show_availability?: boolean
           show_avatar?: boolean
           show_education?: boolean
+          show_experiences?: boolean
+          show_hours?: boolean
+          show_interests?: boolean
           show_links?: boolean
           show_location?: boolean
+          show_references?: boolean
+          show_self_skills?: boolean
+          show_summary?: boolean
+          show_verified_skills?: boolean
           skills?: string[]
           slug: string
           updated_at?: string
@@ -571,16 +635,26 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           education_level?: string | null
+          guardian_acknowledged?: boolean
           headline?: string | null
+          is_minor?: boolean
           is_public?: boolean
           links?: Json
           location?: string | null
           preferred_industries?: string[]
+          published_at?: string | null
           show_availability?: boolean
           show_avatar?: boolean
           show_education?: boolean
+          show_experiences?: boolean
+          show_hours?: boolean
+          show_interests?: boolean
           show_links?: boolean
           show_location?: boolean
+          show_references?: boolean
+          show_self_skills?: boolean
+          show_summary?: boolean
+          show_verified_skills?: boolean
           skills?: string[]
           slug?: string
           updated_at?: string
