@@ -2,7 +2,18 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { createOpenAI } from "npm:@ai-sdk/openai@^3";
 import { streamText, Output, NoObjectGeneratedError } from "npm:ai@^6";
 import { z } from "npm:zod@^3.25";
-import { createLovableAiGatewayRunIdFetch, getLovableAiGatewayRunId } from "./run-id.ts";
+
+const RUN_ID = "X-Lovable-AIG-Run-ID";
+function createRunIdFetch(initial?: string) {
+  let runId = initial?.trim() || undefined;
+  return async (input: RequestInfo | URL, init?: RequestInit) => {
+    const headers = new Headers(init?.headers);
+    if (runId && !headers.has(RUN_ID)) headers.set(RUN_ID, runId);
+    const res = await fetch(input, { ...init, headers });
+    runId ??= res.headers.get(RUN_ID)?.trim() || undefined;
+    return res;
+  };
+}
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -98,12 +109,12 @@ Deno.serve(async (req) => {
 
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) return json({ error: "AI is not configured." }, 500);
-  const runIdFetch = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(req));
+  const runIdFetch = createRunIdFetch(req.headers.get(RUN_ID) ?? undefined);
   const provider = createOpenAI({
     baseURL: "https://ai.gateway.lovable.dev/v1",
     apiKey,
     headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-    fetch: runIdFetch.fetch,
+    fetch: runIdFetch,
   });
 
   const system = `You write concise, professional CV experience bullet points for a work experience seeker.
