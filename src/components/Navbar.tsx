@@ -114,6 +114,7 @@ const Navbar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>
             ) : (
               <Button variant="ghost" size="sm" onClick={() => setAuthModalOpen(true)}>
                 Sign In
