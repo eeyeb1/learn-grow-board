@@ -959,6 +959,41 @@ export type Database = {
         }
         Relationships: []
       }
+      recommendation_feedback: {
+        Row: {
+          created_at: string
+          feedback: string
+          id: string
+          job_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback: string
+          id?: string
+          job_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: string
+          id?: string
+          job_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommendation_feedback_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reference_reports: {
         Row: {
           created_at: string
