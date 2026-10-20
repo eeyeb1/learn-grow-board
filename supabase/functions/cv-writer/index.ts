@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { createOpenAI } from "npm:@ai-sdk/openai@^3";
 import { streamText, Output, NoObjectGeneratedError } from "npm:ai@^6";
 import { z } from "npm:zod@^3.25";
-import { createLovableAiGatewayRunIdFetch, getLovableAiGatewayRunId } from "../_shared/run-id.ts";
+import { createLovableAiGatewayRunIdFetch, getLovableAiGatewayRunId } from "./run-id.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
