@@ -4,6 +4,7 @@ import { Briefcase, Menu, X, LogOut, FileText, User as UserIcon, ChevronDown, Se
 import { useState } from "react";
 import AuthModal from "./AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
+import NotificationBell from "@/components/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,6 +68,8 @@ const Navbar = () => {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
+              <>
+              <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-2">
@@ -111,6 +114,7 @@ const Navbar = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>
             ) : (
               <Button variant="ghost" size="sm" onClick={() => setAuthModalOpen(true)}>
                 Sign In

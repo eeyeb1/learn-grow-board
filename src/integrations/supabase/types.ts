@@ -434,6 +434,75 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          application: boolean
+          deadline: boolean
+          feedback: boolean
+          hours: boolean
+          placement: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application?: boolean
+          deadline?: boolean
+          feedback?: boolean
+          hours?: boolean
+          placement?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application?: boolean
+          deadline?: boolean
+          feedback?: boolean
+          hours?: boolean
+          placement?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          category: string
+          created_at: string
+          dedupe_key: string
+          id: string
+          link: string | null
+          preview: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          category: string
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          link?: string | null
+          preview: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          link?: string | null
+          preview?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       placement_diary: {
         Row: {
           content: string
@@ -1146,6 +1215,18 @@ export type Database = {
     }
     Functions: {
       _new_certificate_code: { Args: never; Returns: string }
+      _notify: {
+        Args: {
+          _body: string
+          _category: string
+          _key: string
+          _link: string
+          _preview: string
+          _title: string
+          _uid: string
+        }
+        Returns: undefined
+      }
       _ref_actor_role: { Args: { _placement_id: string }; Returns: string }
       _ref_check: {
         Args: { _label: string; _max: number; _min: number; _v: string }
@@ -1229,6 +1310,7 @@ export type Database = {
         }
         Returns: string
       }
+      sync_my_deadline_notifications: { Args: never; Returns: undefined }
       update_placement_details: {
         Args: {
           _confirmed_skills: string[]
