@@ -17,13 +17,14 @@ import { useSeekerDashboard, formatHours, profileUrl, shareProfile, DashApplicat
 import { toast } from "sonner";
 import SeekerProfileEditor from "@/components/SeekerProfileEditor";
 import { PortfolioManager } from "@/components/portfolio";
+import CvWriter from "@/components/CvWriter";
 import {
   LayoutDashboard, Search, FileText, Award, Clock, Globe, Settings as SettingsIcon,
-  CheckCircle2, FolderOpen, Briefcase, Share2, Hourglass, Heart, AlertCircle, ArrowRight, Trash2, Copy, Loader2, ExternalLink,
+  CheckCircle2, FolderOpen, Briefcase, Share2, Hourglass, Heart, AlertCircle, ArrowRight, Trash2, Copy, Loader2, ExternalLink, Sparkles,
 } from "lucide-react";
 
-type Section = "overview" | "applications" | "experiences" | "hours" | "portfolio" | "profile";
-const SECTIONS: Section[] = ["overview", "applications", "experiences", "hours", "portfolio", "profile"];
+type Section = "overview" | "applications" | "experiences" | "hours" | "portfolio" | "cv" | "profile";
+const SECTIONS: Section[] = ["overview", "applications", "experiences", "hours", "portfolio", "cv", "profile"];
 
 const navItems = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, end: true },
@@ -32,6 +33,7 @@ const navItems = [
   { to: "/dashboard/experiences", label: "My Experiences", icon: Award },
   { to: "/dashboard/hours", label: "Hours & Verification", icon: Clock },
   { to: "/dashboard/portfolio", label: "Portfolio", icon: FolderOpen },
+  { to: "/dashboard/cv", label: "CV Writer", icon: Sparkles },
   { to: "/dashboard/profile", label: "My Profile", icon: Globe },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];
@@ -135,6 +137,7 @@ const Dashboard = () => {
               {section === "experiences" && <Experiences d={d} />}
               {section === "hours" && <Hours d={d} />}
               {section === "portfolio" && <PortfolioManager items={d.portfolio} requests={d.removalRequests} placements={d.placements} published={!!d.publicProfile?.is_public} onChange={d.reload} />}
+              {section === "cv" && <CvWriter completed={d.completed} />}
               {section === "profile" && <SeekerProfileEditor d={d} />}
             </>
           )}

@@ -253,6 +253,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cv_drafts: {
+        Row: {
+          bullets: Json
+          created_at: string
+          id: string
+          placement_ids: string[]
+          target: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bullets?: Json
+          created_at?: string
+          id?: string
+          placement_ids?: string[]
+          target: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bullets?: Json
+          created_at?: string
+          id?: string
+          placement_ids?: string[]
+          target?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string

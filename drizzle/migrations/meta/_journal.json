@@ -64,6 +64,13 @@
       "when": 1792426631374,
       "tag": "0008_portfolio_items",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792532008740,
+      "tag": "0009_cv_drafts",
+      "breakpoints": true
     }
   ]
 }

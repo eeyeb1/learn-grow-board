@@ -4,3 +4,5 @@ project_id = "lipcbcvacnmhhwgkbffj"
 verify_jwt = false
 [functions.portfolio-file]
 verify_jwt = false
+[functions.cv-writer]
+verify_jwt = false
