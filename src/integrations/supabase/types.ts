@@ -217,6 +217,126 @@ export type Database = {
           },
         ]
       }
+      company_access_requests: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          department: string | null
+          id: string
+          job_title: string | null
+          pathway: string
+          requested_domain: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          job_title?: string | null
+          pathway: string
+          requested_domain?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          department?: string | null
+          id?: string
+          job_title?: string | null
+          pathway?: string
+          requested_domain?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_access_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_domains: {
+        Row: {
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          domain: string
+          id: string
+        }
+        Insert: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          domain: string
+          id?: string
+        }
+        Update: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          domain?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_domains_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_memberships: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          id: string
+          manage_placements: boolean
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          id?: string
+          manage_placements?: boolean
+          role: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          id?: string
+          manage_placements?: boolean
+          role?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_memberships_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_profiles: {
         Row: {
           company_description: string | null
@@ -252,6 +372,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      company_verifications: {
+        Row: {
+          company_id: string
+          created_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_verifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cv_drafts: {
         Row: {
@@ -364,6 +516,7 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          created_by: string | null
           description: string
           duration: string | null
           expires_at: string | null
@@ -385,6 +538,7 @@ export type Database = {
         Insert: {
           company_id: string
           created_at?: string
+          created_by?: string | null
           description: string
           duration?: string | null
           expires_at?: string | null
@@ -406,6 +560,7 @@ export type Database = {
         Update: {
           company_id?: string
           created_at?: string
+          created_by?: string | null
           description?: string
           duration?: string | null
           expires_at?: string | null
@@ -1236,6 +1391,15 @@ export type Database = {
         Args: { _placement_id: string; _uid: string }
         Returns: boolean
       }
+      company_can_draft: {
+        Args: { _company_id: string; _uid: string }
+        Returns: boolean
+      }
+      company_permission: {
+        Args: { _company_id: string; _permission: string; _uid: string }
+        Returns: boolean
+      }
+      get_company_access: { Args: never; Returns: Json }
       get_my_hours_summary: { Args: never; Returns: Json }
       get_placement_hours: { Args: { _placement_id: string }; Returns: Json }
       get_public_profile: { Args: { _slug: string }; Returns: Json }
@@ -1261,6 +1425,16 @@ export type Database = {
       }
       report_reference: {
         Args: { _details: string; _id: string; _reason: string }
+        Returns: string
+      }
+      request_company_access: {
+        Args: {
+          _company_name?: string
+          _department?: string
+          _job_title?: string
+          _pathway: string
+          _website?: string
+        }
         Returns: string
       }
       request_portfolio_removal: {

@@ -85,6 +85,13 @@
       "when": 1792532879129,
       "tag": "0011_notification_centre",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792585404669,
+      "tag": "0012_company_auth_access",
+      "breakpoints": true
     }
   ]
 }
