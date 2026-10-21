@@ -30,6 +30,10 @@ import ReferenceModeration from "./pages/ReferenceModeration";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import PublicProfile from "./pages/PublicProfile";
 import PlacementDetail from "./pages/PlacementDetail";
+import EmployerAuth from "./pages/EmployerAuth";
+import EmployerOnboarding from "./pages/EmployerOnboarding";
+import EmployerWorkspace from "./pages/EmployerWorkspace";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +51,16 @@ const App = () => (
             <Route path="/jobs/:id" element={<JobDetail />} />
             <Route path="/jobs/:id/apply" element={<ApplyJob />} />
             <Route path="/post-role" element={<PostRole />} />
+            <Route path="/employer/sign-in" element={<EmployerAuth />} />
+            <Route path="/employer/register" element={<EmployerAuth />} />
+            <Route path="/employer/forgot-password" element={<EmployerAuth />} />
+            <Route path="/employer/onboarding" element={<EmployerOnboarding />} />
+            <Route path="/employer/workspace" element={<EmployerWorkspace />} />
+            <Route path="/employer/dashboard" element={<EmployerWorkspace />} />
+            <Route path="/employer/employee" element={<EmployerWorkspace />} />
+            <Route path="/employer/drafts" element={<EmployerWorkspace />} />
+            <Route path="/employer/status" element={<EmployerWorkspace />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/success-stories" element={<SuccessStories />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/blog" element={<Blog />} />
