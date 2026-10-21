@@ -108,6 +108,9 @@ const Navbar = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/employer/workspace" className="flex items-center gap-2 cursor-pointer"><Briefcase className="w-4 h-4" />Company workspace</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
                     <LogOut className="w-4 h-4" />
                     Sign Out
@@ -116,9 +119,10 @@ const Navbar = () => {
               </DropdownMenu>
               </>
             ) : (
+              <><Button asChild variant="ghost" size="sm"><Link to="/employer/sign-in">Employers</Link></Button>
               <Button variant="ghost" size="sm" onClick={() => setAuthModalOpen(true)}>
                 Sign In
-              </Button>
+              </Button></>
             )}
             {/* Only show Post a Role for company users (not for applicants or when logged out) */}
             {isCompany && (
@@ -190,6 +194,7 @@ const Navbar = () => {
                 </>
               )}
               <div className="flex flex-col gap-2 mt-4 px-4">
+                <Button asChild variant="outline" onClick={() => setIsMenuOpen(false)}><Link to={user ? '/employer/workspace' : '/employer/sign-in'}>{user ? 'Company workspace' : 'Employer sign in'}</Link></Button>
                 {user ? (
                   <Button variant="ghost" className="justify-start" onClick={handleSignOut}>
                     <LogOut className="w-4 h-4 mr-2" />

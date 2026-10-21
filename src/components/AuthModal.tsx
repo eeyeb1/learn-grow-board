@@ -9,6 +9,7 @@ import { Loader2, Mail, Lock, User, Phone, Chrome, ArrowLeft, CheckCircle, Build
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface AuthModalProps {
   open: boolean;
@@ -22,6 +23,7 @@ type AuthView = "login" | "signup" | "forgot-password" | "reset-sent";
 type UserType = "applicant" | "company";
 
 const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalProps) => {
+  const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   const [view, setView] = useState<AuthView>("login");
   const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
@@ -106,7 +108,7 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
       if (error) {
         toast.error(error.message || "Failed to send reset email");
         return;
@@ -329,7 +331,7 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
 
             <button
               type="button"
-              onClick={() => setUserType("company")}
+              onClick={() => { onOpenChange(false); navigate('/employer/register'); }}
               className={`group relative flex flex-col items-center p-6 rounded-xl border-2 transition-all bg-card hover:bg-primary/5 overflow-hidden ${
                 highlightCompany
                   ? "border-primary shadow-card"
