@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import type { CompanyAccess } from '@/lib/companyAccess';
 
 export interface CompanyProfile {
   id: string;
@@ -30,25 +31,23 @@ export const useCompanyProfile = () => {
 
     setLoading(true);
     try {
-      // Check user type from profiles table
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      const userIsCompany = profileData?.user_type === "company";
-      setIsCompany(userIsCompany);
-
-      if (userIsCompany) {
+      setCompanyProfile(null);
+      setIsCompany(false);
+      const { data, error } = await supabase.rpc('get_company_access');
+      if (error) return;
+      const access = data as unknown as CompanyAccess;
+      const requested = new URLSearchParams(window.location.search).get('company');
+      const context = access.contexts.find(c => c.state === 'company_admin' && (!requested || c.company_id === requested));
+      if (context) {
         // Fetch company profile
         const { data: companyData } = await supabase
           .from("company_profiles")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("id", context.company_id)
           .maybeSingle();
 
         setCompanyProfile(companyData);
+        setIsCompany(!!companyData);
       }
     } catch (error) {
       console.error("Error fetching company profile:", error);
@@ -69,31 +68,9 @@ export const useCompanyProfile = () => {
   }) => {
     if (!user) return { error: new Error("Not authenticated") };
 
-    // First update user type to company
-    await supabase
-      .from("profiles")
-      .update({ user_type: "company" })
-      .eq("user_id", user.id);
-
-    // Then create company profile
-    const { data: newProfile, error } = await supabase
-      .from("company_profiles")
-      .insert({
-        user_id: user.id,
-        company_name: data.company_name,
-        company_description: data.company_description,
-        company_website: data.company_website,
-        industry: data.industry,
-      })
-      .select()
-      .single();
-
-    if (!error && newProfile) {
-      setCompanyProfile(newProfile);
-      setIsCompany(true);
-    }
-
-    return { data: newProfile, error };
+    const { error } = await supabase.rpc('request_company_access', { _pathway: 'register', _company_name: data.company_name, _website: data.company_website || '' });
+    await fetchCompanyProfile();
+    return { error };
   };
 
   const updateCompanyProfile = async (data: Partial<CompanyProfile>) => {
