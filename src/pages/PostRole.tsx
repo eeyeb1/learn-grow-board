@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -165,6 +165,10 @@ const PostRole = () => {
 
   const isLoading = authLoading || profileLoading;
 
+  // Account labels are presentation only: posting requires server-confirmed company administration.
+  if (!isLoading && !user) return <Navigate to="/employer/sign-in" replace />;
+  if (!isLoading && !isCompany) return <Navigate to="/employer/workspace" replace />;
+
   // Loading state
   if (isLoading) {
     return (
@@ -266,7 +270,7 @@ const PostRole = () => {
   }
 
   // Applicant trying to access - show message
-  if (userType === "applicant") {
+  if (userType === "applicant" && !isCompany) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />

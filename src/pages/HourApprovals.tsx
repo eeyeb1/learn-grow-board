@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCompanyAccess } from '@/hooks/useCompanyAccess';
 import { supabase } from "@/integrations/supabase/client";
 import { formatHours } from "@/hooks/useSeekerDashboard";
 import { toast } from "sonner";
@@ -25,7 +26,8 @@ interface Row {
 }
 
 const HourApprovals = () => {
-  const { user, loading: authLoading, userType } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const companyAccess = useCompanyAccess();
   const [rows, setRows] = useState<Row[]>([]);
   const [titles, setTitles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -55,8 +57,8 @@ const HourApprovals = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  if (authLoading) return null;
-  if (!user || userType !== "company") return <Navigate to="/" replace />;
+  if (authLoading || companyAccess.loading) return null;
+  if (!user || !companyAccess.access?.contexts.some(c => c.manage_placements)) return <Navigate to="/employer/workspace" replace />;
 
   const review = async (id: string, status: "approved" | "rejected") => {
     setBusy(id);
