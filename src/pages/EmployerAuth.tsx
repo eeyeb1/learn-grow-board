@@ -33,7 +33,12 @@ export default function EmployerAuth() {
         setNotice('If an account uses this email, a password reset link will arrive shortly.');
       } else if (register) {
         const result = await supabase.auth.signUp({ email: email.trim(), password, options: { emailRedirectTo: `${window.location.origin}/employer/onboarding`, data: { full_name: name.trim() } } });
-        if (result.error) throw result.error;
+        if (result.error) {
+          if (result.error.code === 'user_already_exists') setError('Use your existing account to sign in, then request company access.');
+          else if (result.error.status === 429) setError('Too many requests. Please wait before trying again.');
+          else setError('Account registration could not be completed. Use a stronger password or sign in if you already have an account.');
+          return;
+        }
         // Account preference is not authority; onboarding is resumed only after a validated sign-in.
         sessionStorage.setItem('employer-pathway', pathway);
         setNotice('Check your email to confirm your account. Already registered as a seeker? Sign in with that same account to continue.');
@@ -50,6 +55,7 @@ export default function EmployerAuth() {
   }
   async function social(provider: 'google' | 'lovable') {
     if (busy) return; setBusy(true); setError('');
+    if (register) sessionStorage.setItem('employer-pathway', pathway);
     try {
       const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: `${window.location.origin}/employer/sign-in` });
       if (result.error) setError('Sign-in could not be completed. Please try again.');

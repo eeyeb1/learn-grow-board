@@ -5,6 +5,7 @@ import { useState } from "react";
 import AuthModal from "./AuthModal";
 import { useAuth } from "@/contexts/AuthContext";
 import NotificationBell from "@/components/NotificationBell";
+import { useCompanyAccess } from '@/hooks/useCompanyAccess';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +17,8 @@ import {
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const { user, userType, signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const { access } = useCompanyAccess();
   const location = useLocation();
 
   const handleSignOut = async () => {
@@ -32,7 +34,7 @@ const Navbar = () => {
     { href: "/resources", label: "Resources" },
   ];
 
-  const isCompany = userType === "company";
+  const isCompany = access?.contexts.some(c => c.state === 'company_admin') ?? false;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
@@ -84,9 +86,9 @@ const Navbar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-background border border-border z-50">
                   <DropdownMenuItem asChild>
-                    <Link to={isCompany ? "/hour-approvals" : "/dashboard"} className="flex items-center gap-2 cursor-pointer">
+                    <Link to={isCompany ? "/employer/workspace" : "/dashboard"} className="flex items-center gap-2 cursor-pointer">
                       <LayoutDashboard className="w-4 h-4" />
-                      {isCompany ? "Hour Approvals" : "Dashboard"}
+                      {isCompany ? "Company dashboard" : "Dashboard"}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
