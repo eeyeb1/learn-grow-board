@@ -1,6 +1,9 @@
 # Roadmap
 
 ## Employer integration
+- [ ] Add private company registration details, evidence and applicant status tracking.
+- [ ] Add platform-administrator review, authority checks, audit history and safe approval/suspension.
+- [ ] Verify registration, isolation, takeover prevention and approval notification/access.
 - [x] Inspect existing features and prepare the short integration plan without changing application functionality.
 - [x] Add separate employer/employee sign-in, registration and password recovery using existing identities.
 - [x] Add verified-company membership, draft eligibility and server-enforced access routing without changing seeker data.
