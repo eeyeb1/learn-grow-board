@@ -1,5 +1,6 @@
+// @ts-nocheck -- run with `bun test`; bun types are not part of the app build
 import { describe, expect, test } from 'bun:test';
-import { emptyForm, validate, warnings, toRow, fromRow, type OpportunityForm } from '../opportunityForm';
+import { emptyForm, validate, warnings, toRow, fromRow, type OpportunityForm } from './opportunityForm';
 
 const good: OpportunityForm = { ...emptyForm, title: 'Office shadowing week', category: 'shadowing', location: 'Leeds', schedule: 'Mon–Fri 10–3',
   start_date: '2030-06-01', end_date: '2030-06-05', closing_date: '2030-05-20', estimated_hours: '25', openings: '2', audience: 'Students 16+',
