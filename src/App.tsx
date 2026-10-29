@@ -8,7 +8,7 @@ import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import JobDetail from "./pages/JobDetail";
 import ApplyJob from "./pages/ApplyJob";
-import PostRole from "./pages/PostRole";
+import PlatformOpportunityReview from "./pages/PlatformOpportunityReview";
 import SuccessStories from "./pages/SuccessStories";
 import Resources from "./pages/Resources";
 import Blog from "./pages/Blog";
@@ -53,7 +53,7 @@ const App = () => (
             <Route path="/jobs" element={<Jobs />} />
             <Route path="/jobs/:id" element={<JobDetail />} />
             <Route path="/jobs/:id/apply" element={<ApplyJob />} />
-            <Route path="/post-role" element={<PostRole />} />
+            <Route path="/post-role" element={<Navigate to="/employer/workspace" replace />} />
             <Route path="/employer/sign-in" element={<EmployerAuth />} />
             <Route path="/employer/register" element={<EmployerAuth />} />
             <Route path="/employer/forgot-password" element={<EmployerAuth />} />
@@ -66,6 +66,7 @@ const App = () => (
             <Route path="/employer/drafts" element={<EmployerWorkspace />} />
             <Route path="/employer/profile" element={<EmployerWorkspace />} />
             <Route path="/employer/employees" element={<EmployerWorkspace />} />
+            <Route path="/employer/approvals" element={<EmployerWorkspace />} />
             <Route path="/employer/status" element={<EmployerWorkspace />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/success-stories" element={<SuccessStories />} />
@@ -87,6 +88,7 @@ const App = () => (
             <Route path="/hour-approvals" element={<HourApprovals />} />
             <Route path="/moderation/references" element={<ReferenceModeration />} />
             <Route path="/admin/companies" element={<CompanyVerificationReview />} />
+            <Route path="/admin/opportunities" element={<PlatformOpportunityReview />} />
             <Route path="/placements/:id" element={<PlacementDetail />} />
             <Route path="/verify" element={<VerifyCertificate />} />
             <Route path="/verify/:code" element={<VerifyCertificate />} />
