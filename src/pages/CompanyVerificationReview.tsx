@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { registrationStatus, reviewSchema } from '@/lib/companyRegistration';
 import type { Tables } from '@/integrations/supabase/types';
 import EmployeeMembershipReview from '@/components/EmployeeMembershipReview';
+import { AdminRecovery } from '@/components/EmployeeManagement';
 
 type Submission = Tables<'company_registration_submissions'>;
 type Review = Tables<'company_registration_reviews'>;
@@ -50,7 +51,7 @@ export default function CompanyVerificationReview() {
   return <EmployerShell><main className="container max-w-6xl px-5 py-10">
     <div className="border-b border-border pb-6"><p className="flex gap-2 items-center text-sm text-primary"><ShieldCheck className="h-5 w-5" />Platform administration</p><h1 className="mt-3 font-display text-3xl font-bold">Company verification</h1><p className="mt-3 flex gap-2 text-sm text-muted-foreground"><LockKeyhole className="h-4 w-4 shrink-0" />Private evidence and administrator review history</p><Button asChild variant="link" className="px-0 mt-2"><Link to="/moderation/references">Reference and portfolio reports</Link></Button></div>
     {loading || authLoading ? <p role="status" className="py-8 flex items-center gap-2"><Loader2 className="h-5 w-5 animate-spin" />Checking review access…</p> : error ? <div className="py-8"><p role="alert" className="text-destructive">{error}</p><Button variant="outline" className="mt-4" onClick={() => void load()}>Try again</Button></div> : !allowed ? <p className="py-8 text-muted-foreground">Only platform administrators can review company registrations. Company administrator status does not grant this permission.</p> : <div className="grid gap-8 py-7 lg:grid-cols-[280px_minmax(0,1fr)]"><aside><Label htmlFor="review-filter">Registration status</Label><Select value={filter} onValueChange={setFilter}><SelectTrigger id="review-filter" className="mt-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{Object.entries(registrationStatus).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select><div className="mt-5 space-y-2">{rows.filter(s => filter === 'all' || s.status === filter).map(s => <Button key={s.id} variant={selected === s.id ? 'secondary' : 'ghost'} className="w-full h-auto items-start flex-col text-left whitespace-normal py-4" onClick={() => setSelected(s.id)}><span className="break-words">{s.legal_name}</span><span className="mt-1 text-xs text-muted-foreground">{registrationStatus[s.status as keyof typeof registrationStatus]} · {new Date(s.submitted_at).toLocaleDateString()}</span></Button>)}{!rows.some(s => filter === 'all' || s.status === filter) && <p className="text-sm text-muted-foreground">No registrations in this status.</p>}</div></aside><div className="min-w-0">{active ? <ReviewDetail key={`${active.id}:${active.reviewed_at}`} submission={active} candidates={candidates} history={reviews.filter(r => r.submission_id === active.id)} reload={load} /> : <p className="text-muted-foreground">No registration selected.</p>}</div></div>}
-    {allowed && <EmployeeMembershipReview />}
+    {allowed && <><EmployeeMembershipReview /><AdminRecovery /></>}
   </main></EmployerShell>;
 }
 
