@@ -1,10 +1,7 @@
 -- Run ONLY against a disposable schema-only clone, never against the app database.
 -- psql -v ON_ERROR_STOP=1 -f employerPermissions.sql ; fixtures always roll back.
 BEGIN;
-GRANT USAGE ON SCHEMA public TO authenticated,anon,service_role;
-GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
-REVOKE INSERT,UPDATE,DELETE ON public.company_permission_events,public.company_resource_assignments,public.company_staff_scopes,public.company_memberships,public.job_publication_requests,public.employee_identities,public.user_roles FROM authenticated;
+-- Restore actual deployed grants with the schema; do not broaden them for tests.
 CREATE FUNCTION public.test_assert(ok boolean,label text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF ok IS DISTINCT FROM true THEN RAISE EXCEPTION 'FAIL: %',label; END IF; RAISE NOTICE 'PASS: %',label; END $$;
 INSERT INTO auth.users(id,email,email_confirmed_at) SELECT ('00000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'test'||n||'@rbac-example.org',now() FROM generate_series(1,8) n;
 INSERT INTO public.company_profiles(id,user_id,company_name) VALUES('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','Isolated company A'),('10000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002','Isolated company B');
@@ -25,6 +22,22 @@ INSERT INTO public.company_resource_assignments(company_id,user_id,job_id,permis
 INSERT INTO public.applications(id,user_id,job_id) VALUES('30000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000007','20000000-0000-0000-0000-000000000001');
 UPDATE public.applications SET status='accepted' WHERE id='30000000-0000-0000-0000-000000000001';
 INSERT INTO public.company_resource_assignments(company_id,user_id,placement_id,permissions) SELECT company_id,'00000000-0000-0000-0000-000000000004',id,ARRAY['manage'] FROM public.placements;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
+SET LOCAL ROLE authenticated;
+SELECT public.placement_action(id,'activate',NULL) FROM placements;
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000007',true);
+SET LOCAL ROLE authenticated;
+INSERT INTO hour_entries(application_id,user_id,work_date,minutes,description,status) VALUES('30000000-0000-0000-0000-000000000001',auth.uid(),current_date,60,'Observed work for isolated placement','approved');
+SELECT public.test_assert((SELECT status='pending' FROM hour_entries),'Seeker cannot self-approve hours');
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
+SET LOCAL ROLE authenticated;
+UPDATE hour_entries SET status='approved';
+SELECT public.test_assert((SELECT status='approved' AND reviewed_by=auth.uid() FROM hour_entries),'Assigned supervisor approves relevant hours');
+SELECT public.verify_placement_skill(id,'Teamwork','Teamwork','Observed collaborative work',true) FROM placements;
+SELECT public.test_assert((SELECT count(*) FROM skill_verifications)=1,'Assigned supervisor verifies observed skill');
+RESET ROLE;
 SELECT public.test_assert(public.company_job_permission('20000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','edit'),'Manager edits assigned listing');
 SELECT public.test_assert(NOT public.company_job_permission('20000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000003','read'),'Cross-company read denied');
 SELECT public.test_assert(NOT public.company_job_permission('20000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000003','edit'),'Unassigned listing denied');
@@ -58,6 +71,7 @@ SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000006'
 SET LOCAL ROLE authenticated;
 SELECT public.test_assert((SELECT count(*) FROM jobs WHERE status='draft')=1,'Contributor sees only own private draft');
 SELECT public.test_assert((SELECT count(*) FROM company_memberships)=0,'Contributor cannot read approved staff');
+DO $$ BEGIN BEGIN INSERT INTO company_memberships(company_id,user_id,role,status) VALUES('10000000-0000-0000-0000-000000000001',auth.uid(),'company_admin','approved'); RAISE EXCEPTION 'FAIL: self-appointment succeeded'; EXCEPTION WHEN insufficient_privilege THEN NULL; END; RAISE NOTICE 'PASS: Direct API self-appointment denied'; END $$;
 SELECT public.test_assert((SELECT count(*) FROM applications)=0,'Contributor cannot read seeker applications');
 SELECT public.request_job_publication('20000000-0000-0000-0000-000000000003');
 RESET ROLE;
@@ -69,7 +83,14 @@ SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000007'
 SET LOCAL ROLE authenticated;
 SELECT public.test_assert((SELECT count(*) FROM applications)=1,'Seeker still reads own application');
 SELECT public.test_assert((SELECT count(*) FROM placements)=1,'Seeker still reads own placement');
+SELECT public.test_assert((SELECT minutes FROM hour_entries WHERE status='approved')=60,'Seeker retains approved hours');
 RESET ROLE;
 SELECT public.test_assert((SELECT count(*) FROM company_permission_events WHERE action='company_resource_assignments:insert')=2,'Assignments create audit records');
 DO $$ BEGIN BEGIN UPDATE company_permission_events SET note='tamper'; RAISE EXCEPTION 'FAIL: audit altered'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: Permission history cannot be altered'; END $$;
+UPDATE company_memberships SET status='revoked' WHERE user_id='00000000-0000-0000-0000-000000000004';
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
+SET LOCAL ROLE authenticated;
+SELECT public.test_assert((SELECT count(*) FROM hour_entries)=0,'Revoked supervisor cannot read placement hours');
+DO $$ BEGIN BEGIN PERFORM public.verify_placement_skill('00000000-0000-0000-0000-000000000000','Teamwork','Teamwork','Observed work',true); RAISE EXCEPTION 'FAIL: revoked supervisor confirmed skill'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: Revoked supervisor direct skill confirmation denied'; END $$;
+RESET ROLE;
 ROLLBACK;
