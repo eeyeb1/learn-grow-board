@@ -123,22 +123,3 @@ function DraftContributorHome({ companyId, canDraft, workEmailVerified }: { comp
     <CompanyDrafts companyId={companyId} canDraft={canDraft} />
   </div>;
 }
-
-function CompanyRecords({ companyId, manage }: { companyId: string; manage: boolean }) {
-  const [jobs, setJobs] = useState<{ id: string; title: string; status: string }[]>([]);
-  const [placements, setPlacements] = useState<{ id: string; status: string }[]>([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    let active = true; setLoading(true); setError(''); setJobs([]); setPlacements([]);
-    void (async () => {
-      const result = await supabase.from('jobs').select('id,title,status').eq('company_id', companyId).order('created_at', { ascending: false });
-      const placementResult = manage ? await supabase.from('placements').select('id,status').eq('company_id', companyId) : null;
-      if (!active) return;
-      if (result.error || placementResult?.error) setError('Company records could not be loaded.');
-      else { setJobs(result.data ?? []); setPlacements(placementResult?.data ?? []); }
-      setLoading(false);
-    })(); return () => { active = false; };
-  }, [companyId, manage]);
-  return <section className="grid gap-10 border-t border-border pt-7 md:grid-cols-2">{error && <p role="alert" className="text-destructive">{error}</p>}<div><h2 className="text-xl font-semibold">Company opportunities</h2>{loading ? <p className="py-5 text-muted-foreground">Loading…</p> : jobs.length ? jobs.map(j => <div key={j.id} className="flex items-start justify-between gap-3 border-b border-border py-5"><span className="break-words">{j.title}</span><Badge variant="outline">{j.status}</Badge></div>) : <p className="py-5 text-sm text-muted-foreground">No opportunities recorded.</p>}</div>{manage && <div><h2 className="text-xl font-semibold">Placements</h2>{placements.length ? placements.map(p => <div key={p.id} className="flex items-center justify-between gap-3 border-b border-border py-4"><Badge variant="outline">{p.status}</Badge><Button asChild variant="link"><Link to={`/placements/${p.id}`}>Open placement<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div>) : !loading && <p className="py-5 text-sm text-muted-foreground">No placements recorded.</p>}</div>}</section>;
-}
