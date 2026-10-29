@@ -1126,8 +1126,47 @@ export type Database = {
           },
         ]
       }
+      job_versions: {
+        Row: {
+          created_at: string
+          id: string
+          job_id: string
+          saved_by: string | null
+          snapshot: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          job_id: string
+          saved_by?: string | null
+          snapshot: Json
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          job_id?: string
+          saved_by?: string | null
+          snapshot?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_versions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
+          category: string | null
           company_id: string
           created_at: string
           created_by: string | null
@@ -1140,6 +1179,7 @@ export type Database = {
           location: string | null
           location_type: string
           mentorship_details: string | null
+          opportunity_details: Json
           publication_revision: number
           requirements: string[] | null
           responsibilities: string[] | null
@@ -1151,6 +1191,7 @@ export type Database = {
           what_you_will_learn: string[] | null
         }
         Insert: {
+          category?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -1163,6 +1204,7 @@ export type Database = {
           location?: string | null
           location_type?: string
           mentorship_details?: string | null
+          opportunity_details?: Json
           publication_revision?: number
           requirements?: string[] | null
           responsibilities?: string[] | null
@@ -1174,6 +1216,7 @@ export type Database = {
           what_you_will_learn?: string[] | null
         }
         Update: {
+          category?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
@@ -1186,6 +1229,7 @@ export type Database = {
           location?: string | null
           location_type?: string
           mentorship_details?: string | null
+          opportunity_details?: Json
           publication_revision?: number
           requirements?: string[] | null
           responsibilities?: string[] | null
@@ -2013,6 +2057,13 @@ export type Database = {
         Returns: boolean
       }
       cancel_company_invitation: { Args: { _id: string }; Returns: undefined }
+      check_opportunity: {
+        Args: {
+          j: Database["public"]["Tables"]["jobs"]["Row"]
+          strict: boolean
+        }
+        Returns: undefined
+      }
       company_application_permission: {
         Args: { _application_id: string; _uid: string }
         Returns: boolean

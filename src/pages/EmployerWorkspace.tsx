@@ -15,6 +15,7 @@ import CompanyRegistrationStatus from '@/components/CompanyRegistrationStatus';
 import EmployeeManagement, { MyCompanyInvitations } from '@/components/EmployeeManagement';
 import CompanyDashboard from '@/components/CompanyDashboard';
 import CompanyProfileEditor from '@/components/CompanyProfileEditor';
+import OpportunityDrafts from '@/components/OpportunityDrafts';
 
 const messages: Record<CompanyState, [string, string]> = {
   company_admin: ['Company dashboard', 'Authorised company administrator'],
@@ -48,47 +49,16 @@ export default function EmployerWorkspace() {
       {context && unrestricted ? <>
         <nav className="my-6 flex flex-wrap gap-3" aria-label="Company workspace"><Button asChild variant="outline"><Link to={companyDestination(context)}><ShieldCheck className="mr-2 h-4 w-4" />{context.state === 'company_admin' ? 'Dashboard' : context.state === 'employee' ? 'Workspace' : 'My drafts'}</Link></Button>{context.state !== 'draft_only' && <Button asChild variant="outline"><Link to={`/employer/drafts?company=${context.company_id}`}><FileText className="mr-2 h-4 w-4" />My drafts</Link></Button>}{context.manage_placements && <Button asChild variant="outline"><Link to="/hour-approvals"><Clock className="mr-2 h-4 w-4" />Hour approvals</Link></Button>}{context.state === 'company_admin' && <Button asChild><Link to={`/post-role?company=${context.company_id}`}><Plus className="mr-2 h-4 w-4" />Post a role</Link></Button>}</nav>
         {context.state === 'company_admin' && <div className="mb-6 flex flex-wrap gap-3"><Button asChild variant="outline"><Link to={`/employer/profile?company=${context.company_id}`}><Building2 className="mr-2 h-4 w-4" />Company profile</Link></Button><Button asChild variant={section === 'employees' ? 'default' : 'outline'}><Link to={`/employer/employees?company=${context.company_id}`}><Users className="mr-2 h-4 w-4" />Employee management</Link></Button></div>}
-        {section === 'employees' && context.state === 'company_admin' ? <EmployeeManagement key={`${user?.id}-${context.company_id}`} companyId={context.company_id} /> : section === 'profile' && context.state === 'company_admin' ? <CompanyProfileEditor key={`${user?.id}-${context.company_id}`} companyId={context.company_id} /> : context.state === 'draft_only' ? <DraftContributorHome companyId={context.company_id} canDraft={context.can_draft ?? false} workEmailVerified={!!access?.employee?.work_email_verified_at} /> : section === 'drafts' ? <CompanyDrafts companyId={context.company_id} canDraft={context.can_draft ?? false} /> : <CompanyDashboard context={context} />}
+        {section === 'employees' && context.state === 'company_admin' ? <EmployeeManagement key={`${user?.id}-${context.company_id}`} companyId={context.company_id} /> : section === 'profile' && context.state === 'company_admin' ? <CompanyProfileEditor key={`${user?.id}-${context.company_id}`} companyId={context.company_id} /> : context.state === 'draft_only' ? <DraftContributorHome companyId={context.company_id} companyName={context.company_name} canDraft={context.can_draft ?? false} workEmailVerified={!!access?.employee?.work_email_verified_at} /> : section === 'drafts' ? <CompanyDrafts companyId={context.company_id} companyName={context.company_name} canDraft={context.can_draft ?? false} /> : <CompanyDashboard context={context} />}
         {context.state === 'company_admin' && !['drafts', 'profile', 'employees'].includes(section) && <div id="publication-approvals" className="scroll-mt-24"><PublicationApprovals companyId={context.company_id} /></div>}
       </> : <div className="py-8 space-y-5"><Badge variant="outline">Restricted access</Badge>{!access?.email_verified && <p className="text-sm text-muted-foreground">Open the confirmation link in your email, then sign in again.</p>}{access?.requests.map(r => <p key={r.id} className="text-sm text-muted-foreground">{r.pathway === 'register' ? 'Company registration' : 'Membership request'}: {r.status}</p>)}<div className="flex flex-wrap gap-3"><Button asChild variant="outline"><Link to="/employer/onboarding">Register or join a company<ArrowRight className="ml-2 h-4 w-4" /></Link></Button><Button asChild variant="ghost"><Link to="/employer/forgot-password">Password recovery</Link></Button></div></div>}
     </>}
   </main></EmployerShell>;
 }
 
-function CompanyDrafts({ companyId, canDraft }: { companyId: string; canDraft: boolean }) {
-  const { user } = useAuth();
-  const [rows, setRows] = useState<{ id: string; title: string; description: string }[]>([]);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
+function CompanyDrafts({ companyId, companyName, canDraft }: { companyId: string; companyName: string; canDraft: boolean }) {
   const [requestVersion, setRequestVersion] = useState(0);
-  async function load() {
-    if (!user) return;
-    setLoading(true);
-    const result = await supabase.from('jobs').select('id,title,description').eq('company_id', companyId).eq('created_by', user.id).eq('status', 'draft').order('created_at', { ascending: false });
-    if (result.error) setError('We could not load your drafts.'); else setRows(result.data ?? []);
-    setLoading(false);
-  }
-  useEffect(() => { setRows([]); setEditing(null); setTitle(''); setDescription(''); void load(); }, [companyId, user?.id]);
-  async function save(e: React.FormEvent) {
-    e.preventDefault(); if (busy || !user) return; setBusy(true); setError('');
-    const result = editing
-      ? await supabase.from('jobs').update({ title: title.trim(), description: description.trim() }).eq('id', editing).eq('company_id', companyId).eq('created_by', user.id).eq('status', 'draft').select('id').single()
-      : await supabase.from('jobs').insert({ company_id: companyId, title: title.trim(), description: description.trim(), status: 'draft', location_type: 'remote', skill_level: 'beginner' }).select('id').single();
-    setBusy(false);
-    if (result.error) { setError('Draft could not be saved. Your company drafting permission may have changed.'); return; }
-    setEditing(null); setTitle(''); setDescription(''); setRequestVersion(v => v + 1); await load();
-  }
-  async function submit(id: string) {
-    setBusy(true); setError('');
-    const result = await supabase.rpc('request_job_publication', { _job_id: id });
-    setBusy(false);
-    if (result.error) setError(result.error.message); else { setRequestVersion(v => v + 1); await load(); }
-  }
-  return <section className="grid gap-10 border-t border-border pt-7 md:grid-cols-2"><div><h2 className="text-xl font-semibold">{editing ? 'Edit draft' : 'New draft'}</h2>{error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}{canDraft ? <form className="mt-5 space-y-4" onSubmit={save}><div className="space-y-2"><Label htmlFor="draft-title">Role title</Label><Input id="draft-title" required maxLength={160} value={title} onChange={e => setTitle(e.target.value)} /></div><div className="space-y-2"><Label htmlFor="draft-description">Description</Label><Textarea id="draft-description" required maxLength={10000} rows={6} value={description} onChange={e => setDescription(e.target.value)} /></div><Button type="submit" disabled={busy}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save draft</Button>{editing && <Button type="button" variant="ghost" onClick={() => { setEditing(null); setTitle(''); setDescription(''); }}>Cancel edit</Button>}</form> : <p className="py-5 text-muted-foreground">Draft creation is not granted to your account.</p>}</div><div><h2 className="text-xl font-semibold">Saved drafts</h2>{loading ? <p className="py-6 text-sm text-muted-foreground">Loading drafts…</p> : rows.length ? rows.map(r => <article key={r.id} className="flex flex-wrap items-center justify-between gap-4 border-b border-border py-5"><div className="min-w-0"><p className="break-words font-medium">{r.title}</p><Badge variant="outline" className="mt-2">Draft</Badge></div><div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => { setEditing(r.id); setTitle(r.title); setDescription(r.description); }}>Edit</Button><Button size="sm" disabled={busy} onClick={() => void submit(r.id)}>Request company approval</Button></div></article>) : <p className="py-6 text-sm text-muted-foreground">No drafts yet.</p>}<OwnPublicationRequests companyId={companyId} version={requestVersion} /></div></section>;
+  return <><OpportunityDrafts companyId={companyId} companyName={companyName} canDraft={canDraft} onSubmitted={() => setRequestVersion(v => v + 1)} /><OwnPublicationRequests companyId={companyId} version={requestVersion} /></>;
 }
 
 function OwnPublicationRequests({ companyId, version = 0 }: { companyId: string; version?: number }) {
@@ -116,12 +86,12 @@ function PublicationApprovals({ companyId }: { companyId: string }) {
   return <section className="mt-10 border-t border-border pt-7"><h2 className="text-xl font-semibold">Publication approvals</h2>{error && <p role="alert" className="text-destructive">{error}</p>}{rows.length ? rows.map(r => <article key={r.id} className="space-y-4 border-b border-border py-5"><h3 className="font-semibold">{r.job?.title} · Revision {r.revision}</h3><p className="whitespace-pre-wrap break-words text-sm">{r.job?.description}</p><Label htmlFor={`approval-${r.id}`}>Review notes</Label><Textarea id={`approval-${r.id}`} maxLength={2000} value={notes[r.id] ?? ''} onChange={e => setNotes(n => ({ ...n, [r.id]: e.target.value }))} /><div className="flex gap-3"><Button disabled={busy || (notes[r.id]?.trim().length ?? 0) < 10} onClick={() => void review(r.id, true)}>Approve publication</Button><Button variant="outline" disabled={busy || (notes[r.id]?.trim().length ?? 0) < 10} onClick={() => void review(r.id, false)}>Reject</Button></div></article>) : <p className="py-5 text-muted-foreground">No pending publication requests.</p>}</section>;
 }
 
-function DraftContributorHome({ companyId, canDraft, workEmailVerified }: { companyId: string; canDraft: boolean; workEmailVerified: boolean }) {
+function DraftContributorHome({ companyId, companyName, canDraft, workEmailVerified }: { companyId: string; companyName: string; canDraft: boolean; workEmailVerified: boolean }) {
   return <div className="space-y-8">
     <section aria-label="Verification status" className="grid gap-4 sm:grid-cols-2">
       <div className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-4 w-4 text-primary" />Verification status</h2><p className="mt-2 text-sm text-muted-foreground">Work email {workEmailVerified ? 'verified' : 'not verified'} · Company membership not approved · Not authorised to publish</p><Button asChild variant="link" className="px-0"><Link to="/employer/employee-details">Manage work email</Link></Button></div>
       <div className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="flex items-center gap-2 font-semibold"><Building2 className="h-4 w-4 text-primary" />Request membership</h2><p className="mt-2 text-sm text-muted-foreground">A company administrator must approve membership before you can see applications, staff or placements.</p><Button asChild variant="outline" size="sm" className="mt-3"><Link to="/employer/employee-details">Request company membership<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div>
     </section>
-    <CompanyDrafts companyId={companyId} canDraft={canDraft} />
+    <CompanyDrafts companyId={companyId} companyName={companyName} canDraft={canDraft} />
   </div>;
 }

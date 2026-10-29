@@ -148,6 +148,20 @@
       "when": 1793277559459,
       "tag": "0020_company_employee_management",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793291294812,
+      "tag": "0021_guided_opportunity_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793291330586,
+      "tag": "0022_opportunity_strict_on_submission",
+      "breakpoints": true
     }
   ]
 }
