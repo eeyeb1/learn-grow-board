@@ -1074,11 +1074,17 @@ export type Database = {
       }
       job_publication_requests: {
         Row: {
+          approved_snapshot: Json | null
           company_id: string
           created_at: string
           id: string
           job_id: string
           note: string | null
+          platform_note: string | null
+          platform_review_required: boolean
+          platform_reviewed_at: string | null
+          platform_reviewed_by: string | null
+          platform_status: string | null
           requested_by: string
           reviewed_at: string | null
           reviewed_by: string | null
@@ -1086,11 +1092,17 @@ export type Database = {
           status: string
         }
         Insert: {
+          approved_snapshot?: Json | null
           company_id: string
           created_at?: string
           id?: string
           job_id: string
           note?: string | null
+          platform_note?: string | null
+          platform_review_required?: boolean
+          platform_reviewed_at?: string | null
+          platform_reviewed_by?: string | null
+          platform_status?: string | null
           requested_by: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -1098,11 +1110,17 @@ export type Database = {
           status?: string
         }
         Update: {
+          approved_snapshot?: Json | null
           company_id?: string
           created_at?: string
           id?: string
           job_id?: string
           note?: string | null
+          platform_note?: string | null
+          platform_review_required?: boolean
+          platform_reviewed_at?: string | null
+          platform_reviewed_by?: string | null
+          platform_status?: string | null
           requested_by?: string
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -1122,6 +1140,73 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_review_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string
+          company_id: string
+          created_at: string
+          from_status: string | null
+          id: string
+          job_id: string
+          note: string | null
+          request_id: string | null
+          revision: number
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role: string
+          company_id: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          job_id: string
+          note?: string | null
+          request_id?: string | null
+          revision: number
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string
+          company_id?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          job_id?: string
+          note?: string | null
+          request_id?: string | null
+          revision?: number
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_review_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_review_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_review_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "job_publication_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -2030,6 +2115,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _job_event: {
+        Args: {
+          _action: string
+          _from: string
+          _job: Database["public"]["Tables"]["jobs"]["Row"]
+          _note: string
+          _request: string
+          _role: string
+          _to: string
+        }
+        Returns: undefined
+      }
       _new_certificate_code: { Args: never; Returns: string }
       _notify: {
         Args: {
@@ -2040,6 +2137,18 @@ export type Database = {
           _preview: string
           _title: string
           _uid: string
+        }
+        Returns: undefined
+      }
+      _notify_company_admins: {
+        Args: {
+          _body: string
+          _company: string
+          _except: string
+          _key: string
+          _link: string
+          _preview: string
+          _title: string
         }
         Returns: undefined
       }
@@ -2119,6 +2228,10 @@ export type Database = {
         Returns: boolean
       }
       issue_certificate: { Args: { _placement_id: string }; Returns: string }
+      job_material: {
+        Args: { j: Database["public"]["Tables"]["jobs"]["Row"] }
+        Returns: Json
+      }
       list_companies_without_admin: { Args: never; Returns: Json }
       list_company_review_candidates: { Args: never; Returns: Json }
       list_company_staff: { Args: { _company_id: string }; Returns: Json }
@@ -2127,12 +2240,17 @@ export type Database = {
         Returns: Json
       }
       list_my_company_invitations: { Args: never; Returns: Json }
+      list_platform_job_reviews: { Args: never; Returns: Json }
       moderate_reference_report: {
         Args: { _decision: string; _note: string; _report_id: string }
         Returns: undefined
       }
       placement_action: {
         Args: { _action: string; _note?: string; _placement_id: string }
+        Returns: undefined
+      }
+      platform_review_job: {
+        Args: { _approve: boolean; _note: string; _request_id: string }
         Returns: undefined
       }
       recover_company_admin: {
@@ -2195,6 +2313,10 @@ export type Database = {
       review_job_publication: {
         Args: { _approve: boolean; _note: string; _request_id: string }
         Returns: undefined
+      }
+      review_job_submission: {
+        Args: { _decision: string; _note: string; _request_id: string }
+        Returns: string
       }
       revoke_certificate: {
         Args: { _id: string; _reason: string }
@@ -2264,6 +2386,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_job_listing_state: {
+        Args: { _action: string; _job_id: string; _note: string }
+        Returns: undefined
+      }
       set_reference_approval: {
         Args: { _approved: boolean; _id: string }
         Returns: undefined
@@ -2273,6 +2399,7 @@ export type Database = {
         Returns: undefined
       }
       submit_company_registration: { Args: { _details: Json }; Returns: string }
+      submit_job_for_approval: { Args: { _job_id: string }; Returns: string }
       submit_reference: {
         Args: {
           _author_name: string
@@ -2322,6 +2449,7 @@ export type Database = {
         }
         Returns: string
       }
+      withdraw_job_submission: { Args: { _job_id: string }; Returns: undefined }
       withdraw_reference: { Args: { _id: string }; Returns: undefined }
     }
     Enums: {
