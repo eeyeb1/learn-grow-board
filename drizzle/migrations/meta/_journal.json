@@ -99,6 +99,13 @@
       "when": 1793269463215,
       "tag": "0013_company_registration_review",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793270668869,
+      "tag": "0014_employee_work_email_and_membership",
+      "breakpoints": true
     }
   ]
 }

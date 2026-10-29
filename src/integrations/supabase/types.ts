@@ -222,34 +222,52 @@ export type Database = {
           company_id: string | null
           created_at: string
           department: string | null
+          employee_name: string | null
           id: string
           job_title: string | null
           pathway: string
+          requested_company: string | null
           requested_domain: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string
           user_id: string
+          work_email: string | null
         }
         Insert: {
           company_id?: string | null
           created_at?: string
           department?: string | null
+          employee_name?: string | null
           id?: string
           job_title?: string | null
           pathway: string
+          requested_company?: string | null
           requested_domain?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           user_id: string
+          work_email?: string | null
         }
         Update: {
           company_id?: string | null
           created_at?: string
           department?: string | null
+          employee_name?: string | null
           id?: string
           job_title?: string | null
           pathway?: string
+          requested_company?: string | null
           requested_domain?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string
           user_id?: string
+          work_email?: string | null
         }
         Relationships: [
           {
@@ -311,10 +329,56 @@ export type Database = {
           },
         ]
       }
+      company_membership_reviews: {
+        Row: {
+          action: string
+          company_id: string
+          created_at: string
+          id: string
+          note: string
+          request_id: string
+          reviewer_id: string
+        }
+        Insert: {
+          action: string
+          company_id: string
+          created_at?: string
+          id?: string
+          note: string
+          request_id: string
+          reviewer_id: string
+        }
+        Update: {
+          action?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          request_id?: string
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_membership_reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_membership_reviews_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "company_access_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_memberships: {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          approved_work_email: string | null
           company_id: string
           id: string
           manage_placements: boolean
@@ -325,6 +389,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          approved_work_email?: string | null
           company_id: string
           id?: string
           manage_placements?: boolean
@@ -335,6 +400,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          approved_work_email?: string | null
           company_id?: string
           id?: string
           manage_placements?: boolean
@@ -577,6 +643,80 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      employee_email_challenges: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          invalidated_at: string | null
+          token_hash: string
+          user_id: string
+          work_email: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invalidated_at?: string | null
+          token_hash: string
+          user_id: string
+          work_email: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invalidated_at?: string | null
+          token_hash?: string
+          user_id?: string
+          work_email?: string
+        }
+        Relationships: []
+      }
+      employee_identities: {
+        Row: {
+          claimed_company: string
+          full_name: string
+          job_title: string
+          matched_company_id: string | null
+          updated_at: string
+          user_id: string
+          work_email: string
+          work_email_verified_at: string | null
+        }
+        Insert: {
+          claimed_company: string
+          full_name: string
+          job_title: string
+          matched_company_id?: string | null
+          updated_at?: string
+          user_id: string
+          work_email: string
+          work_email_verified_at?: string | null
+        }
+        Update: {
+          claimed_company?: string
+          full_name?: string
+          job_title?: string
+          matched_company_id?: string | null
+          updated_at?: string
+          user_id?: string
+          work_email?: string
+          work_email_verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_identities_matched_company_id_fkey"
+            columns: ["matched_company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       favorites: {
         Row: {
@@ -1527,6 +1667,10 @@ export type Database = {
         Args: { _label: string; _max: number; _min: number; _v: string }
         Returns: string
       }
+      begin_employee_email_challenge: {
+        Args: { _hash: string; _uid: string }
+        Returns: Json
+      }
       can_manage_placement: {
         Args: { _placement_id: string; _uid: string }
         Returns: boolean
@@ -1543,6 +1687,9 @@ export type Database = {
         Args: { _company_id: string; _permission: string; _uid: string }
         Returns: boolean
       }
+      confirm_employee_email: { Args: { _hash: string }; Returns: undefined }
+      employee_domain_company: { Args: { _email: string }; Returns: string }
+      employee_email_valid: { Args: { _email: string }; Returns: boolean }
       get_company_access: { Args: never; Returns: Json }
       get_my_hours_summary: { Args: never; Returns: Json }
       get_placement_hours: { Args: { _placement_id: string }; Returns: Json }
@@ -1560,6 +1707,10 @@ export type Database = {
       }
       issue_certificate: { Args: { _placement_id: string }; Returns: string }
       list_company_review_candidates: { Args: never; Returns: Json }
+      list_employee_membership_requests: {
+        Args: { _company_id?: string }
+        Returns: Json
+      }
       moderate_reference_report: {
         Args: { _decision: string; _note: string; _report_id: string }
         Returns: undefined
@@ -1607,11 +1758,28 @@ export type Database = {
         }
         Returns: string
       }
+      review_employee_membership: {
+        Args: { _decision: string; _note: string; _request_id: string }
+        Returns: undefined
+      }
       revoke_certificate: {
         Args: { _id: string; _reason: string }
         Returns: undefined
       }
       revoke_skill_verification: { Args: { _id: string }; Returns: undefined }
+      route_manual_employee_request: {
+        Args: { _company_id: string; _note: string; _request_id: string }
+        Returns: undefined
+      }
+      save_employee_identity: {
+        Args: {
+          _company: string
+          _job_title: string
+          _name: string
+          _work_email: string
+        }
+        Returns: undefined
+      }
       set_certificate_privacy: {
         Args: {
           _id: string
