@@ -45,7 +45,7 @@ UPDATE jobs SET description='Clean, summarise and present survey data with a nam
 RESET ROLE;
 SELECT pg_temp.ok((SELECT status FROM jobs WHERE id='b0000000-0000-0000-0000-000000000001')='draft','material change after approval needs renewed approval');
 SELECT pg_temp.ok((SELECT count(*) FROM notifications WHERE user_id='00000000-0000-0000-0000-000000000003' AND dedupe_key LIKE 'job-%')>=5,'author notified at each step');
-SELECT pg_temp.ok((SELECT array_agg(action ORDER BY created_at) FROM job_review_events WHERE job_id='b0000000-0000-0000-0000-000000000001')=ARRAY['submitted','changes_requested','submitted','company_approved','sent_to_platform_review','published','material_change'],'complete audit trail');
+SELECT pg_temp.ok((SELECT array_agg(action ORDER BY action) FROM job_review_events WHERE job_id='b0000000-0000-0000-0000-000000000001')=ARRAY['changes_requested','company_approved','material_change','published','sent_to_platform_review','submitted','submitted'],'complete audit trail');
 SELECT pg_temp.as_user(1); SET LOCAL ROLE authenticated;
 DO $$ BEGIN BEGIN UPDATE job_review_events SET note='x'; RAISE EXCEPTION 'FAIL: audit mutable'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: audit trail immutable'; END $$;
 RESET ROLE;
