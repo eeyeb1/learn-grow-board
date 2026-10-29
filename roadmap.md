@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Employer integration
+- [ ] Add admin-only company profile editing, optional verified public pages, open opportunity links and privacy-safe opt-in impact; test access and publication boundaries.
 - [x] Enforce scoped employer roles, explicit listing/placement assignments, administrator publication approval and immutable permission auditing; preserve seeker access.
 - [x] Add authorised staff controls; 33 actual-policy tests passed in a disposable database with rolled-back fixtures, plus 20 existing unit tests. Checked real signed-in seeker dashboard, unknown-company denial, direct staff escalation/publication/membership-write denial and signed-out switching.
 - [ ] Verify staff assignment and publication approval through a genuine company administrator's UI (blocker: no verified company or trusted company administrator exists; isolated database approval/read-back passed, no real authority was fabricated).
