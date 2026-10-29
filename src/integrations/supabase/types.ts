@@ -421,6 +421,56 @@ export type Database = {
           },
         ]
       }
+      company_page_settings: {
+        Row: {
+          accessibility_information: string
+          company_id: string
+          general_location: string
+          is_public: boolean
+          learning_opportunities: string
+          logo_path: string | null
+          public_contact_email: string
+          public_contact_url: string
+          show_verified_impact: boolean
+          updated_at: string
+          work_environment: string
+        }
+        Insert: {
+          accessibility_information?: string
+          company_id: string
+          general_location?: string
+          is_public?: boolean
+          learning_opportunities?: string
+          logo_path?: string | null
+          public_contact_email?: string
+          public_contact_url?: string
+          show_verified_impact?: boolean
+          updated_at?: string
+          work_environment?: string
+        }
+        Update: {
+          accessibility_information?: string
+          company_id?: string
+          general_location?: string
+          is_public?: boolean
+          learning_opportunities?: string
+          logo_path?: string | null
+          public_contact_email?: string
+          public_contact_url?: string
+          show_verified_impact?: boolean
+          updated_at?: string
+          work_environment?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_page_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_permission_events: {
         Row: {
           action: string
@@ -1904,6 +1954,7 @@ export type Database = {
       get_company_access: { Args: never; Returns: Json }
       get_my_hours_summary: { Args: never; Returns: Json }
       get_placement_hours: { Args: { _placement_id: string }; Returns: Json }
+      get_public_company: { Args: { _company_id: string }; Returns: Json }
       get_public_profile: { Args: { _slug: string }; Returns: Json }
       has_role: {
         Args: {
@@ -1985,6 +2036,10 @@ export type Database = {
       revoke_skill_verification: { Args: { _id: string }; Returns: undefined }
       route_manual_employee_request: {
         Args: { _company_id: string; _note: string; _request_id: string }
+        Returns: undefined
+      }
+      save_company_page: {
+        Args: { _company_id: string; _data: Json }
         Returns: undefined
       }
       save_employee_identity: {
