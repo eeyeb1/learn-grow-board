@@ -167,7 +167,7 @@ function OpportunityEditor({ companyId, companyName, initialId, initial, returne
         <Button size="sm" disabled={submitting} onClick={() => void submit()}>{submitting ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}Submit for Approval</Button>
       </div>
     </div>
-    {hadPending && <p className="mb-5 rounded-md border border-border bg-muted p-3 text-sm">This draft is awaiting company review. Saving changes withdraws that request; send it again when you are ready.</p>}
+    {returnedNote && <p className="mb-5 whitespace-pre-wrap break-words rounded-md border border-border bg-muted p-3 text-sm"><span className="font-medium">Changes requested: </span>{returnedNote}</p>}
     {submitError && <p role="alert" className="mb-5 text-sm text-destructive">{submitError}</p>}
 
     <div className="space-y-10">
@@ -223,7 +223,7 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
   return <fieldset className="space-y-5"><legend className="mb-4 flex items-center gap-3 font-display text-lg font-semibold"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-sm text-primary-foreground">{n}</span>{title}</legend>{children}</fieldset>;
 }
 
-function OpportunityPreview({ form, companyName }: { form: OpportunityForm; companyName: string }) {
+export function OpportunityPreview({ form, companyName }: { form: OpportunityForm; companyName: string }) {
   const cat = CATEGORIES.find(c => c.value === form.category);
   const list = (s: string) => s.split('\n').map(l => l.trim()).filter(Boolean);
   const Row = ({ label, value }: { label: string; value: string }) => value.trim() ? <div><h4 className="text-sm font-semibold">{label}</h4><p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{value}</p></div> : null;
