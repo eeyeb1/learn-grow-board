@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Employer integration
+- [x] Add admin Employee Management page (members, requests, invitations, roles, assignments, revocation, history), exact-domain single-use 7-day invitations bound to the verified work email, checked admin promotion and platform-admin zero-admin recovery; direct calls by a non-admin account were refused.
+- [ ] Try invitations, promotion and recovery with a genuine company admin (blocker: no verified company or administrator exists; invitation emails also wait on email sending setup).
 - [x] Add admin-only company profile editing, optional verified public pages, open opportunity links and privacy-safe opt-in impact; 14 isolated privacy tests, 33 existing permission tests and 21 unit tests passed; signed-in seeker access and unknown-company editor denial checked.
 - [ ] Verify company profile save, logo upload and public-page publication through a genuine company admin account (blocker: no verified company or trusted company administrator exists; isolated admin save/read-back passed without fabricating live authority).
 - [x] Enforce scoped employer roles, explicit listing/placement assignments, administrator publication approval and immutable permission auditing; preserve seeker access.
