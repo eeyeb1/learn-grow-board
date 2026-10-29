@@ -1,5 +1,6 @@
+// @ts-nocheck -- run with `bun test`; bun types are not part of the app build
 import { describe, expect, test } from 'bun:test';
-import { isAuthorEditable, isPubliclyVisible, isUnderReview, STATUS_LABELS } from '../opportunityStatus';
+import { isAuthorEditable, isPubliclyVisible, isUnderReview, STATUS_LABELS } from './opportunityStatus';
 
 describe('opportunity approval states', () => {
   test('only Published (active) listings are publicly visible', () => {
