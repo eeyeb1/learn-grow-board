@@ -1,6 +1,7 @@
+import type { EmployeeIdentity } from './employeeIdentity';
 export type CompanyState = 'company_admin' | 'employee' | 'draft_only' | 'email_pending' | 'company_pending' | 'membership_pending' | 'access_denied';
-export interface CompanyContext { company_id: string; company_name: string; state: CompanyState; manage_placements: boolean }
-export interface CompanyAccess { email_verified: boolean; contexts: CompanyContext[]; requests: { id: string; status: string; pathway: string; company_id: string | null }[] }
+export interface CompanyContext { company_id: string; company_name: string; state: CompanyState; manage_placements: boolean; membership_approved?: boolean; authorised_to_publish?: boolean }
+export interface CompanyAccess { email_verified: boolean; employee?: EmployeeIdentity | null; contexts: CompanyContext[]; requests: { id: string; status: string; pathway: string; company_id: string | null }[] }
 export function companyDestination(context: CompanyContext): string {
   const section = context.state === 'company_admin' ? 'dashboard' : context.state === 'employee' ? 'employee' : context.state === 'draft_only' ? 'drafts' : 'status';
   return `/employer/${section}?company=${encodeURIComponent(context.company_id)}`;
