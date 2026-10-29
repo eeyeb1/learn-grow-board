@@ -27,7 +27,7 @@ export default function CompanyProfileEditor({ companyId }: { companyId: string 
     if (company.error) throw company.error; if (settings.error) throw settings.error;
     return { ...empty, ...company.data, ...(settings.data ?? {}), company_description: company.data.company_description ?? '', company_website: company.data.company_website ?? '', industry: company.data.industry ?? '', logo_path: settings.data?.logo_path ?? '' };
   } });
-  useEffect(() => { setForm(query.data ?? empty); setError(''); setSaved(false); }, [query.data, companyId, user?.id]);
+  useEffect(() => { setForm(query.data ?? empty); setError(''); }, [query.data, companyId, user?.id]);
   useEffect(() => { let active = true; setLogo(''); if (form.logo_path) void supabase.storage.from('company-logos').createSignedUrl(form.logo_path, 60).then(r => { if (active) setLogo(r.data?.signedUrl ?? ''); }); return () => { active = false; }; }, [form.logo_path]);
   function change<K extends keyof Fields>(key: K, value: Fields[K]) { setForm(f => ({ ...f, [key]: value })); setSaved(false); }
   async function upload(file?: File) {
