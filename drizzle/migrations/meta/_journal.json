@@ -92,6 +92,13 @@
       "when": 1792585404669,
       "tag": "0012_company_auth_access",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793269463215,
+      "tag": "0013_company_registration_review",
+      "breakpoints": true
     }
   ]
 }
