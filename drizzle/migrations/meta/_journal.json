@@ -141,6 +141,13 @@
       "when": 1793274854113,
       "tag": "0019_company_page_grants_and_logo_access",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793277559459,
+      "tag": "0020_company_employee_management",
+      "breakpoints": true
     }
   ]
 }
