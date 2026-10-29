@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, ArrowRight, Bell, Briefcase, CheckCircle2, ClipboardCheck, Clock, FileText, Loader2, Plus, RefreshCw, Send, UserCheck, Users } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Bell, Briefcase, CheckCircle2, ClipboardCheck, Clock, FileText, Plus, RefreshCw, Send, UserCheck, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -117,4 +117,3 @@ function Panel({ id, title, icon: Icon, action, children }: { id?: string; title
   return <section id={id} className="scroll-mt-24 rounded-xl border border-border bg-card p-5 shadow-sm"><div className="mb-3 flex items-center justify-between"><h2 className="flex items-center gap-2 font-semibold"><Icon className="h-4 w-4 text-primary" />{title}</h2>{action}</div>{children}</section>;
 }
 function Empty({ children }: { children: React.ReactNode }) { return <p className="py-3 text-sm text-muted-foreground">{children}</p>; }
-export { Loader2 };
