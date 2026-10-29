@@ -279,6 +279,44 @@ export type Database = {
           },
         ]
       }
+      company_admin_recoveries: {
+        Row: {
+          appointed_user_id: string
+          authority_evidence: string
+          company_id: string
+          created_at: string
+          id: string
+          legitimacy_evidence: string
+          platform_admin_id: string
+        }
+        Insert: {
+          appointed_user_id: string
+          authority_evidence: string
+          company_id: string
+          created_at?: string
+          id?: string
+          legitimacy_evidence: string
+          platform_admin_id: string
+        }
+        Update: {
+          appointed_user_id?: string
+          authority_evidence?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          legitimacy_evidence?: string
+          platform_admin_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_admin_recoveries_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_domain_exclusions: {
         Row: {
           domain: string
@@ -322,6 +360,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "company_domains_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_invitations: {
+        Row: {
+          company_id: string
+          created_at: string
+          draft: boolean
+          expires_at: string
+          id: string
+          invited_by: string
+          invited_email: string
+          responded_at: string | null
+          scope: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          draft?: boolean
+          expires_at?: string
+          id?: string
+          invited_by: string
+          invited_email: string
+          responded_at?: string | null
+          scope: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          draft?: boolean
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          invited_email?: string
+          responded_at?: string | null
+          scope?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_invitations_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company_profiles"
@@ -1924,6 +2012,7 @@ export type Database = {
         Args: { _placement_id: string; _uid: string }
         Returns: boolean
       }
+      cancel_company_invitation: { Args: { _id: string }; Returns: undefined }
       company_application_permission: {
         Args: { _application_id: string; _uid: string }
         Returns: boolean
@@ -1964,16 +2053,29 @@ export type Database = {
         }
         Returns: boolean
       }
+      invite_company_staff: {
+        Args: {
+          _company_id: string
+          _draft: boolean
+          _email: string
+          _note: string
+          _scope: string
+        }
+        Returns: string
+      }
       is_placement_employer: {
         Args: { _application_id: string; _user_id: string }
         Returns: boolean
       }
       issue_certificate: { Args: { _placement_id: string }; Returns: string }
+      list_companies_without_admin: { Args: never; Returns: Json }
       list_company_review_candidates: { Args: never; Returns: Json }
+      list_company_staff: { Args: { _company_id: string }; Returns: Json }
       list_employee_membership_requests: {
         Args: { _company_id?: string }
         Returns: Json
       }
+      list_my_company_invitations: { Args: never; Returns: Json }
       moderate_reference_report: {
         Args: { _decision: string; _note: string; _report_id: string }
         Returns: undefined
@@ -1981,6 +2083,15 @@ export type Database = {
       placement_action: {
         Args: { _action: string; _note?: string; _placement_id: string }
         Returns: undefined
+      }
+      recover_company_admin: {
+        Args: {
+          _authority: string
+          _company_id: string
+          _legitimacy: string
+          _user_id: string
+        }
+        Returns: string
       }
       report_reference: {
         Args: { _details: string; _id: string; _reason: string }
@@ -2003,6 +2114,10 @@ export type Database = {
       }
       resolve_portfolio_removal: {
         Args: { _decision: string; _note: string; _request_id: string }
+        Returns: undefined
+      }
+      respond_company_invitation: {
+        Args: { _accept: boolean; _id: string }
         Returns: undefined
       }
       restore_reference: {
@@ -2034,6 +2149,10 @@ export type Database = {
         Args: { _id: string; _reason: string }
         Returns: undefined
       }
+      revoke_company_admin: {
+        Args: { _company_id: string; _note: string; _user_id: string }
+        Returns: undefined
+      }
       revoke_skill_verification: { Args: { _id: string }; Returns: undefined }
       route_manual_employee_request: {
         Args: { _company_id: string; _note: string; _request_id: string }
@@ -2059,6 +2178,16 @@ export type Database = {
           _show_name: boolean
           _show_skills: boolean
           _verification_enabled: boolean
+        }
+        Returns: undefined
+      }
+      set_company_admin_role: {
+        Args: {
+          _company_id: string
+          _confirm_email: string
+          _note: string
+          _promote: boolean
+          _user_id: string
         }
         Returns: undefined
       }
