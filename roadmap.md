@@ -29,3 +29,5 @@
 
 ## Before publishing
 - [ ] Assign a moderator account so reference reports can be reviewed (blocker: Emmanuel must name which account gets the moderator role). Until then, /moderation/references shows "Only moderators can view this page" to everyone.
+- [x] Formal opportunity approval workflow: submit/withdraw, company approve/reject/request changes, platform safety review, close/suspend, renewed approval after material edits, notifications and immutable audit; rolled-back database test passed.
+- [ ] Try the approval queue in the browser with a real company admin and platform admin (blocker: no verified company or platform administrator assigned yet).

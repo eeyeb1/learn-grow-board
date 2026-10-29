@@ -10,7 +10,7 @@ export function companyDestination(context: CompanyContext): string {
 export function workspacePermitted(state: CompanyState, section: string): boolean {
   if (section === 'status') return true;
   if (section === 'dashboard') return state === 'company_admin';
-  if (section === 'profile' || section === 'employees') return state === 'company_admin';
+  if (section === 'profile' || section === 'employees' || section === 'approvals') return state === 'company_admin';
   if (section === 'employee') return state === 'employee';
   return section === 'drafts' && ['company_admin', 'employee', 'draft_only'].includes(state);
 }

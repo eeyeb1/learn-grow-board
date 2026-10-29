@@ -1,0 +1,53 @@
+-- Opportunity approval workflow regression test. Everything rolls back.
+-- psql -v ON_ERROR_STOP=1 -f opportunityApproval.sql
+BEGIN;
+CREATE FUNCTION pg_temp.ok(c boolean, l text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF c IS DISTINCT FROM true THEN RAISE EXCEPTION 'FAIL: %', l; END IF; RAISE NOTICE 'PASS: %', l; END $$;
+CREATE FUNCTION pg_temp.as_user(n int) RETURNS void LANGUAGE sql AS $$ SELECT set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000'||lpad(n::text,2,'0'), true), set_config('request.jwt.claims', json_build_object('sub','00000000-0000-0000-0000-0000000000'||lpad(n::text,2,'0'),'role','authenticated')::text, true) $$;
+INSERT INTO auth.users(id,email,email_confirmed_at) SELECT ('00000000-0000-0000-0000-0000000000'||lpad(n::text,2,'0'))::uuid,'t'||n||'@approval-example.org',now() FROM generate_series(1,4) n;
+INSERT INTO public.company_profiles(id,user_id,company_name) VALUES('a0000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','Approval Co');
+INSERT INTO public.company_verifications(company_id,status) VALUES('a0000000-0000-0000-0000-000000000001','verified');
+INSERT INTO public.company_domains(company_id,domain,approved) VALUES('a0000000-0000-0000-0000-000000000001','approval-example.org',true);
+INSERT INTO public.company_memberships(company_id,user_id,role,status) VALUES('a0000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','company_admin','approved'),('a0000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002','company_admin','approved');
+INSERT INTO public.employee_identities(user_id,full_name,job_title,claimed_company,work_email,work_email_verified_at,matched_company_id) VALUES('00000000-0000-0000-0000-000000000003','Contributor','Analyst','Approval Co','t3@approval-example.org',now(),'a0000000-0000-0000-0000-000000000001');
+INSERT INTO public.user_roles(user_id,role) VALUES('00000000-0000-0000-0000-000000000004','admin');
+
+SELECT pg_temp.as_user(3); SET LOCAL ROLE authenticated;
+INSERT INTO jobs(id,company_id,title,description,location_type,status,category,mentorship_details,what_you_will_learn,duration,expires_at,opportunity_details) VALUES('b0000000-0000-0000-0000-000000000001','a0000000-0000-0000-0000-000000000001','Paid data assistant','Clean and summarise survey data with a named supervisor each week.','remote','draft','paid_job','A named analyst supervises daily with weekly feedback sessions.',ARRAY['Data cleaning'],'Mon-Wed mornings',(current_date+10)::timestamptz,jsonb_build_object('start_date',(current_date+20)::text,'end_date',(current_date+40)::text,'estimated_hours',40,'openings',1,'audience','Students','eligibility','Age 16+','payment_details','£12.21 per hour, paid monthly'));
+DO $$ BEGIN BEGIN INSERT INTO jobs(company_id,title,description,location_type,status) VALUES('a0000000-0000-0000-0000-000000000001','Direct','Direct publish attempt','remote','active'); RAISE EXCEPTION 'FAIL: direct publish'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: contributor cannot create a published listing'; END $$;
+SELECT public.submit_job_for_approval('b0000000-0000-0000-0000-000000000001');
+SELECT pg_temp.ok((SELECT status FROM jobs WHERE id='b0000000-0000-0000-0000-000000000001')='pending_company','submission marks Pending Company Approval');
+UPDATE jobs SET title='Edited while pending' WHERE id='b0000000-0000-0000-0000-000000000001' AND false;
+DO $$ BEGIN BEGIN UPDATE jobs SET title='Edited while pending' WHERE id='b0000000-0000-0000-0000-000000000001'; IF FOUND THEN RAISE EXCEPTION 'FAIL: edited pending'; END IF; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: pending submission is read-only'; END $$;
+DO $$ BEGIN BEGIN PERFORM public.review_job_submission((SELECT id FROM job_publication_requests WHERE job_id='b0000000-0000-0000-0000-000000000001'),'approve','Self approval attempt'); RAISE EXCEPTION 'FAIL: contributor approved'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: contributor cannot approve own draft'; END $$;
+DO $$ BEGIN BEGIN UPDATE jobs SET status='active' WHERE id='b0000000-0000-0000-0000-000000000001'; IF FOUND THEN RAISE EXCEPTION 'FAIL: bypass'; END IF; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: approval queue cannot be bypassed'; END $$;
+RESET ROLE;
+SELECT pg_temp.ok((SELECT count(*) FROM notifications WHERE dedupe_key LIKE 'job-submitted:%' AND user_id IN ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002'))=2,'both company admins notified');
+
+SELECT pg_temp.as_user(1); SET LOCAL ROLE authenticated;
+SELECT public.review_job_submission((SELECT id FROM job_publication_requests WHERE job_id='b0000000-0000-0000-0000-000000000001'),'changes','Please add the supervisor name.');
+RESET ROLE;
+SELECT pg_temp.ok((SELECT status FROM jobs WHERE id='b0000000-0000-0000-0000-000000000001')='changes_requested','changes requested returns it to the author');
+SELECT pg_temp.as_user(3); SET LOCAL ROLE authenticated;
+UPDATE jobs SET mentorship_details='Priya Shah, senior analyst, supervises daily with weekly feedback.' WHERE id='b0000000-0000-0000-0000-000000000001';
+SELECT public.submit_job_for_approval('b0000000-0000-0000-0000-000000000001');
+RESET ROLE;
+SELECT pg_temp.as_user(1); SET LOCAL ROLE authenticated;
+SELECT pg_temp.ok(public.review_job_submission((SELECT id FROM job_publication_requests WHERE job_id='b0000000-0000-0000-0000-000000000001' AND status='pending'),'approve','Checked pay, dates and supervision.')='pending_platform','first company listing goes to platform review');
+RESET ROLE;
+SELECT pg_temp.ok((SELECT reviewed_by='00000000-0000-0000-0000-000000000001' AND reviewed_at IS NOT NULL AND approved_snapshot->>'title'='Paid data assistant' AND revision=(SELECT publication_revision FROM jobs WHERE id=job_id) FROM job_publication_requests WHERE job_id='b0000000-0000-0000-0000-000000000001' AND status='approved'),'reviewer, time and approved version recorded');
+SELECT pg_temp.ok(NOT EXISTS(SELECT 1 FROM jobs WHERE id='b0000000-0000-0000-0000-000000000001' AND status='active'),'not public before platform review');
+SELECT set_config('test.req',(SELECT id::text FROM job_publication_requests WHERE job_id='b0000000-0000-0000-0000-000000000001' AND status='approved'),true);
+SELECT pg_temp.as_user(4); SET LOCAL ROLE authenticated;
+SELECT public.platform_review_job(current_setting('test.req')::uuid,true,'Safe, paid and supervised.');
+RESET ROLE;
+SELECT pg_temp.ok((SELECT status FROM jobs WHERE id='b0000000-0000-0000-0000-000000000001')='active','platform approval publishes');
+SELECT pg_temp.as_user(1); SET LOCAL ROLE authenticated;
+UPDATE jobs SET description='Clean, summarise and present survey data with a named supervisor each week.' WHERE id='b0000000-0000-0000-0000-000000000001';
+RESET ROLE;
+SELECT pg_temp.ok((SELECT status FROM jobs WHERE id='b0000000-0000-0000-0000-000000000001')='draft','material change after approval needs renewed approval');
+SELECT pg_temp.ok((SELECT count(*) FROM notifications WHERE user_id='00000000-0000-0000-0000-000000000003' AND dedupe_key LIKE 'job-%')>=5,'author notified at each step');
+SELECT pg_temp.ok((SELECT array_agg(action ORDER BY action) FROM job_review_events WHERE job_id='b0000000-0000-0000-0000-000000000001')=ARRAY['changes_requested','company_approved','material_change','published','sent_to_platform_review','submitted','submitted'],'complete audit trail');
+SELECT pg_temp.as_user(1); SET LOCAL ROLE authenticated;
+SELECT pg_temp.ok(NOT has_table_privilege('authenticated','public.job_review_events','UPDATE') AND NOT has_table_privilege('authenticated','public.job_review_events','DELETE'),'audit trail immutable for app users');
+RESET ROLE;
+ROLLBACK;
