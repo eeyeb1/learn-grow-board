@@ -261,6 +261,21 @@ export type Database = {
           },
         ]
       }
+      company_domain_exclusions: {
+        Row: {
+          domain: string
+          reason: string
+        }
+        Insert: {
+          domain: string
+          reason: string
+        }
+        Update: {
+          domain?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       company_domains: {
         Row: {
           approved: boolean
@@ -372,6 +387,131 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      company_registration_reviews: {
+        Row: {
+          action: string
+          applicant_message: string
+          approved_domains: string[]
+          authority_evidence: string
+          company_id: string | null
+          created_at: string
+          id: string
+          legitimacy_evidence: string
+          private_notes: string
+          reviewer_id: string
+          submission_id: string
+        }
+        Insert: {
+          action: string
+          applicant_message: string
+          approved_domains?: string[]
+          authority_evidence: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          legitimacy_evidence: string
+          private_notes: string
+          reviewer_id: string
+          submission_id: string
+        }
+        Update: {
+          action?: string
+          applicant_message?: string
+          approved_domains?: string[]
+          authority_evidence?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          legitimacy_evidence?: string
+          private_notes?: string
+          reviewer_id?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_registration_reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_registration_reviews_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "company_registration_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_registration_submissions: {
+        Row: {
+          business_location: string
+          company_id: string | null
+          decision_message: string | null
+          id: string
+          industry: string
+          legal_name: string
+          registration_identifier: string
+          relationship: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          submitted_evidence: string
+          trading_name: string
+          user_id: string
+          website: string
+          work_email: string
+        }
+        Insert: {
+          business_location: string
+          company_id?: string | null
+          decision_message?: string | null
+          id?: string
+          industry: string
+          legal_name: string
+          registration_identifier?: string
+          relationship: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_evidence: string
+          trading_name?: string
+          user_id: string
+          website: string
+          work_email: string
+        }
+        Update: {
+          business_location?: string
+          company_id?: string | null
+          decision_message?: string | null
+          id?: string
+          industry?: string
+          legal_name?: string
+          registration_identifier?: string
+          relationship?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_evidence?: string
+          trading_name?: string
+          user_id?: string
+          website?: string
+          work_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_registration_submissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_verifications: {
         Row: {
@@ -1395,6 +1535,10 @@ export type Database = {
         Args: { _company_id: string; _uid: string }
         Returns: boolean
       }
+      company_domain_match_allowed: {
+        Args: { _domain: string }
+        Returns: boolean
+      }
       company_permission: {
         Args: { _company_id: string; _permission: string; _uid: string }
         Returns: boolean
@@ -1415,6 +1559,7 @@ export type Database = {
         Returns: boolean
       }
       issue_certificate: { Args: { _placement_id: string }; Returns: string }
+      list_company_review_candidates: { Args: never; Returns: Json }
       moderate_reference_report: {
         Args: { _decision: string; _note: string; _report_id: string }
         Returns: undefined
@@ -1449,6 +1594,19 @@ export type Database = {
         Args: { _id: string; _note: string }
         Returns: undefined
       }
+      review_company_registration: {
+        Args: {
+          _authority_evidence: string
+          _company_id?: string
+          _decision: string
+          _domains?: string[]
+          _legitimacy_evidence: string
+          _message: string
+          _notes: string
+          _submission_id: string
+        }
+        Returns: string
+      }
       revoke_certificate: {
         Args: { _id: string; _reason: string }
         Returns: undefined
@@ -1472,6 +1630,7 @@ export type Database = {
         Args: { _id: string; _visible: boolean }
         Returns: undefined
       }
+      submit_company_registration: { Args: { _details: Json }; Returns: string }
       submit_reference: {
         Args: {
           _author_name: string

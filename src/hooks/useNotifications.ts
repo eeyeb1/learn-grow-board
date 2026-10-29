@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export type NotificationRow = {
   id: string;
-  category: "application" | "placement" | "hours" | "feedback" | "deadline";
+  category: "application" | "placement" | "hours" | "feedback" | "deadline" | "company";
   title: string;
   preview: string;
   body: string | null;
@@ -15,19 +15,19 @@ export type NotificationRow = {
 
 /** Only the user's own notifications are returned (row-level security). */
 export function useNotifications() {
-  const { user, userType } = useAuth();
+  const { user } = useAuth();
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const enabled = !!user && userType !== "company";
+  const enabled = !!user;
 
   const load = useCallback(async () => {
-    if (!enabled) { setItems([]); setLoading(false); return; }
+    if (!user) { setItems([]); setLoading(false); return; }
     setError(null);
     const { data, error } = await supabase
       .from("notifications")
       .select("id, category, title, preview, body, link, read_at, created_at")
-      .eq("user_id", user!.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) setError("Could not load notifications.");
@@ -36,11 +36,11 @@ export function useNotifications() {
   }, [enabled, user]);
 
   useEffect(() => {
-    if (!enabled) { setItems([]); setLoading(false); return; }
+    if (!user) { setItems([]); setLoading(false); return; }
     supabase.rpc("sync_my_deadline_notifications").then(() => load());
     const channel = supabase
-      .channel(`notifications-${user!.id}-${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user!.id}` }, () => load())
+      .channel(`notifications-${user.id}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [enabled, user, load]);
