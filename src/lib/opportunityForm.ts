@@ -72,7 +72,7 @@ export function warnings(f: OpportunityForm): string[] {
 }
 
 export function toRow(f: OpportunityForm) {
-  const details: Record<string, unknown> = {
+  const details: Record<string, string | number | boolean | null> = {
     department: f.department, remote_preference: f.remote_preference, schedule: f.schedule,
     start_date: f.start_date, end_date: f.end_date, estimated_hours: num(f.estimated_hours), openings: num(f.openings),
     audience: f.audience, eligibility: f.eligibility, payment_details: f.payment_details, expense_details: f.expense_details,
