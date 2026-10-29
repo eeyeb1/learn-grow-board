@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import CompanyRegistrationStatus from '@/components/CompanyRegistrationStatus';
 import EmployeeMembershipReview from '@/components/EmployeeMembershipReview';
 import CompanyStaffAccess from '@/components/CompanyStaffAccess';
+import CompanyDashboard from '@/components/CompanyDashboard';
 
 const messages: Record<CompanyState, [string, string]> = {
   company_admin: ['Company dashboard', 'Authorised company administrator'],
@@ -45,9 +46,9 @@ export default function EmployerWorkspace() {
       <div className="py-5 flex flex-wrap gap-3 items-center">{context?.scope && <Badge>{context.scope.replace(/_/g, ' ')}</Badge>}<Badge variant="outline">Work email {access?.employee?.work_email_verified_at ? 'verified' : 'not verified'}</Badge><Badge variant="outline">Company membership {context?.membership_approved ? 'approved' : 'not approved'}</Badge><Badge variant="outline">Authorised to publish: {context?.authorised_to_publish ? 'Yes' : 'No'}</Badge><Button asChild variant="link"><Link to="/employer/employee-details">Work email and employee details</Link></Button></div>
       {context && unrestricted ? <>
         <nav className="my-6 flex flex-wrap gap-3" aria-label="Company workspace"><Button asChild variant="outline"><Link to={companyDestination(context)}><ShieldCheck className="mr-2 h-4 w-4" />{context.state === 'company_admin' ? 'Dashboard' : context.state === 'employee' ? 'Workspace' : 'My drafts'}</Link></Button>{context.state !== 'draft_only' && <Button asChild variant="outline"><Link to={`/employer/drafts?company=${context.company_id}`}><FileText className="mr-2 h-4 w-4" />My drafts</Link></Button>}{context.manage_placements && <Button asChild variant="outline"><Link to="/hour-approvals"><Clock className="mr-2 h-4 w-4" />Hour approvals</Link></Button>}{context.state === 'company_admin' && <Button asChild><Link to={`/post-role?company=${context.company_id}`}><Plus className="mr-2 h-4 w-4" />Post a role</Link></Button>}</nav>
-        {section === 'drafts' || context.state === 'draft_only' ? <CompanyDrafts companyId={context.company_id} canDraft={context.can_draft ?? false} /> : <CompanyRecords companyId={context.company_id} manage={context.manage_placements} />}
-        {context.state === 'company_admin' && section !== 'drafts' && <EmployeeMembershipReview companyId={context.company_id} />}
-        {context.state === 'company_admin' && section !== 'drafts' && <><PublicationApprovals companyId={context.company_id} /><CompanyStaffAccess companyId={context.company_id} /></>}
+        {context.state === 'draft_only' ? <DraftContributorHome companyId={context.company_id} canDraft={context.can_draft ?? false} workEmailVerified={!!access?.employee?.work_email_verified_at} /> : section === 'drafts' ? <CompanyDrafts companyId={context.company_id} canDraft={context.can_draft ?? false} /> : <CompanyDashboard context={context} />}
+        {context.state === 'company_admin' && section !== 'drafts' && <div id="membership-requests" className="scroll-mt-24"><EmployeeMembershipReview companyId={context.company_id} /></div>}
+        {context.state === 'company_admin' && section !== 'drafts' && <><div id="publication-approvals" className="scroll-mt-24"><PublicationApprovals companyId={context.company_id} /></div><div id="staff-access" className="scroll-mt-24"><CompanyStaffAccess companyId={context.company_id} /></div></>}
       </> : <div className="py-8 space-y-5"><Badge variant="outline">Restricted access</Badge>{!access?.email_verified && <p className="text-sm text-muted-foreground">Open the confirmation link in your email, then sign in again.</p>}{access?.requests.map(r => <p key={r.id} className="text-sm text-muted-foreground">{r.pathway === 'register' ? 'Company registration' : 'Membership request'}: {r.status}</p>)}<div className="flex flex-wrap gap-3"><Button asChild variant="outline"><Link to="/employer/onboarding">Register or join a company<ArrowRight className="ml-2 h-4 w-4" /></Link></Button><Button asChild variant="ghost"><Link to="/employer/forgot-password">Password recovery</Link></Button></div></div>}
     </>}
   </main></EmployerShell>;
@@ -114,21 +115,12 @@ function PublicationApprovals({ companyId }: { companyId: string }) {
   return <section className="mt-10 border-t border-border pt-7"><h2 className="text-xl font-semibold">Publication approvals</h2>{error && <p role="alert" className="text-destructive">{error}</p>}{rows.length ? rows.map(r => <article key={r.id} className="space-y-4 border-b border-border py-5"><h3 className="font-semibold">{r.job?.title} · Revision {r.revision}</h3><p className="whitespace-pre-wrap break-words text-sm">{r.job?.description}</p><Label htmlFor={`approval-${r.id}`}>Review notes</Label><Textarea id={`approval-${r.id}`} maxLength={2000} value={notes[r.id] ?? ''} onChange={e => setNotes(n => ({ ...n, [r.id]: e.target.value }))} /><div className="flex gap-3"><Button disabled={busy || (notes[r.id]?.trim().length ?? 0) < 10} onClick={() => void review(r.id, true)}>Approve publication</Button><Button variant="outline" disabled={busy || (notes[r.id]?.trim().length ?? 0) < 10} onClick={() => void review(r.id, false)}>Reject</Button></div></article>) : <p className="py-5 text-muted-foreground">No pending publication requests.</p>}</section>;
 }
 
-function CompanyRecords({ companyId, manage }: { companyId: string; manage: boolean }) {
-  const [jobs, setJobs] = useState<{ id: string; title: string; status: string }[]>([]);
-  const [placements, setPlacements] = useState<{ id: string; status: string }[]>([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    let active = true; setLoading(true); setError(''); setJobs([]); setPlacements([]);
-    void (async () => {
-      const result = await supabase.from('jobs').select('id,title,status').eq('company_id', companyId).order('created_at', { ascending: false });
-      const placementResult = manage ? await supabase.from('placements').select('id,status').eq('company_id', companyId) : null;
-      if (!active) return;
-      if (result.error || placementResult?.error) setError('Company records could not be loaded.');
-      else { setJobs(result.data ?? []); setPlacements(placementResult?.data ?? []); }
-      setLoading(false);
-    })(); return () => { active = false; };
-  }, [companyId, manage]);
-  return <section className="grid gap-10 border-t border-border pt-7 md:grid-cols-2">{error && <p role="alert" className="text-destructive">{error}</p>}<div><h2 className="text-xl font-semibold">Company opportunities</h2>{loading ? <p className="py-5 text-muted-foreground">Loading…</p> : jobs.length ? jobs.map(j => <div key={j.id} className="flex items-start justify-between gap-3 border-b border-border py-5"><span className="break-words">{j.title}</span><Badge variant="outline">{j.status}</Badge></div>) : <p className="py-5 text-sm text-muted-foreground">No opportunities recorded.</p>}</div>{manage && <div><h2 className="text-xl font-semibold">Placements</h2>{placements.length ? placements.map(p => <div key={p.id} className="flex items-center justify-between gap-3 border-b border-border py-4"><Badge variant="outline">{p.status}</Badge><Button asChild variant="link"><Link to={`/placements/${p.id}`}>Open placement<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div>) : !loading && <p className="py-5 text-sm text-muted-foreground">No placements recorded.</p>}</div>}</section>;
+function DraftContributorHome({ companyId, canDraft, workEmailVerified }: { companyId: string; canDraft: boolean; workEmailVerified: boolean }) {
+  return <div className="space-y-8">
+    <section aria-label="Verification status" className="grid gap-4 sm:grid-cols-2">
+      <div className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-4 w-4 text-primary" />Verification status</h2><p className="mt-2 text-sm text-muted-foreground">Work email {workEmailVerified ? 'verified' : 'not verified'} · Company membership not approved · Not authorised to publish</p><Button asChild variant="link" className="px-0"><Link to="/employer/employee-details">Manage work email</Link></Button></div>
+      <div className="rounded-xl border border-border bg-card p-5 shadow-sm"><h2 className="flex items-center gap-2 font-semibold"><Building2 className="h-4 w-4 text-primary" />Request membership</h2><p className="mt-2 text-sm text-muted-foreground">A company administrator must approve membership before you can see applications, staff or placements.</p><Button asChild variant="outline" size="sm" className="mt-3"><Link to="/employer/employee-details">Request company membership<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></div>
+    </section>
+    <CompanyDrafts companyId={companyId} canDraft={canDraft} />
+  </div>;
 }
