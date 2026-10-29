@@ -13,8 +13,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CATEGORIES, emptyForm, fromRow, isPaid, toRow, validate, warnings, type Errors, type OpportunityForm } from '@/lib/opportunityForm';
 
-const COLS = 'id,title,category,description,location_type,location,duration,hours_per_week,what_you_will_learn,mentorship_details,expires_at,opportunity_details,updated_at';
-type DraftRow = Parameters<typeof fromRow>[0] & { id: string; updated_at: string };
+const COLS = 'id,title,category,description,location_type,location,duration,hours_per_week,what_you_will_learn,mentorship_details,expires_at,opportunity_details,updated_at,status';
+type DraftRow = Parameters<typeof fromRow>[0] & { id: string; updated_at: string; status: string };
 type Version = { id: string; version: number; created_at: string; updated_at: string; snapshot: Record<string, unknown> };
 
 interface Props { companyId: string; companyName: string; canDraft: boolean; onSubmitted?: () => void }
@@ -22,22 +22,26 @@ interface Props { companyId: string; companyName: string; canDraft: boolean; onS
 export default function OpportunityDrafts({ companyId, companyName, canDraft, onSubmitted }: Props) {
   const { user } = useAuth();
   const [rows, setRows] = useState<DraftRow[]>([]);
-  const [pending, setPending] = useState<Set<string>>(new Set());
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState('');
-  const [editing, setEditing] = useState<{ id: string | null; form: OpportunityForm } | null>(null);
+  const [editing, setEditing] = useState<{ id: string | null; form: OpportunityForm; status: string } | null>(null);
   const [toDelete, setToDelete] = useState<DraftRow | null>(null);
+  const [viewing, setViewing] = useState<DraftRow | null>(null);
+  const [historyFor, setHistoryFor] = useState<DraftRow | null>(null);
   const [notice, setNotice] = useState('');
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true); setListError('');
     const [r, p] = await Promise.all([
-      supabase.from('jobs').select(COLS).eq('company_id', companyId).eq('created_by', user.id).eq('status', 'draft').order('updated_at', { ascending: false }),
-      supabase.from('job_publication_requests').select('job_id').eq('company_id', companyId).eq('requested_by', user.id).eq('status', 'pending'),
+      supabase.from('jobs').select(COLS).eq('company_id', companyId).eq('created_by', user.id).order('updated_at', { ascending: false }),
+      supabase.from('job_publication_requests').select('job_id,note,status,created_at').eq('company_id', companyId).eq('requested_by', user.id).order('created_at', { ascending: true }),
     ]);
-    if (r.error) setListError('We could not load your drafts. Try again.'); else setRows((r.data ?? []) as DraftRow[]);
-    setPending(new Set((p.data ?? []).map(x => x.job_id)));
+    if (r.error) setListError('We could not load your opportunities. Try again.'); else setRows((r.data ?? []) as DraftRow[]);
+    const n: Record<string, string> = {};
+    for (const x of p.data ?? []) if (x.note && ['changes_requested', 'rejected'].includes(x.status)) n[x.job_id] = x.note; else if (x.status === 'pending') delete n[x.job_id];
+    setNotes(n);
     setLoading(false);
   }, [companyId, user]);
   useEffect(() => { setRows([]); setEditing(null); void load(); }, [load]);
@@ -46,32 +50,47 @@ export default function OpportunityDrafts({ companyId, companyName, canDraft, on
     const f = fromRow(r);
     const row = toRow({ ...f, title: `Copy of ${f.title || 'untitled draft'}`.slice(0, 160) });
     const res = await supabase.from('jobs').insert({ ...row, company_id: companyId, status: 'draft' }).select('id').single();
-    if (res.error) setListError(res.error.message); else { setNotice('Draft duplicated.'); await load(); }
+    if (res.error) setListError(res.error.message); else { setNotice('Copied into a new draft.'); await load(); }
   }
   async function remove() {
     if (!toDelete || !user) return;
-    const res = await supabase.from('jobs').delete().eq('id', toDelete.id).eq('created_by', user.id).eq('status', 'draft');
+    const res = await supabase.from('jobs').delete().eq('id', toDelete.id).eq('created_by', user.id).in('status', ['draft', 'changes_requested']);
     setToDelete(null);
     if (res.error) setListError(res.error.message); else { setNotice('Draft deleted.'); await load(); }
   }
+  async function withdraw(r: DraftRow) {
+    setListError('');
+    const res = await supabase.rpc('withdraw_job_submission', { _job_id: r.id });
+    if (res.error) setListError(res.error.message); else { setNotice('Submission withdrawn. It is a draft again.'); await load(); }
+  }
 
-  if (editing) return <OpportunityEditor key={editing.id ?? 'new'} companyId={companyId} companyName={companyName} initialId={editing.id} initial={editing.form} hadPending={!!editing.id && pending.has(editing.id)}
-    onClose={() => { setEditing(null); void load(); }} onSubmitted={() => { onSubmitted?.(); setEditing(null); setNotice('Sent for company review. A company administrator decides whether it is published.'); void load(); }} />;
+  if (editing) return <OpportunityEditor key={editing.id ?? 'new'} companyId={companyId} companyName={companyName} initialId={editing.id} initial={editing.form} returnedNote={editing.status === 'changes_requested' && editing.id ? notes[editing.id] : undefined}
+    onClose={() => { setEditing(null); void load(); }} onSubmitted={() => { onSubmitted?.(); setEditing(null); setNotice('Submitted for approval. It is read-only while a company administrator reviews it.'); void load(); }} />;
 
   return <section className="border-t border-border pt-7">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div><h2 className="text-xl font-semibold">My opportunity drafts</h2><p className="mt-1 text-sm text-muted-foreground">Only you can see and change these drafts. Publication needs approval from a {companyName} administrator.</p></div>
-      {canDraft && <Button onClick={() => setEditing({ id: null, form: emptyForm })}><Plus className="mr-2 h-4 w-4" />Create opportunity</Button>}
+      <div><h2 className="text-xl font-semibold">My opportunities</h2><p className="mt-1 text-sm text-muted-foreground">Only you can change your drafts. Publication needs approval from a {companyName} administrator.</p></div>
+      {canDraft && <Button onClick={() => setEditing({ id: null, form: emptyForm, status: 'draft' })}><Plus className="mr-2 h-4 w-4" />Create opportunity</Button>}
     </div>
     {!canDraft && <p className="py-5 text-muted-foreground">Draft creation is not granted to your account.</p>}
     {notice && <p role="status" className="mt-4 text-sm text-primary">{notice}</p>}
     {listError && <p role="alert" className="mt-4 text-sm text-destructive">{listError} <Button variant="link" className="h-auto p-0" onClick={() => void load()}>Retry</Button></p>}
-    {loading ? <p className="py-6 text-sm text-muted-foreground" role="status">Loading drafts…</p> : rows.length ? <ul className="mt-4 divide-y divide-border">{rows.map(r => {
+    {loading ? <p className="py-6 text-sm text-muted-foreground" role="status">Loading…</p> : rows.length ? <ul className="mt-4 divide-y divide-border">{rows.map(r => {
       const cat = CATEGORIES.find(c => c.value === r.category);
+      const editable = isAuthorEditable(r.status);
       const complete = Object.keys(validate(fromRow(r))).length === 0;
-      return <li key={r.id} className="flex flex-wrap items-center justify-between gap-4 py-5"><div className="min-w-0"><p className="break-words font-medium">{r.title}</p><div className="mt-2 flex flex-wrap gap-2"><Badge variant="outline">Draft</Badge>{cat && <Badge variant={cat.paid ? 'default' : 'secondary'}>{cat.label}</Badge>}{pending.has(r.id) ? <Badge>Awaiting company review</Badge> : !complete && <Badge variant="outline">Incomplete</Badge>}<span className="text-xs text-muted-foreground">Saved {new Date(r.updated_at).toLocaleString()}</span></div></div>
-        {canDraft && <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => setEditing({ id: r.id, form: fromRow(r) })}><Pencil className="mr-1.5 h-4 w-4" />Edit</Button><Button variant="outline" size="sm" onClick={() => void duplicate(r)}><Copy className="mr-1.5 h-4 w-4" />Duplicate</Button><Button variant="ghost" size="sm" onClick={() => setToDelete(r)} aria-label={`Delete ${r.title}`}><Trash2 className="h-4 w-4" /></Button></div>}</li>;
+      return <li key={r.id} className="flex flex-wrap items-center justify-between gap-4 py-5"><div className="min-w-0"><p className="break-words font-medium">{r.title}</p><div className="mt-2 flex flex-wrap items-center gap-2"><Badge variant={r.status === 'active' ? 'default' : 'outline'}>{statusLabel(r.status)}</Badge>{cat && <Badge variant={cat.paid ? 'default' : 'secondary'}>{cat.label}</Badge>}{editable && !complete && <Badge variant="outline">Incomplete</Badge>}{isUnderReview(r.status) && <Badge variant="secondary"><Lock className="mr-1 h-3 w-3" />Read-only</Badge>}<span className="text-xs text-muted-foreground">Updated {new Date(r.updated_at).toLocaleString()}</span></div>
+        {notes[r.id] && ['changes_requested', 'rejected'].includes(r.status) && <p className="mt-2 max-w-xl whitespace-pre-wrap break-words text-sm text-muted-foreground"><span className="font-medium text-foreground">Reviewer: </span>{notes[r.id]}</p>}</div>
+        <div className="flex flex-wrap gap-2">
+          {editable && canDraft ? <Button variant="outline" size="sm" onClick={() => setEditing({ id: r.id, form: fromRow(r), status: r.status })}><Pencil className="mr-1.5 h-4 w-4" />Edit</Button> : <Button variant="outline" size="sm" onClick={() => setViewing(r)}><Eye className="mr-1.5 h-4 w-4" />View</Button>}
+          {r.status === 'pending_company' && <Button variant="outline" size="sm" onClick={() => void withdraw(r)}><Undo2 className="mr-1.5 h-4 w-4" />Withdraw</Button>}
+          {r.status !== 'draft' && <Button variant="ghost" size="sm" onClick={() => setHistoryFor(r)}><History className="mr-1.5 h-4 w-4" />History</Button>}
+          {canDraft && <Button variant="outline" size="sm" onClick={() => void duplicate(r)}><Copy className="mr-1.5 h-4 w-4" />Duplicate</Button>}
+          {editable && canDraft && <Button variant="ghost" size="sm" onClick={() => setToDelete(r)} aria-label={`Delete ${r.title}`}><Trash2 className="h-4 w-4" /></Button>}
+        </div></li>;
     })}</ul> : <p className="py-6 text-sm text-muted-foreground">No drafts yet.</p>}
+    <Dialog open={!!viewing} onOpenChange={o => !o && setViewing(null)}><DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>{viewing?.title}</DialogTitle><DialogDescription>{viewing && statusLabel(viewing.status)} · Read-only. {viewing?.status === 'active' || viewing?.status === 'company_approved' ? 'Material edits by an editor return it to Draft for renewed approval.' : ''}</DialogDescription></DialogHeader>{viewing && <OpportunityPreview form={fromRow(viewing)} companyName={companyName} />}</DialogContent></Dialog>
+    <OpportunityReviewHistory jobId={historyFor?.id ?? null} title={historyFor?.title ?? ''} open={!!historyFor} onOpenChange={o => !o && setHistoryFor(null)} />
     <AlertDialog open={!!toDelete} onOpenChange={o => !o && setToDelete(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete this draft?</AlertDialogTitle><AlertDialogDescription>“{toDelete?.title}” and its version history will be permanently deleted.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => void remove()}>Delete draft</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </section>;
 }
