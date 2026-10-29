@@ -36,8 +36,9 @@ SELECT pg_temp.ok(public.review_job_submission((SELECT id FROM job_publication_r
 RESET ROLE;
 SELECT pg_temp.ok((SELECT reviewed_by='00000000-0000-0000-0000-000000000001' AND reviewed_at IS NOT NULL AND approved_snapshot->>'title'='Paid data assistant' AND revision=(SELECT publication_revision FROM jobs WHERE id=job_id) FROM job_publication_requests WHERE job_id='b0000000-0000-0000-0000-000000000001' AND status='approved'),'reviewer, time and approved version recorded');
 SELECT pg_temp.ok(NOT EXISTS(SELECT 1 FROM jobs WHERE id='b0000000-0000-0000-0000-000000000001' AND status='active'),'not public before platform review');
+SELECT set_config('test.req',(SELECT id::text FROM job_publication_requests WHERE job_id='b0000000-0000-0000-0000-000000000001' AND status='approved'),true);
 SELECT pg_temp.as_user(4); SET LOCAL ROLE authenticated;
-SELECT public.platform_review_job((SELECT id FROM job_publication_requests WHERE job_id='b0000000-0000-0000-0000-000000000001' AND status='approved'),true,'Safe, paid and supervised.');
+SELECT public.platform_review_job(current_setting('test.req')::uuid,true,'Safe, paid and supervised.');
 RESET ROLE;
 SELECT pg_temp.ok((SELECT status FROM jobs WHERE id='b0000000-0000-0000-0000-000000000001')='active','platform approval publishes');
 SELECT pg_temp.as_user(1); SET LOCAL ROLE authenticated;
