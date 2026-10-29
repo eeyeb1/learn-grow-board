@@ -380,6 +380,7 @@ export type Database = {
           approved_by: string | null
           approved_work_email: string | null
           company_id: string
+          domain_bound: boolean
           id: string
           manage_placements: boolean
           role: string
@@ -391,6 +392,7 @@ export type Database = {
           approved_by?: string | null
           approved_work_email?: string | null
           company_id: string
+          domain_bound?: boolean
           id?: string
           manage_placements?: boolean
           role: string
@@ -402,6 +404,7 @@ export type Database = {
           approved_by?: string | null
           approved_work_email?: string | null
           company_id?: string
+          domain_bound?: boolean
           id?: string
           manage_placements?: boolean
           role?: string
@@ -411,6 +414,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "company_memberships_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_permission_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_state: Json | null
+          before_state: Json | null
+          company_id: string
+          created_at: string
+          id: string
+          note: string | null
+          resource_id: string | null
+          subject_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          company_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          resource_id?: string | null
+          subject_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          resource_id?: string | null
+          subject_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_permission_events_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company_profiles"
@@ -576,6 +626,98 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "company_profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_resource_assignments: {
+        Row: {
+          company_id: string
+          id: string
+          job_id: string | null
+          permissions: string[]
+          placement_id: string | null
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          id?: string
+          job_id?: string | null
+          permissions: string[]
+          placement_id?: string | null
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          id?: string
+          job_id?: string | null
+          permissions?: string[]
+          placement_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_resource_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_resource_assignments_company_id_user_id_fkey"
+            columns: ["company_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "company_memberships"
+            referencedColumns: ["company_id", "user_id"]
+          },
+          {
+            foreignKeyName: "company_resource_assignments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_resource_assignments_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_staff_scopes: {
+        Row: {
+          company_id: string
+          permissions: string[]
+          scope: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          permissions?: string[]
+          scope?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          permissions?: string[]
+          scope?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_staff_scopes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_staff_scopes_company_id_user_id_fkey"
+            columns: ["company_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "company_memberships"
+            referencedColumns: ["company_id", "user_id"]
           },
         ]
       }
@@ -792,6 +934,60 @@ export type Database = {
           },
         ]
       }
+      job_publication_requests: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          job_id: string
+          note: string | null
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          revision: number
+          status: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+          note?: string | null
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision: number
+          status?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          note?: string | null
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          revision?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_publication_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_publication_requests_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           company_id: string
@@ -806,6 +1002,7 @@ export type Database = {
           location: string | null
           location_type: string
           mentorship_details: string | null
+          publication_revision: number
           requirements: string[] | null
           responsibilities: string[] | null
           skill_level: string
@@ -828,6 +1025,7 @@ export type Database = {
           location?: string | null
           location_type?: string
           mentorship_details?: string | null
+          publication_revision?: number
           requirements?: string[] | null
           responsibilities?: string[] | null
           skill_level?: string
@@ -850,6 +1048,7 @@ export type Database = {
           location?: string | null
           location_type?: string
           mentorship_details?: string | null
+          publication_revision?: number
           requirements?: string[] | null
           responsibilities?: string[] | null
           skill_level?: string
@@ -1675,12 +1874,24 @@ export type Database = {
         Args: { _placement_id: string; _uid: string }
         Returns: boolean
       }
+      company_application_permission: {
+        Args: { _application_id: string; _uid: string }
+        Returns: boolean
+      }
+      company_application_read: {
+        Args: { _application_id: string; _uid: string }
+        Returns: boolean
+      }
       company_can_draft: {
         Args: { _company_id: string; _uid: string }
         Returns: boolean
       }
       company_domain_match_allowed: {
         Args: { _domain: string }
+        Returns: boolean
+      }
+      company_job_permission: {
+        Args: { _job_id: string; _permission: string; _uid: string }
         Returns: boolean
       }
       company_permission: {
@@ -1733,6 +1944,7 @@ export type Database = {
         }
         Returns: string
       }
+      request_job_publication: { Args: { _job_id: string }; Returns: string }
       request_portfolio_removal: {
         Args: { _details: string; _item_id: string; _reason: string }
         Returns: string
@@ -1762,6 +1974,10 @@ export type Database = {
         Args: { _decision: string; _note: string; _request_id: string }
         Returns: undefined
       }
+      review_job_publication: {
+        Args: { _approve: boolean; _note: string; _request_id: string }
+        Returns: undefined
+      }
       revoke_certificate: {
         Args: { _id: string; _reason: string }
         Returns: undefined
@@ -1787,6 +2003,28 @@ export type Database = {
           _show_name: boolean
           _show_skills: boolean
           _verification_enabled: boolean
+        }
+        Returns: undefined
+      }
+      set_company_resource_assignment: {
+        Args: {
+          _company_id: string
+          _job_id: string
+          _note: string
+          _permissions: string[]
+          _placement_id: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      set_company_staff_access: {
+        Args: {
+          _company_id: string
+          _draft: boolean
+          _note: string
+          _revoke: boolean
+          _scope: string
+          _user_id: string
         }
         Returns: undefined
       }

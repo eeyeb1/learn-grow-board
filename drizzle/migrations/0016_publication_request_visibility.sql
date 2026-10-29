@@ -1,0 +1,3 @@
+DROP POLICY "Own publication requests or company approval" ON public.job_publication_requests;
+CREATE POLICY "Own publication requests or company approval" ON public.job_publication_requests FOR SELECT TO authenticated USING((requested_by=auth.uid() AND (public.company_can_draft(company_id,auth.uid()) OR public.company_job_permission(job_id,auth.uid(),'edit'))) OR public.company_permission(company_id,auth.uid(),'admin'));
+REVOKE ALL ON FUNCTION public.audit_company_permission(),public.guard_permission_history(),public.guard_company_membership_scope(),public.audit_public_job() FROM PUBLIC,anon,authenticated;

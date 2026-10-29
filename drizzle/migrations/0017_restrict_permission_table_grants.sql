@@ -1,0 +1,5 @@
+REVOKE INSERT,UPDATE,DELETE ON public.company_staff_scopes,public.company_resource_assignments,public.company_memberships,public.job_publication_requests,public.company_permission_events FROM authenticated,anon;
+REVOKE SELECT ON public.company_staff_scopes,public.company_resource_assignments,public.company_memberships,public.job_publication_requests,public.company_permission_events FROM anon;
+REVOKE UPDATE,DELETE ON public.company_permission_events FROM service_role;
+GRANT SELECT ON public.company_staff_scopes,public.company_resource_assignments,public.company_memberships,public.job_publication_requests,public.company_permission_events TO authenticated;
+GRANT SELECT,INSERT ON public.company_permission_events TO service_role;
