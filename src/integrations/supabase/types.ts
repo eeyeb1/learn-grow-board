@@ -2057,6 +2057,13 @@ export type Database = {
         Returns: boolean
       }
       cancel_company_invitation: { Args: { _id: string }; Returns: undefined }
+      check_opportunity: {
+        Args: {
+          j: Database["public"]["Tables"]["jobs"]["Row"]
+          strict: boolean
+        }
+        Returns: undefined
+      }
       company_application_permission: {
         Args: { _application_id: string; _uid: string }
         Returns: boolean
