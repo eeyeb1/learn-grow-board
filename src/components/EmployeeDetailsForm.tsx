@@ -24,11 +24,12 @@ export default function EmployeeDetailsForm({ identity, refresh }: { identity?: 
       const d = parsed.data;
       const saved = await supabase.rpc('save_employee_identity', { _name: d.full_name, _job_title: d.job_title, _company: d.claimed_company, _work_email: d.work_email });
       if (saved.error) throw new Error(saved.error.message);
-      setSavedIdentity({ ...d, work_email_verified_at: savedIdentity?.work_email === d.work_email ? savedIdentity.work_email_verified_at : null, matched_company_id: savedIdentity?.work_email === d.work_email ? savedIdentity.matched_company_id : null });
+      setSavedIdentity({ full_name: d.full_name ?? '', job_title: d.job_title ?? '', claimed_company: d.claimed_company ?? '', work_email: d.work_email ?? '', work_email_verified_at: savedIdentity?.work_email === d.work_email ? savedIdentity.work_email_verified_at : null, matched_company_id: savedIdentity?.work_email === d.work_email ? savedIdentity.matched_company_id : null });
       const verification = await supabase.functions.invoke('employee-work-email', { body: { action: 'send' } });
       if (verification.error || verification.data?.error) {
         setMessage('Your details are saved. Your work email is not verified yet.');
-        setError(verification.data?.error ?? 'Verification email could not be sent. Please try again later.');
+        const detail = verification.error?.context instanceof Response ? await verification.error.context.json().catch(() => null) : null;
+        setError(verification.data?.error ?? detail?.error ?? 'Verification email could not be sent. Please try again later.');
       } else setMessage('Verification email requested. Open the link within 30 minutes while signed in to this platform account.');
     } catch (e) { setError(e instanceof Error ? e.message : 'Your details could not be saved.'); }
     finally { setBusy(false); }
