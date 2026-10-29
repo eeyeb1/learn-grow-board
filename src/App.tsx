@@ -36,6 +36,7 @@ import EmployerWorkspace from "./pages/EmployerWorkspace";
 import ResetPassword from "./pages/ResetPassword";
 import CompanyVerificationReview from "./pages/CompanyVerificationReview";
 import EmployeeEmail from "./pages/EmployeeEmail";
+import PublicCompany from "./pages/PublicCompany";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const App = () => (
             <Route path="/employer/dashboard" element={<EmployerWorkspace />} />
             <Route path="/employer/employee" element={<EmployerWorkspace />} />
             <Route path="/employer/drafts" element={<EmployerWorkspace />} />
+            <Route path="/employer/profile" element={<EmployerWorkspace />} />
             <Route path="/employer/status" element={<EmployerWorkspace />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/success-stories" element={<SuccessStories />} />
@@ -70,6 +72,7 @@ const App = () => (
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:id" element={<BlogDetail />} />
             <Route path="/companies" element={<Companies />} />
+            <Route path="/companies/:companyId" element={<PublicCompany />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/guidelines" element={<Guidelines />} />
             <Route path="/terms" element={<Terms />} />
