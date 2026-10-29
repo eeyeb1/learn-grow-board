@@ -56,7 +56,7 @@ export default function OpportunityDrafts({ companyId, companyName, canDraft, on
   }
   async function remove() {
     if (!toDelete || !user) return;
-    const res = await supabase.from('jobs').delete().eq('id', toDelete.id).eq('created_by', user.id).in('status', ['draft', 'changes_requested']);
+    const res = await supabase.from('jobs').delete().eq('id', toDelete.id).eq('created_by', user.id).eq('status', 'draft');
     setToDelete(null);
     if (res.error) setListError(res.error.message); else { setNotice('Draft deleted.'); await load(); }
   }
@@ -88,7 +88,7 @@ export default function OpportunityDrafts({ companyId, companyName, canDraft, on
           {r.status === 'pending_company' && <Button variant="outline" size="sm" onClick={() => void withdraw(r)}><Undo2 className="mr-1.5 h-4 w-4" />Withdraw</Button>}
           {r.status !== 'draft' && <Button variant="ghost" size="sm" onClick={() => setHistoryFor(r)}><History className="mr-1.5 h-4 w-4" />History</Button>}
           {canDraft && <Button variant="outline" size="sm" onClick={() => void duplicate(r)}><Copy className="mr-1.5 h-4 w-4" />Duplicate</Button>}
-          {editable && canDraft && <Button variant="ghost" size="sm" onClick={() => setToDelete(r)} aria-label={`Delete ${r.title}`}><Trash2 className="h-4 w-4" /></Button>}
+          {r.status === 'draft' && canDraft && <Button variant="ghost" size="sm" onClick={() => setToDelete(r)} aria-label={`Delete ${r.title}`}><Trash2 className="h-4 w-4" /></Button>}
         </div></li>;
     })}</ul> : <p className="py-6 text-sm text-muted-foreground">No drafts yet.</p>}
     <Dialog open={!!viewing} onOpenChange={o => !o && setViewing(null)}><DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto"><DialogHeader><DialogTitle>{viewing?.title}</DialogTitle><DialogDescription>{viewing && statusLabel(viewing.status)} · Read-only. {viewing?.status === 'active' || viewing?.status === 'company_approved' ? 'Material edits by an editor return it to Draft for renewed approval.' : ''}</DialogDescription></DialogHeader>{viewing && <OpportunityPreview form={fromRow(viewing)} companyName={companyName} />}</DialogContent></Dialog>
