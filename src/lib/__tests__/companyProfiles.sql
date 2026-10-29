@@ -33,9 +33,10 @@ SELECT profile_assert(get_public_company('91000000-0000-0000-0000-000000000001')
 RESET ROLE;
 INSERT INTO applications(id,user_id,job_id,status) SELECT ('93000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,('90000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'92000000-0000-0000-0000-000000000001','submitted' FROM generate_series(3,7) n;
 UPDATE applications SET status='accepted' WHERE id::text LIKE '93000000%';
-UPDATE placements SET status='completed' WHERE company_id='91000000-0000-0000-0000-000000000001';
+UPDATE placements SET status='active' WHERE company_id='91000000-0000-0000-0000-000000000001';
 INSERT INTO hour_entries(user_id,application_id,work_date,minutes,description,status) SELECT user_id,id,current_date,60,'Pending hours fixture','pending' FROM applications WHERE id::text LIKE '93000000%';
 UPDATE hour_entries SET status='approved';
+UPDATE placements SET status='completed' WHERE company_id='91000000-0000-0000-0000-000000000001';
 SELECT profile_assert((get_public_company('91000000-0000-0000-0000-000000000001')->'impact'->>'completed_experiences')::int=5,'Impact counts completed experiences accurately');
 SELECT profile_assert((get_public_company('91000000-0000-0000-0000-000000000001')->'impact'->>'approved_minutes')::int=300,'Verified impact uses approved hours only');
 UPDATE company_page_settings SET show_verified_impact=false;
