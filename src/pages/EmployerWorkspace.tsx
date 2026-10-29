@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import CompanyRegistrationStatus from '@/components/CompanyRegistrationStatus';
 import EmployeeMembershipReview from '@/components/EmployeeMembershipReview';
 import CompanyStaffAccess from '@/components/CompanyStaffAccess';
+import CompanyDashboard from '@/components/CompanyDashboard';
 
 const messages: Record<CompanyState, [string, string]> = {
   company_admin: ['Company dashboard', 'Authorised company administrator'],
