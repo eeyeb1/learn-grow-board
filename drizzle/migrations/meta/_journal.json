@@ -134,6 +134,13 @@
       "when": 1793274835939,
       "tag": "0018_verified_company_public_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793274854113,
+      "tag": "0019_company_page_grants_and_logo_access",
+      "breakpoints": true
     }
   ]
 }

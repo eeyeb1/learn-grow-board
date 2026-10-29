@@ -1944,6 +1944,7 @@ export type Database = {
         Args: { _job_id: string; _permission: string; _uid: string }
         Returns: boolean
       }
+      company_logo_readable: { Args: { _path: string }; Returns: boolean }
       company_permission: {
         Args: { _company_id: string; _permission: string; _uid: string }
         Returns: boolean
