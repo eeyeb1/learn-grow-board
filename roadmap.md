@@ -1,10 +1,12 @@
 # Roadmap
 
 ## Employer integration
-- [ ] Add separate employee details and secure work-email verification/re-verification.
-- [ ] Match exact verified company domains for restricted personal drafts; provide unmatched manual requests.
-- [ ] Add company-admin membership decisions, status notices and server isolation tests.
-- [ ] Verify employee request/status and security rules end-to-end; email delivery requires a configured sender domain.
+- [x] Add private employee details and service-issued, hashed, account-bound single-use work-email confirmation; email changes pause employee access.
+- [x] Match exact verified company domains for restricted personal drafts; provide unmatched manual requests and platform-admin referral without automatic company identity.
+- [x] Add company-admin employee approval/rejection, private audit notes and existing company status notifications, without publication or operational-record authority.
+- [x] Verify signed-in employee save, pending manual request read-back, delivered in-app request notification, fabricated-link denial, mobile layout and seeker dashboard; 20 unit tests passed. Direct checks deny self-approval, company/manual queue access, challenge issuance, token disclosure and verification writes. Temporary records removed.
+- [ ] Enable and verify actual work-email delivery, expiry/replay/re-verification round-trip (blocker: sender domain must be configured; then scaffold shared app emails and employee-work-email template, configure trusted app origin, and enable delivery. No work address was falsely verified).
+- [ ] Verify genuine matched-company drafting and company-admin approval/rejection end-to-end (blocker: no verified company or trusted company administrator exists).
 - [x] Add private company registration details, evidence and applicant status tracking.
 - [x] Add platform-administrator review, authority checks, audit history and safe approval/suspension.
 - [x] Verify signed-in registration submission and pending read-back without authority, consumer/disposable domain denial, unauthorised review/candidate denial, private history isolation and seeker access; 16 unit tests passed; temporary submission removed.
