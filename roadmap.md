@@ -1,6 +1,10 @@
 # Roadmap
 
 ## Employer integration
+- [ ] Add separate employee details and secure work-email verification/re-verification.
+- [ ] Match exact verified company domains for restricted personal drafts; provide unmatched manual requests.
+- [ ] Add company-admin membership decisions, status notices and server isolation tests.
+- [ ] Verify employee request/status and security rules end-to-end; email delivery requires a configured sender domain.
 - [x] Add private company registration details, evidence and applicant status tracking.
 - [x] Add platform-administrator review, authority checks, audit history and safe approval/suspension.
 - [x] Verify signed-in registration submission and pending read-back without authority, consumer/disposable domain denial, unauthorised review/candidate denial, private history isolation and seeker access; 16 unit tests passed; temporary submission removed.
