@@ -11,14 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications, NotificationRow } from "@/hooks/useNotifications";
 
-const CATEGORIES: { key: NotificationRow["category"]; label: string; text: string }[] = [
+const CATEGORIES: { key: Exclude<NotificationRow["category"], 'company'>; label: string; text: string }[] = [
   { key: "application", label: "Application updates", text: "When an employer changes the status of an application." },
   { key: "placement", label: "Placements", text: "When you're accepted or a placement starts, completes or is cancelled." },
   { key: "hours", label: "Hour reviews", text: "Approvals, rejections and correction requests from your supervisor." },
   { key: "feedback", label: "Feedback & references", text: "When an employer adds feedback or writes a reference." },
   { key: "deadline", label: "Placement deadlines", text: "Reminders before a placement starts or ends." },
 ];
-type Prefs = Record<NotificationRow["category"], boolean>;
+type Prefs = Record<Exclude<NotificationRow["category"], 'company'>, boolean>;
 const DEFAULT_PREFS: Prefs = { application: true, placement: true, hours: true, feedback: true, deadline: true };
 
 const NotificationCentre = () => {

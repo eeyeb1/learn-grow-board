@@ -34,6 +34,7 @@ import EmployerAuth from "./pages/EmployerAuth";
 import EmployerOnboarding from "./pages/EmployerOnboarding";
 import EmployerWorkspace from "./pages/EmployerWorkspace";
 import ResetPassword from "./pages/ResetPassword";
+import CompanyVerificationReview from "./pages/CompanyVerificationReview";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/dashboard/:section" element={<Dashboard />} />
             <Route path="/hour-approvals" element={<HourApprovals />} />
             <Route path="/moderation/references" element={<ReferenceModeration />} />
+            <Route path="/admin/companies" element={<CompanyVerificationReview />} />
             <Route path="/placements/:id" element={<PlacementDetail />} />
             <Route path="/verify" element={<VerifyCertificate />} />
             <Route path="/verify/:code" element={<VerifyCertificate />} />

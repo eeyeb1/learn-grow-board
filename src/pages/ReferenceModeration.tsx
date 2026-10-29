@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,6 +60,7 @@ const ReferenceModeration = () => {
       <Navbar />
       <div className="container mx-auto px-4 py-10 max-w-4xl space-y-6">
         <h1 className="font-display text-3xl font-bold text-foreground flex items-center gap-2"><ShieldCheck className="w-7 h-7 text-primary" />Reference reports</h1>
+        {isAdmin && <Button asChild variant="outline"><Link to="/admin/companies">Company verification</Link></Button>}
         {isAdmin === false ? (
           <Card><CardContent className="p-6 text-muted-foreground">Only moderators can view this page.</CardContent></Card>
         ) : state === "loading" ? <Skeleton className="h-40" /> : state === "error" ? (
