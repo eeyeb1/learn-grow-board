@@ -1,6 +1,8 @@
 # Roadmap
 
 ## Employer integration
+- [ ] Enforce scoped employer roles, explicit listing/placement assignments, administrator publication approval and immutable permission auditing; preserve seeker access.
+- [ ] Add authorised staff controls and run cross-company, escalation, switching, revocation, domain-change and direct-access security tests.
 - [x] Add private employee details and service-issued, hashed, account-bound single-use work-email confirmation; email changes pause employee access.
 - [x] Match exact verified company domains for restricted personal drafts; provide unmatched manual requests and platform-admin referral without automatic company identity.
 - [x] Add company-admin employee approval/rejection, private audit notes and existing company status notifications, without publication or operational-record authority.
