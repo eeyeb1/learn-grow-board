@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Briefcase, ArrowLeft, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function EmployerShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
@@ -13,6 +14,7 @@ export default function EmployerShell({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-2"><Button asChild variant="ghost" size="sm"><Link to={user ? '/dashboard' : '/'}><ArrowLeft className="mr-2 h-4 w-4" />{user ? 'Seeker workspace' : 'Back to ExpBoard'}</Link></Button>{user && <Button size="icon" variant="ghost" aria-label="Sign out" title="Sign out" onClick={() => void signOut()}><LogOut className="h-4 w-4" /></Button>}</div>
       </div>
     </header>
+    {user && <div className="container flex justify-end px-4 pt-3"><Button asChild variant="ghost" size="sm"><Link to="/employer/status">Company status</Link></Button><NotificationBell /></div>}
     {children}
     <footer className="container flex flex-wrap justify-center gap-5 px-4 py-8 text-xs text-muted-foreground"><Link to="/terms">Terms of use</Link><Link to="/privacy">Privacy policy</Link></footer>
   </div>;

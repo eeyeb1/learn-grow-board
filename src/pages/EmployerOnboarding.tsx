@@ -13,8 +13,6 @@ export default function EmployerOnboarding() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [pathway, setPathway] = useState<'register' | 'join'>(() => sessionStorage.getItem('employer-pathway') === 'join' ? 'join' : 'register');
-  const [company, setCompany] = useState('');
-  const [website, setWebsite] = useState('');
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState('');
   const [busy, setBusy] = useState(false);
@@ -25,7 +23,7 @@ export default function EmployerOnboarding() {
     try {
       const validated = await supabase.auth.getUser();
       if (!validated.data.user?.email_confirmed_at) { setError('Verify your email before requesting company access.'); return; }
-      const result = await supabase.rpc('request_company_access', { _pathway: pathway, _company_name: company.trim(), _website: website.trim(), _job_title: title.trim(), _department: department.trim() });
+      const result = await supabase.rpc('request_company_access', { _pathway: 'join', _job_title: title.trim(), _department: department.trim() });
       if (result.error) { setError(result.error.message); return; }
       sessionStorage.removeItem('employer-pathway');
       navigate('/employer/workspace', { replace: true });
@@ -38,7 +36,7 @@ export default function EmployerOnboarding() {
     {error && <p role="alert" className="mb-5 text-sm text-destructive">{error}</p>}
     {pathway === 'register' ? <CompanyRegistrationForm email={user?.email ?? ''} /> : <form onSubmit={submit} className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="employee-title">Job title (optional)</Label><Input id="employee-title" value={title} onChange={e => setTitle(e.target.value)} maxLength={100} /></div><div className="space-y-2"><Label htmlFor="employee-department">Department (optional)</Label><Input id="employee-department" value={department} onChange={e => setDepartment(e.target.value)} maxLength={100} /></div></div>
-      <Button type="submit" className="w-full" disabled={busy || loading}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Request {pathway === 'register' ? 'company registration' : 'company membership'}</Button>
+      <Button type="submit" className="w-full" disabled={busy || loading}>{busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Request company membership</Button>
     </form>}<Button variant="link" className="mt-4 px-0" onClick={() => navigate('/employer/status')}>View my access status</Button>
   </main></EmployerShell>;
 }
