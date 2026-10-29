@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Copy, Eye, History, Loader2, Pencil, Plus, Send, Trash2, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Copy, Eye, History, Loader2, Lock, Pencil, Plus, Send, Trash2, CheckCircle2, Undo2 } from 'lucide-react';
+import OpportunityReviewHistory from '@/components/OpportunityReviewHistory';
+import { isAuthorEditable, isUnderReview, statusLabel } from '@/lib/opportunityStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -95,7 +97,7 @@ export default function OpportunityDrafts({ companyId, companyName, canDraft, on
   </section>;
 }
 
-function OpportunityEditor({ companyId, companyName, initialId, initial, hadPending, onClose, onSubmitted }: { companyId: string; companyName: string; initialId: string | null; initial: OpportunityForm; hadPending: boolean; onClose: () => void; onSubmitted: () => void }) {
+function OpportunityEditor({ companyId, companyName, initialId, initial, returnedNote, onClose, onSubmitted }: { companyId: string; companyName: string; initialId: string | null; initial: OpportunityForm; returnedNote?: string; onClose: () => void; onSubmitted: () => void }) {
   const [form, setForm] = useState(initial);
   const [id, setId] = useState(initialId);
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -118,7 +120,7 @@ function OpportunityEditor({ companyId, companyName, initialId, initial, hadPend
       setStatus('saving'); setSaveError('');
       const row = toRow(f);
       const res = id
-        ? await supabase.from('jobs').update(row).eq('id', id).eq('status', 'draft').select('id').single()
+        ? await supabase.from('jobs').update(row).eq('id', id).in('status', ['draft', 'changes_requested']).select('id').single()
         : await supabase.from('jobs').insert({ ...row, company_id: companyId, status: 'draft' }).select('id').single();
       if (res.error) { setStatus('error'); setSaveError(res.error.message); return null; }
       dirty.current = false; setId(res.data.id); setStatus('saved'); return res.data.id as string;
@@ -134,11 +136,11 @@ function OpportunityEditor({ companyId, companyName, initialId, initial, hadPend
 
   async function submit() {
     setShowErrors(true); setSubmitError('');
-    if (Object.keys(errors).length) { setSubmitError('Fix the highlighted fields before requesting review.'); return; }
+    if (Object.keys(errors).length) { setSubmitError('Complete the highlighted required fields before submitting for approval.'); return; }
     setSubmitting(true);
     const savedId = await save(form);
     if (!savedId) { setSubmitting(false); return; }
-    const r = await supabase.rpc('request_job_publication', { _job_id: savedId });
+    const r = await supabase.rpc('submit_job_for_approval', { _job_id: savedId });
     setSubmitting(false);
     if (r.error) setSubmitError(r.error.message); else onSubmitted();
   }
@@ -162,7 +164,7 @@ function OpportunityEditor({ companyId, companyName, initialId, initial, hadPend
         {id && <Button variant="outline" size="sm" onClick={() => setHistory(true)}><History className="mr-1.5 h-4 w-4" />Versions</Button>}
         <Button variant="outline" size="sm" onClick={() => setPreview(true)}><Eye className="mr-1.5 h-4 w-4" />Preview</Button>
         <Button variant="outline" size="sm" disabled={status === 'saving' || !form.title.trim()} onClick={() => void save(form)}>Save now</Button>
-        <Button size="sm" disabled={submitting} onClick={() => void submit()}>{submitting ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}Request company review</Button>
+        <Button size="sm" disabled={submitting} onClick={() => void submit()}>{submitting ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}Submit for Approval</Button>
       </div>
     </div>
     {hadPending && <p className="mb-5 rounded-md border border-border bg-muted p-3 text-sm">This draft is awaiting company review. Saving changes withdraws that request; send it again when you are ready.</p>}
