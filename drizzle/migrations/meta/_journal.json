@@ -169,6 +169,13 @@
       "when": 1793292321479,
       "tag": "0023_opportunity_approval_workflow",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793292683750,
+      "tag": "0024_harden_job_review_audit",
+      "breakpoints": true
     }
   ]
 }
