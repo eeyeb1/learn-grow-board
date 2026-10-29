@@ -65,6 +65,7 @@ const App = () => (
             <Route path="/employer/employee" element={<EmployerWorkspace />} />
             <Route path="/employer/drafts" element={<EmployerWorkspace />} />
             <Route path="/employer/profile" element={<EmployerWorkspace />} />
+            <Route path="/employer/employees" element={<EmployerWorkspace />} />
             <Route path="/employer/status" element={<EmployerWorkspace />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/success-stories" element={<SuccessStories />} />

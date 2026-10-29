@@ -78,7 +78,7 @@ export default function CompanyDashboard({ context }: { context: CompanyContext 
   ].filter(Boolean) as { label: string; value: number; icon: typeof Briefcase; href: string }[];
 
   const urgent = [
-    isAdmin && data.memberRequests ? { text: `${data.memberRequests} employee approval request${data.memberRequests > 1 ? 's' : ''}`, href: '#membership-requests' } : null,
+    isAdmin && data.memberRequests ? { text: `${data.memberRequests} employee approval request${data.memberRequests > 1 ? 's' : ''}`, href: `/employer/employees?company=${cid}#membership-requests` } : null,
     isAdmin && data.pubs.length ? { text: `${data.pubs.length} opportunity publication request${data.pubs.length > 1 ? 's' : ''}`, href: '#publication-approvals' } : null,
     data.hours.length ? { text: `${data.hours.length} hour log${data.hours.length > 1 ? 's' : ''} to verify`, href: '/hour-approvals' } : null,
     awaiting.length ? { text: `${awaiting.length} application${awaiting.length > 1 ? 's' : ''} awaiting review`, href: '#applicants' } : null,
@@ -98,7 +98,7 @@ export default function CompanyDashboard({ context }: { context: CompanyContext 
         {isAdmin && <Button asChild><Link to={`/post-role?company=${cid}`}><Plus className="mr-2 h-4 w-4" />Post a role</Link></Button>}
         {context.can_draft && <Button asChild variant="outline"><Link to={`/employer/drafts?company=${cid}`}><FileText className="mr-2 h-4 w-4" />My drafts</Link></Button>}
         {showPlacements && <Button asChild variant="outline"><Link to="/hour-approvals"><Clock className="mr-2 h-4 w-4" />Verify hours</Link></Button>}
-        {isAdmin && <Button asChild variant="outline"><a href="#staff-access"><Users className="mr-2 h-4 w-4" />Manage staff access</a></Button>}
+        {isAdmin && <Button asChild variant="outline"><Link to={`/employer/employees?company=${cid}`}><Users className="mr-2 h-4 w-4" />Employee management</Link></Button>}
         <Button asChild variant="ghost"><Link to="/employer/employee-details">Work email details</Link></Button>
       </div></Panel>
     </div>
