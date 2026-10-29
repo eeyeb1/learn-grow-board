@@ -35,7 +35,7 @@ SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004'
 SET LOCAL ROLE authenticated;
 UPDATE hour_entries SET status='approved';
 SELECT public.test_assert((SELECT status='approved' AND reviewed_by=auth.uid() FROM hour_entries),'Assigned supervisor approves relevant hours');
-SELECT public.verify_placement_skill(id,'Teamwork','Teamwork','Observed collaborative work',true) FROM placements;
+SELECT public.verify_placement_skill(id,'Teamwork','teamwork','Observed collaborative work',true) FROM placements;
 SELECT public.test_assert((SELECT count(*) FROM skill_verifications)=1,'Assigned supervisor verifies observed skill');
 RESET ROLE;
 SELECT public.test_assert(public.company_job_permission('20000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','edit'),'Manager edits assigned listing');
@@ -87,10 +87,11 @@ SELECT public.test_assert((SELECT minutes FROM hour_entries WHERE status='approv
 RESET ROLE;
 SELECT public.test_assert((SELECT count(*) FROM company_permission_events WHERE action='company_resource_assignments:insert')=2,'Assignments create audit records');
 DO $$ BEGIN BEGIN UPDATE company_permission_events SET note='tamper'; RAISE EXCEPTION 'FAIL: audit altered'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: Permission history cannot be altered'; END $$;
+SELECT set_config('test.placement_id',(SELECT id::text FROM placements WHERE application_id='30000000-0000-0000-0000-000000000001'),true);
 UPDATE company_memberships SET status='revoked' WHERE user_id='00000000-0000-0000-0000-000000000004';
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
 SET LOCAL ROLE authenticated;
 SELECT public.test_assert((SELECT count(*) FROM hour_entries)=0,'Revoked supervisor cannot read placement hours');
-DO $$ BEGIN BEGIN PERFORM public.verify_placement_skill('00000000-0000-0000-0000-000000000000','Teamwork','Teamwork','Observed work',true); RAISE EXCEPTION 'FAIL: revoked supervisor confirmed skill'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: Revoked supervisor direct skill confirmation denied'; END $$;
+DO $$ BEGIN BEGIN PERFORM public.verify_placement_skill(current_setting('test.placement_id')::uuid,'Teamwork','teamwork','Observed work',true); RAISE EXCEPTION 'FAIL: revoked supervisor confirmed skill'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: Revoked supervisor direct skill confirmation denied'; END $$;
 RESET ROLE;
 ROLLBACK;
