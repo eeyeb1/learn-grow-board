@@ -1089,6 +1089,7 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           revision: number
+          self_authored_approval: boolean
           status: string
         }
         Insert: {
@@ -1107,6 +1108,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           revision: number
+          self_authored_approval?: boolean
           status?: string
         }
         Update: {
@@ -1125,6 +1127,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           revision?: number
+          self_authored_approval?: boolean
           status?: string
         }
         Relationships: [
@@ -2233,6 +2236,10 @@ export type Database = {
         Returns: Json
       }
       list_companies_without_admin: { Args: never; Returns: Json }
+      list_company_approval_requests: {
+        Args: { _company_id: string }
+        Returns: Json
+      }
       list_company_review_candidates: { Args: never; Returns: Json }
       list_company_staff: { Args: { _company_id: string }; Returns: Json }
       list_employee_membership_requests: {
@@ -2280,6 +2287,10 @@ export type Database = {
       request_portfolio_removal: {
         Args: { _details: string; _item_id: string; _reason: string }
         Returns: string
+      }
+      requires_second_authoriser: {
+        Args: { _category: string }
+        Returns: boolean
       }
       resolve_portfolio_removal: {
         Args: { _decision: string; _note: string; _request_id: string }
