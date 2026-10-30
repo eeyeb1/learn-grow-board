@@ -183,6 +183,13 @@
       "when": 1793360403846,
       "tag": "0025_approval_centre",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793360627519,
+      "tag": "0026_my_opportunities_management",
+      "breakpoints": true
     }
   ]
 }
