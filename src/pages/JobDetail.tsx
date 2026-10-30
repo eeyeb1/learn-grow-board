@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { jobDetails } from "@/data/jobDetails";
+import { useJobDetail } from "@/hooks/useJobDetail";
 import { useJobStorage } from "@/hooks/useJobStorage";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/AuthModal";
@@ -28,7 +28,7 @@ import {
 const JobDetail = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { id } = useParams<{ id: string }>();
-  const job = id ? jobDetails[id] : null;
+  const { job, open: acceptingApplications, loading: jobLoading } = useJobDetail(id);
   const { user } = useAuth();
   const { isFavorite, hasApplied, toggleFavorite } = useJobStorage();
 
@@ -59,6 +59,8 @@ const JobDetail = () => {
     const newState = await toggleFavorite(id);
     toast.success(newState ? "Added to favorites" : "Removed from favorites");
   };
+
+  if (jobLoading) return <div className="min-h-screen bg-background"><Navbar /><p role="status" className="container mx-auto px-4 py-24 text-center text-muted-foreground">Loading opportunity…</p></div>;
 
   if (!job) {
     return (

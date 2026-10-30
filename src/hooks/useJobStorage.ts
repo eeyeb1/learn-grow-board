@@ -173,6 +173,7 @@ export const useJobStorage = () => {
 
         setDrafts((prev) => prev.filter((d) => d.jobId !== jobId));
       }
+      return error;
     },
     [user]
   );

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { jobDetails } from "@/data/jobDetails";
+import { useJobDetail } from "@/hooks/useJobDetail";
 import { useJobStorage } from "@/hooks/useJobStorage";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -49,7 +49,7 @@ const DRAFT_KEY_PREFIX = "job_application_draft_";
 const ApplyJob = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const job = id ? jobDetails[id] : null;
+  const { job, open: acceptingApplications, loading: jobLoading } = useJobDetail(id);
   const draftKey = `${DRAFT_KEY_PREFIX}${id}`;
   const { user } = useAuth();
   const { markAsApplied, hasApplied, getDraft, saveDraft: saveSupabaseDraft, deleteDraft } = useJobStorage();
@@ -222,6 +222,8 @@ const ApplyJob = () => {
   };
 
   // Job not found
+  if (jobLoading) return <div className="min-h-screen bg-background"><Navbar /><p role="status" className="container mx-auto px-4 py-24 text-center text-muted-foreground">Loading opportunity…</p></div>;
+
   if (!job) {
     return (
       <div className="min-h-screen bg-background">
