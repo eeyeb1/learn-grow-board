@@ -41,12 +41,56 @@ export type Database = {
         }
         Relationships: []
       }
+      application_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string
+          application_id: string
+          created_at: string
+          from_status: string | null
+          id: string
+          reason: string | null
+          to_status: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role: string
+          application_id: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          reason?: string | null
+          to_status: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string
+          application_id?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          reason?: string | null
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           form_data: Json
           id: string
           job_id: string
           status: string
+          status_changed_at: string | null
+          status_changed_by: string | null
+          status_reason: string | null
           submitted_at: string
           user_id: string
         }
@@ -55,6 +99,9 @@ export type Database = {
           id?: string
           job_id: string
           status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          status_reason?: string | null
           submitted_at?: string
           user_id: string
         }
@@ -63,6 +110,9 @@ export type Database = {
           id?: string
           job_id?: string
           status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          status_reason?: string | null
           submitted_at?: string
           user_id?: string
         }
@@ -2241,6 +2291,10 @@ export type Database = {
         Returns: Json
       }
       list_companies_without_admin: { Args: never; Returns: Json }
+      list_company_applications: {
+        Args: { _company_id: string }
+        Returns: Json
+      }
       list_company_approval_requests: {
         Args: { _company_id: string }
         Returns: Json
@@ -2364,6 +2418,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_application_status: {
+        Args: { _application_id: string; _reason?: string; _status: string }
+        Returns: undefined
+      }
       set_certificate_privacy: {
         Args: {
           _id: string
@@ -2468,6 +2526,10 @@ export type Database = {
           _skill: string
         }
         Returns: string
+      }
+      withdraw_application: {
+        Args: { _application_id: string; _reason?: string }
+        Returns: undefined
       }
       withdraw_job_submission: { Args: { _job_id: string }; Returns: undefined }
       withdraw_reference: { Args: { _id: string }; Returns: undefined }
