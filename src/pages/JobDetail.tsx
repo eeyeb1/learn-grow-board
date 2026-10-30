@@ -162,7 +162,9 @@ const JobDetail = () => {
             {/* Apply Card */}
             <Card className="p-6 lg:w-80 shrink-0 h-fit">
               <div className="flex gap-2 mb-4">
-                {alreadyApplied ? (
+                {!acceptingApplications && !alreadyApplied ? (
+                  <Button size="lg" className="flex-1" disabled>Applications closed</Button>
+                ) : alreadyApplied ? (
                   <Button variant="outline" size="lg" className="flex-1" disabled>
                     <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
                     Applied
@@ -300,7 +302,9 @@ const JobDetail = () => {
               {/* Mobile Apply Button */}
               <div className="lg:hidden space-y-2">
                 <div className="flex gap-2">
-                  {alreadyApplied ? (
+                  {!acceptingApplications && !alreadyApplied ? (
+                  <Button size="lg" className="flex-1" disabled>Applications closed</Button>
+                ) : alreadyApplied ? (
                     <Button variant="outline" size="lg" className="flex-1" disabled>
                       <CheckCircle2 className="w-4 h-4 mr-2 text-green-600" />
                       Applied
