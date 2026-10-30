@@ -2164,6 +2164,10 @@ export type Database = {
         Args: { _hash: string; _uid: string }
         Returns: Json
       }
+      can_manage_listing: {
+        Args: { _job_id: string; _uid: string }
+        Returns: boolean
+      }
       can_manage_placement: {
         Args: { _placement_id: string; _uid: string }
         Returns: boolean
@@ -2202,6 +2206,7 @@ export type Database = {
         Returns: boolean
       }
       confirm_employee_email: { Args: { _hash: string }; Returns: undefined }
+      duplicate_job_as_draft: { Args: { _job_id: string }; Returns: string }
       employee_domain_company: { Args: { _email: string }; Returns: string }
       employee_email_valid: { Args: { _email: string }; Returns: boolean }
       get_company_access: { Args: never; Returns: Json }
@@ -2244,6 +2249,10 @@ export type Database = {
       list_company_staff: { Args: { _company_id: string }; Returns: Json }
       list_employee_membership_requests: {
         Args: { _company_id?: string }
+        Returns: Json
+      }
+      list_managed_opportunities: {
+        Args: { _company_id: string }
         Returns: Json
       }
       list_my_company_invitations: { Args: never; Returns: Json }
