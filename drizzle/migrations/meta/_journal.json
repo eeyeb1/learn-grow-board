@@ -197,6 +197,13 @@
       "when": 1793360754926,
       "tag": "0027_application_open_sample_ids",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1793364104145,
+      "tag": "0028_company_applications_inbox",
+      "breakpoints": true
     }
   ]
 }
