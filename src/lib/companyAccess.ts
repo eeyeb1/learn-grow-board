@@ -12,5 +12,6 @@ export function workspacePermitted(state: CompanyState, section: string): boolea
   if (section === 'dashboard') return state === 'company_admin';
   if (section === 'profile' || section === 'employees' || section === 'approvals') return state === 'company_admin';
   if (section === 'employee') return state === 'employee';
+  if (section === 'opportunities') return state === 'company_admin' || state === 'employee';
   return section === 'drafts' && ['company_admin', 'employee', 'draft_only'].includes(state);
 }
