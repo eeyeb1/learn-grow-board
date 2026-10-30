@@ -177,26 +177,19 @@ const ApplyJob = () => {
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      console.log("Application submitted:", {
-        ...formData,
-        resume: resumeFile?.name || resumeFileName,
-        jobId: id,
-        jobTitle: job?.title,
-        companyName: job?.company,
-      });
-      
-      // Mark as applied in backend (if logged in)
+      let applyError: { message: string } | null | undefined = null;
       if (id && user) {
-        const applyError = await markAsApplied(id, {
+        applyError = await markAsApplied(id, {
           fullName: formData.fullName,
           email: formData.email,
           phone: formData.phone,
+          coverLetter: formData.coverLetter,
+          linkedin: formData.linkedin,
+          github: formData.github,
+          portfolio: formData.portfolio,
         });
       }
-      
+
       if (applyError) { toast.error(applyError.message.includes('not accepting') ? 'This opportunity is no longer accepting applications.' : 'Your application could not be submitted. Please try again.'); return; }
       setSubmitted(true);
     } catch (error) {

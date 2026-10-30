@@ -19,6 +19,7 @@ export interface DashApplication {
   id: string;
   job_id: string;
   status: string;
+  status_reason: string | null;
   submitted_at: string;
   job: DashJob | null;
 }
@@ -168,7 +169,7 @@ export const useSeekerDashboard = () => {
     setError(null);
     try {
       const [apps, favs, hrs, sum, prof, pub, plc, pf, rr] = await Promise.all([
-        supabase.from("applications").select("id, job_id, status, submitted_at").eq("user_id", user.id).order("submitted_at", { ascending: false }),
+        supabase.from("applications").select("id, job_id, status, status_reason, submitted_at").eq("user_id", user.id).order("submitted_at", { ascending: false }),
         supabase.from("favorites").select("job_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("hour_entries").select("*").eq("user_id", user.id).order("work_date", { ascending: false }),
         supabase.rpc("get_my_hours_summary"),

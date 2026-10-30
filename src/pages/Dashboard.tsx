@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/contexts/AuthContext";
 import { useSeekerDashboard, formatHours, profileUrl, shareProfile, DashApplication, HourEntry, Placement } from "@/hooks/useSeekerDashboard";
 import { toast } from "sonner";
+import { applicationLabel, seekerCanWithdraw } from "@/lib/applicationStatus";
+import { supabase } from "@/integrations/supabase/client";
 import SeekerProfileEditor from "@/components/SeekerProfileEditor";
 import { PortfolioManager } from "@/components/portfolio";
 import CvWriter from "@/components/CvWriter";
@@ -49,6 +51,7 @@ const statusStyle: Record<string, string> = {
   completed: "bg-primary text-primary-foreground",
   rejected: "bg-destructive/10 text-destructive",
   cancelled: "bg-muted text-muted-foreground",
+  withdrawn: "bg-muted text-muted-foreground",
   upcoming: "bg-accent text-accent-foreground",
   active: "bg-primary/10 text-primary",
   pending: "bg-accent text-accent-foreground",
@@ -56,7 +59,7 @@ const statusStyle: Record<string, string> = {
 };
 
 const StatusBadge = ({ status }: { status: string }) => (
-  <Badge variant="soft" className={`capitalize ${statusStyle[status] ?? "bg-muted text-muted-foreground"}`}>{status}</Badge>
+  <Badge variant="soft" className={`capitalize ${statusStyle[status] ?? "bg-muted text-muted-foreground"}`}>{applicationLabel(status)}</Badge>
 );
 
 const Empty = ({ icon: Icon, title, text, action }: { icon: typeof Clock; title: string; text: string; action?: React.ReactNode }) => (
@@ -70,17 +73,33 @@ const Empty = ({ icon: Icon, title, text, action }: { icon: typeof Clock; title:
   </div>
 );
 
-const AppRow = ({ app }: { app: DashApplication }) => (
-  <div className="flex items-center justify-between gap-3 py-3 border-b border-border last:border-0">
-    <div className="min-w-0">
-      <p className="font-medium text-foreground truncate">{app.job?.title ?? "Opportunity no longer listed"}</p>
-      <p className="text-xs text-muted-foreground truncate">
-        {app.job?.company ?? "—"} · Applied {new Date(app.submitted_at).toLocaleDateString()}
-      </p>
+const AppRow = ({ app, onChanged }: { app: DashApplication; onChanged?: () => void }) => {
+  const [busy, setBusy] = useState(false);
+  const withdraw = async () => {
+    if (!window.confirm("Withdraw this application? The company will see it as withdrawn and this can't be undone.")) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("withdraw_application", { _application_id: app.id });
+    setBusy(false);
+    if (error) toast.error(error.message); else { toast.success("Application withdrawn"); onChanged?.(); }
+  };
+  return (
+    <div className="py-3 border-b border-border last:border-0">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-medium text-foreground truncate">{app.job?.title ?? "Opportunity no longer listed"}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            {app.job?.company ?? "—"} · Applied {new Date(app.submitted_at).toLocaleDateString()}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {onChanged && seekerCanWithdraw(app.status) && <Button size="sm" variant="ghost" disabled={busy} onClick={() => void withdraw()}>Withdraw</Button>}
+          <StatusBadge status={app.status} />
+        </div>
+      </div>
+      {app.status_reason && <p className="mt-1 text-xs text-muted-foreground">Note: {app.status_reason}</p>}
     </div>
-    <StatusBadge status={app.status} />
-  </div>
-);
+  );
+};
 
 const Dashboard = () => {
   const { section = "overview" } = useParams();
@@ -291,7 +310,7 @@ const Applications = ({ d }: { d: D }) => (
       {d.applications.length === 0 ? (
         <Empty icon={FileText} title="No applications yet" text="Browse opportunities and apply — you'll be able to follow each one here."
           action={<Link to="/jobs"><Button size="sm">Find experience</Button></Link>} />
-      ) : d.applications.map((a) => <AppRow key={a.id} app={a} />)}
+      ) : d.applications.map((a) => <AppRow key={a.id} app={a} onChanged={d.reload} />)}
     </CardContent>
   </Card>
 );

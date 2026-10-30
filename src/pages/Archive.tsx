@@ -74,7 +74,9 @@ const Archive = () => {
   const updateApplicationStatus = async (applicationId: string, newStatus: string) => {
     setUpdatingStatus(true);
     try {
-      const { error } = await supabase.from("applications").update({ status: newStatus }).eq("id", applicationId);
+      const reason = newStatus === "rejected" ? window.prompt("Reason for declining (shared with the applicant, at least 10 characters):") : null;
+      if (newStatus === "rejected" && !reason) return;
+      const { error } = await supabase.rpc("set_application_status", { _application_id: applicationId, _status: newStatus, _reason: reason });
 
       if (error) {
         console.error("Error updating status:", error);

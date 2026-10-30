@@ -147,7 +147,7 @@ export const useJobStorage = () => {
   const handleMarkAsApplied = useCallback(
     async (
       jobId: string,
-      formData: { fullName: string; email: string; phone: string }
+      formData: { fullName: string; email: string; phone: string; coverLetter?: string; linkedin?: string; github?: string; portfolio?: string }
     ) => {
       if (!user) return;
 
