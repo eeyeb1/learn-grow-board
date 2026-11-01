@@ -3,8 +3,8 @@
 - Verified hours are computed only in database functions (get_my_hours_summary, get_public_profile) from approved hour_entries; a trigger forces new/edited seeker entries to pending so the client can never self-verify.
 - Public seeker profiles are read only via the get_public_profile RPC, which returns opt-in fields only; never expose public_profiles or profiles rows to anon directly.
 - Placements are trigger-created on acceptance and changed only via audited RPCs (placement_action, update_placement_details); no client write policies.
-- Certificates come only from issue_certificate server snapshots; PDFs render from that row and public checks use verify_certificate with privacy flags. Why: totals never come from client input.
-- Portfolio files stay in the private `portfolio` bucket, served only via the `portfolio-file` function (access + magic-byte checks); removals use SECURITY DEFINER RPCs. Why: private file URLs must never leak.
+- Certificates come only from issue_certificate server snapshots; PDFs render from that row and public checks use verify_certificate with privacy flags. Why: no client totals.
+- Portfolio files stay in the private `portfolio` bucket, served only via the `portfolio-file` function (access + magic-byte checks); removals use SECURITY DEFINER RPCs. Why: no URL leaks.
 - The cv-writer function uses the caller's RLS session to load only completed placements, approved hours, verified skills and chosen diary entries, redacting contacts. Why: grounded output, no private data to the model.
 - Seeker recommendations are rule-based and explainable (src/lib/recommendations.ts, tested with bun test): only active, unexpired listings; inputs limited to chosen preferences and feedback, never age/minor/education/personal data. Why: auditable, non-discriminatory.
 - Seeker notifications are created only by SECURITY DEFINER triggers/RPCs via `_notify` (not client-executable), deduplicated by UNIQUE(user_id, dedupe_key) and filtered by notification_preferences; clients may only change read_at. Previews are generic; details render only from the user's own RLS-scoped rows. Why: no forged/duplicate notifications or sensitive previews.
