@@ -204,6 +204,13 @@
       "when": 1793364104145,
       "tag": "0028_company_applications_inbox",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793568728619,
+      "tag": "0029_placement_onboarding",
+      "breakpoints": true
     }
   ]
 }
