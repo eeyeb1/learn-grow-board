@@ -1619,55 +1619,100 @@ export type Database = {
       }
       placements: {
         Row: {
+          activated_at: string | null
           application_id: string
+          cancelled_at: string | null
           certificate_issued_at: string | null
           company_id: string
+          completed_at: string | null
+          completion_checklist: Json
           confirmed_skills: string[]
           created_at: string
+          dispute_reason: string | null
+          disputed_at: string | null
           employer_feedback: string | null
           end_date: string | null
+          expectations: string | null
+          expected_duration: string | null
           id: string
+          induction_checklist: Json
           job_id: string
           learning_objectives: string[]
+          location: string | null
+          safeguarding: string | null
+          schedule: string | null
+          seeker_confirmed_at: string | null
           start_date: string | null
           status: string
+          status_before_dispute: string | null
           supervisor_contact: string | null
+          supervisor_id: string | null
           supervisor_name: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          activated_at?: string | null
           application_id: string
+          cancelled_at?: string | null
           certificate_issued_at?: string | null
           company_id: string
+          completed_at?: string | null
+          completion_checklist?: Json
           confirmed_skills?: string[]
           created_at?: string
+          dispute_reason?: string | null
+          disputed_at?: string | null
           employer_feedback?: string | null
           end_date?: string | null
+          expectations?: string | null
+          expected_duration?: string | null
           id?: string
+          induction_checklist?: Json
           job_id: string
           learning_objectives?: string[]
+          location?: string | null
+          safeguarding?: string | null
+          schedule?: string | null
+          seeker_confirmed_at?: string | null
           start_date?: string | null
           status?: string
+          status_before_dispute?: string | null
           supervisor_contact?: string | null
+          supervisor_id?: string | null
           supervisor_name?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          activated_at?: string | null
           application_id?: string
+          cancelled_at?: string | null
           certificate_issued_at?: string | null
           company_id?: string
+          completed_at?: string | null
+          completion_checklist?: Json
           confirmed_skills?: string[]
           created_at?: string
+          dispute_reason?: string | null
+          disputed_at?: string | null
           employer_feedback?: string | null
           end_date?: string | null
+          expectations?: string | null
+          expected_duration?: string | null
           id?: string
+          induction_checklist?: Json
           job_id?: string
           learning_objectives?: string[]
+          location?: string | null
+          safeguarding?: string | null
+          schedule?: string | null
+          seeker_confirmed_at?: string | null
           start_date?: string | null
           status?: string
+          status_before_dispute?: string | null
           supervisor_contact?: string | null
+          supervisor_id?: string | null
           supervisor_name?: string | null
           updated_at?: string
           user_id?: string
@@ -2168,6 +2213,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _checklist_ok: { Args: { _c: Json }; Returns: boolean }
       _job_event: {
         Args: {
           _action: string
@@ -2209,6 +2255,10 @@ export type Database = {
       _ref_check: {
         Args: { _label: string; _max: number; _min: number; _v: string }
         Returns: string
+      }
+      assign_placement_supervisor: {
+        Args: { _note: string; _placement_id: string; _user_id: string }
+        Returns: undefined
       }
       begin_employee_email_challenge: {
         Args: { _hash: string; _uid: string }
@@ -2256,6 +2306,10 @@ export type Database = {
         Returns: boolean
       }
       confirm_employee_email: { Args: { _hash: string }; Returns: undefined }
+      confirm_placement_onboarding: {
+        Args: { _placement_id: string }
+        Returns: undefined
+      }
       duplicate_job_as_draft: { Args: { _job_id: string }; Returns: string }
       employee_domain_company: { Args: { _email: string }; Returns: string }
       employee_email_valid: { Args: { _email: string }; Returns: boolean }
@@ -2310,6 +2364,10 @@ export type Database = {
         Returns: Json
       }
       list_my_company_invitations: { Args: never; Returns: Json }
+      list_placement_supervisors: {
+        Args: { _placement_id: string }
+        Returns: Json
+      }
       list_platform_job_reviews: { Args: never; Returns: Json }
       moderate_reference_report: {
         Args: { _decision: string; _note: string; _report_id: string }
@@ -2502,6 +2560,10 @@ export type Database = {
           _supervisor_contact: string
           _supervisor_name: string
         }
+        Returns: undefined
+      }
+      update_placement_onboarding: {
+        Args: { _data: Json; _placement_id: string }
         Returns: undefined
       }
       update_reference: {
