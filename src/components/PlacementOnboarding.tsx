@@ -82,7 +82,7 @@ export default function PlacementOnboarding({ placement, isSeeker, canManage, on
             : <p>{isSeeker ? 'Please read the details below and confirm them before your placement starts.' : 'Waiting for the seeker to confirm these details. Changing schedule, location, safeguarding or expectations asks them to confirm again.'}</p>}
           {isSeeker && !placement.seeker_confirmed_at && !closed(placement.status) && placement.schedule && placement.expectations && <Button size="sm" className="mt-2" disabled={busy} onClick={() => void confirm()}>I confirm these details</Button>}
         </div>
-        {edit && sups !== null && sups.length + 1 > 1 && (
+        {edit && sups !== null && sups.length > 0 && (
           <div className="grid gap-2 rounded-lg border border-border p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
             <div><Label htmlFor="ob-sup">Assign supervisor</Label><Select value={sup} onValueChange={setSup}><SelectTrigger id="ob-sup"><SelectValue placeholder="Choose an approved supervisor" /></SelectTrigger><SelectContent>{sups.map((s) => <SelectItem key={s.user_id} value={s.user_id}>{s.name}{s.job_title ? ` · ${s.job_title}` : ''}</SelectItem>)}</SelectContent></Select></div>
             <div><Label htmlFor="ob-supnote">Reason (recorded)</Label><Input id="ob-supnote" value={supNote} maxLength={500} onChange={(e) => setSupNote(e.target.value)} /></div>
