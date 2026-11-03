@@ -40,7 +40,21 @@ export interface Placement {
   id: string;
   application_id: string;
   user_id: string;
-  status: "upcoming" | "active" | "completed" | "cancelled";
+  status: "upcoming" | "active" | "completed" | "cancelled" | "disputed";
+  supervisor_id: string | null;
+  schedule: string | null;
+  location: string | null;
+  expected_duration: string | null;
+  safeguarding: string | null;
+  expectations: string | null;
+  induction_checklist: { label: string; done: boolean; done_at?: string | null }[];
+  completion_checklist: { label: string; done: boolean; done_at?: string | null }[];
+  seeker_confirmed_at: string | null;
+  activated_at: string | null;
+  completed_at: string | null;
+  cancelled_at: string | null;
+  disputed_at: string | null;
+  dispute_reason: string | null;
   start_date: string | null;
   end_date: string | null;
   learning_objectives: string[];
@@ -55,7 +69,7 @@ export interface Placement {
 }
 
 export const PLACEMENT_SELECT =
-  "id, application_id, user_id, status, start_date, end_date, learning_objectives, supervisor_name, supervisor_contact, confirmed_skills, employer_feedback, certificate_issued_at, created_at, job:jobs(id, title, skills, location), company:company_profiles(company_name)";
+  "id, application_id, user_id, status, start_date, end_date, learning_objectives, supervisor_name, supervisor_contact, confirmed_skills, employer_feedback, certificate_issued_at, created_at, supervisor_id, schedule, location, expected_duration, safeguarding, expectations, induction_checklist, completion_checklist, seeker_confirmed_at, activated_at, completed_at, cancelled_at, disputed_at, dispute_reason, job:jobs(id, title, skills, location), company:company_profiles(company_name)";
 
 export interface HoursSummary {
   verified_minutes: number;

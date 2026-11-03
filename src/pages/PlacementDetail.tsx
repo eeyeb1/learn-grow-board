@@ -24,6 +24,7 @@ import { EmployerReferencePanel } from "@/components/references";
 import CertificatePanel from "@/components/CertificatePanel";
 import { PlacementPortfolioPanel } from "@/components/portfolio";
 import { toast } from "sonner";
+import PlacementOnboarding from "@/components/PlacementOnboarding";
 import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, FolderOpen, History, Loader2, MessageSquare, Target, Trash2, UserCheck, Wrench } from "lucide-react";
 
 interface DiaryEntry { id: string; entry_date: string; content: string }
@@ -149,6 +150,8 @@ const PlacementDetail = () => {
               </CardContent>
             </Card>
 
+            <PlacementOnboarding key={placement.id + placement.seeker_confirmed_at + placement.status} placement={placement} isSeeker={isSeeker} canManage={canManage} onChange={load} />
+            {isSeeker && (placement.status === "upcoming" || placement.status === "active") && <SeekerDispute placementId={placement.id} onChange={load} />}
             {canManage && !isSeeker && <ManagePanel placement={placement} onChange={load} />}
 
             <Tabs defaultValue="hours">
@@ -274,6 +277,28 @@ const DiaryPanel = ({ placementId, userId, entries, onChange, canWrite }: { plac
   );
 };
 
+type Act = "activate" | "complete" | "cancel" | "dispute" | "resolve";
+
+const SeekerDispute = ({ placementId, onChange }: { placementId: string; onChange: () => void }) => {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const send = async () => {
+    if (note.trim().length < 10) return toast.error("Describe the issue in at least 10 characters.");
+    setBusy(true);
+    const { error } = await supabase.rpc("placement_action", { _placement_id: placementId, _action: "dispute", _note: note.trim() });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Dispute raised. The company has been notified."); setOpen(false); onChange();
+  };
+  return (
+    <div className="print:hidden">
+      {!open ? <Button variant="outline" size="sm" onClick={() => setOpen(true)}>Report a problem with this placement</Button> : (
+        <Card><CardContent className="space-y-2 p-4"><Label htmlFor="disp">What's wrong?</Label><Textarea id="disp" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} /><div className="flex gap-2"><Button size="sm" disabled={busy} onClick={() => void send()}>Raise dispute</Button><Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button></div></CardContent></Card>)}
+    </div>
+  );
+};
+
 const ManagePanel = ({ placement, onChange }: { placement: Placement; onChange: () => void }) => {
   const [f, setF] = useState({
     start_date: placement.start_date ?? "",
@@ -307,7 +332,8 @@ const ManagePanel = ({ placement, onChange }: { placement: Placement; onChange: 
     toast.success("Placement details saved"); onChange();
   };
 
-  const act = async (action: "activate" | "complete" | "cancel") => {
+  const act = async (action: Act) => {
+    if ((action === "cancel" || action === "dispute" || action === "resolve") && note.trim().length < 10) return toast.error("Add a note of at least 10 characters first.");
     setBusy(true);
     const { error } = await supabase.rpc("placement_action", { _placement_id: placement.id, _action: action, _note: note.trim() || undefined });
     setBusy(false);
@@ -315,7 +341,7 @@ const ManagePanel = ({ placement, onChange }: { placement: Placement; onChange: 
     setNote(""); toast.success("Placement updated"); onChange();
   };
 
-  const ActionButton = ({ action, label, desc, variant = "default" }: { action: "activate" | "complete" | "cancel"; label: string; desc: string; variant?: "default" | "outline" }) => (
+  const ActionButton = ({ action, label, desc, variant = "default" }: { action: Act; label: string; desc: string; variant?: "default" | "outline" }) => (
     <AlertDialog>
       <AlertDialogTrigger asChild><Button size="sm" variant={variant} disabled={busy}>{label}</Button></AlertDialogTrigger>
       <AlertDialogContent>
@@ -331,10 +357,12 @@ const ManagePanel = ({ placement, onChange }: { placement: Placement; onChange: 
       <CardContent className="space-y-5">
         {placement.status !== "completed" && placement.status !== "cancelled" && (
           <div className="space-y-2">
-            <Input placeholder="Optional note for the history log" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
+            <Input placeholder="Note for the history log (required to cancel, dispute or resolve)" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
             <div className="flex flex-wrap gap-2">
-              {placement.status === "upcoming" && <ActionButton action="activate" label="Activate placement" desc="The seeker will be able to log hours. The start date defaults to today if not set." />}
-              {placement.status === "active" && <ActionButton action="complete" label="Mark completed" desc="Hour logging closes and a certificate is issued using approved hours only. The end date defaults to today if not set." />}
+              {placement.status === "upcoming" && <ActionButton action="activate" label="Activate placement" desc="Requires an assigned supervisor, completed onboarding details and initial instructions, and the seeker's confirmation. The seeker can then log hours." />}
+              {placement.status === "active" && <ActionButton action="complete" label="Mark completed" desc="Requires the completion checklist. Hour logging closes and a certificate is issued using approved hours only. The end date defaults to today if not set." />}
+              {placement.status === "disputed" && <ActionButton action="resolve" label="Resolve dispute" desc="The placement returns to the state it was in before the dispute." />}
+              {placement.status !== "disputed" && <ActionButton action="dispute" label="Raise dispute" variant="outline" desc="The placement is paused as Disputed until a company administrator resolves it." />}
               <ActionButton action="cancel" label="Cancel placement" variant="outline" desc="The placement will be cancelled and hours can no longer be logged." />
             </div>
           </div>

@@ -51,6 +51,7 @@ const statusStyle: Record<string, string> = {
   completed: "bg-primary text-primary-foreground",
   rejected: "bg-destructive/10 text-destructive",
   cancelled: "bg-muted text-muted-foreground",
+  disputed: "bg-destructive/10 text-destructive",
   withdrawn: "bg-muted text-muted-foreground",
   upcoming: "bg-accent text-accent-foreground",
   active: "bg-primary/10 text-primary",
@@ -319,6 +320,8 @@ const PLACEMENT_GROUPS: { status: Placement["status"]; title: string; empty: str
   { status: "active", title: "Active", empty: "No active placements. Your employer activates a placement when it starts." },
   { status: "upcoming", title: "Accepted & upcoming", empty: "When an employer accepts your application, the placement appears here." },
   { status: "completed", title: "Completed", empty: "Your employer marks a placement completed when it ends." },
+  { status: "disputed", title: "Disputed", empty: "No disputed placements." },
+  { status: "cancelled", title: "Cancelled", empty: "No cancelled placements." },
 ];
 
 const fmtDate = (d: string | null) => (d ? new Date(d + "T00:00:00").toLocaleDateString() : null);
