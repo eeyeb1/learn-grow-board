@@ -1072,13 +1072,17 @@ export type Database = {
       hour_entries: {
         Row: {
           application_id: string
+          break_minutes: number
           created_at: string
           description: string
+          end_time: string | null
           id: string
           minutes: number
           reviewed_at: string | null
           reviewed_by: string | null
           reviewer_note: string | null
+          revision: number
+          start_time: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1086,13 +1090,17 @@ export type Database = {
         }
         Insert: {
           application_id: string
+          break_minutes?: number
           created_at?: string
           description: string
+          end_time?: string | null
           id?: string
           minutes: number
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_note?: string | null
+          revision?: number
+          start_time?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1100,13 +1108,17 @@ export type Database = {
         }
         Update: {
           application_id?: string
+          break_minutes?: number
           created_at?: string
           description?: string
+          end_time?: string | null
           id?: string
           minutes?: number
           reviewed_at?: string | null
           reviewed_by?: string | null
           reviewer_note?: string | null
+          revision?: number
+          start_time?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -1121,6 +1133,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      hour_entry_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string
+          after_state: Json | null
+          application_id: string
+          before_state: Json | null
+          created_at: string
+          entry_id: string
+          from_status: string | null
+          id: string
+          note: string | null
+          seeker_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role: string
+          after_state?: Json | null
+          application_id: string
+          before_state?: Json | null
+          created_at?: string
+          entry_id: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          seeker_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string
+          after_state?: Json | null
+          application_id?: string
+          before_state?: Json | null
+          created_at?: string
+          entry_id?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          seeker_id?: string
+          to_status?: string | null
+        }
+        Relationships: []
       }
       job_publication_requests: {
         Row: {
@@ -2272,6 +2332,10 @@ export type Database = {
         Args: { _placement_id: string; _uid: string }
         Returns: boolean
       }
+      can_verify_hours: {
+        Args: { _application_id: string; _uid: string }
+        Returns: boolean
+      }
       cancel_company_invitation: { Args: { _id: string }; Returns: undefined }
       check_opportunity: {
         Args: {
@@ -2359,6 +2423,7 @@ export type Database = {
         Args: { _company_id?: string }
         Returns: Json
       }
+      list_hour_review_queue: { Args: never; Returns: Json }
       list_managed_opportunities: {
         Args: { _company_id: string }
         Returns: Json
@@ -2440,6 +2505,10 @@ export type Database = {
       }
       review_employee_membership: {
         Args: { _decision: string; _note: string; _request_id: string }
+        Returns: undefined
+      }
+      review_hour_entry: {
+        Args: { _decision: string; _entry_id: string; _note: string }
         Returns: undefined
       }
       review_job_publication: {
