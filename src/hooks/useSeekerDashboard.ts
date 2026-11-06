@@ -30,7 +30,10 @@ export interface HourEntry {
   work_date: string;
   minutes: number;
   description: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "correction_requested";
+  start_time: string | null;
+  end_time: string | null;
+  break_minutes: number;
   reviewer_note: string | null;
   reviewed_at: string | null;
   created_at: string;
@@ -227,9 +230,16 @@ export const useSeekerDashboard = () => {
     load();
   }, [load]);
 
-  const logHours = async (input: { application_id: string; work_date: string; minutes: number; description: string }) => {
+  const logHours = async (input: { application_id: string; work_date: string; minutes: number; description: string; start_time?: string | null; end_time?: string | null; break_minutes?: number }) => {
     if (!user) return { error: "Not signed in" };
     const { error } = await supabase.from("hour_entries").insert({ ...input, user_id: user.id });
+    if (error) return { error: error.message };
+    await load();
+    return { error: null };
+  };
+
+  const updateHours = async (id: string, input: { work_date: string; minutes: number; description: string; start_time: string | null; end_time: string | null; break_minutes: number }) => {
+    const { error } = await supabase.from("hour_entries").update(input).eq("id", id);
     if (error) return { error: error.message };
     await load();
     return { error: null };
@@ -286,7 +296,7 @@ export const useSeekerDashboard = () => {
 
   return {
     loading, error, reload: load,
-    applications, placements, activePlacements, completed, saved, hours, summary, profile, publicProfile,
+    applications, placements, activePlacements, completed, saved, hours, summary, profile, publicProfile, updateHours,
     completionChecks, completion,
     logHours, deleteHours, savePublicProfile, references, setReferenceApproval, skillVerifications, setSkillVisibility, portfolio, removalRequests,
   };
