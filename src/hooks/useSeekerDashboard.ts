@@ -79,6 +79,7 @@ export interface HoursSummary {
   pending_minutes: number;
   pending_count: number;
   rejected_count: number;
+  correction_count?: number;
 }
 
 export interface PublicProfileSettings {
