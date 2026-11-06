@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSeekerDashboard, formatHours, profileUrl, shareProfile, DashApplication, HourEntry, Placement } from "@/hooks/useSeekerDashboard";
 import { toast } from "sonner";
 import { applicationLabel, seekerCanWithdraw } from "@/lib/applicationStatus";
+import { durationFromTimes, hourStatusLabel, seekerCanEditHours } from "@/lib/hourVerification";
 import { supabase } from "@/integrations/supabase/client";
 import SeekerProfileEditor from "@/components/SeekerProfileEditor";
 import { PortfolioManager } from "@/components/portfolio";
@@ -368,62 +369,148 @@ const Experiences = ({ d }: { d: D }) => (
   </>
 );
 
+const HourFields = ({ v, set }: { v: HourForm; set: (v: HourForm) => void }) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const computed = v.mode === "times" ? durationFromTimes(v.start, v.end, parseInt(v.brk || "0")) : null;
+  return (
+    <>
+      <div className="space-y-1.5">
+        <Label htmlFor={`date-${v.key}`}>Date</Label>
+        <Input id={`date-${v.key}`} type="date" max={today} value={v.date} onChange={(e) => set({ ...v, date: e.target.value })} />
+      </div>
+      <div className="space-y-1.5">
+        <Label>How to record time</Label>
+        <Select value={v.mode} onValueChange={(m) => set({ ...v, mode: m as HourForm["mode"] })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="times">Start, end and break</SelectItem><SelectItem value="duration">Total duration only</SelectItem></SelectContent>
+        </Select>
+      </div>
+      {v.mode === "times" ? (
+        <div className="sm:col-span-2 grid grid-cols-3 gap-2">
+          <div className="space-y-1.5"><Label htmlFor={`st-${v.key}`}>Start</Label><Input id={`st-${v.key}`} type="time" value={v.start} onChange={(e) => set({ ...v, start: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label htmlFor={`en-${v.key}`}>End</Label><Input id={`en-${v.key}`} type="time" value={v.end} onChange={(e) => set({ ...v, end: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label htmlFor={`br-${v.key}`}>Break (min)</Label><Input id={`br-${v.key}`} type="number" min={0} max={720} step={5} value={v.brk} onChange={(e) => set({ ...v, brk: e.target.value })} /></div>
+          <p className="col-span-3 text-xs text-muted-foreground">{computed ? `Duration: ${formatHours(computed)}` : "End must be after start, and the break shorter than the time worked."}</p>
+        </div>
+      ) : (
+        <div className="sm:col-span-2 grid grid-cols-2 gap-2">
+          <div className="space-y-1.5"><Label htmlFor={`h-${v.key}`}>Hours</Label><Input id={`h-${v.key}`} type="number" min={0} max={24} value={v.hrs} onChange={(e) => set({ ...v, hrs: e.target.value })} placeholder="0" /></div>
+          <div className="space-y-1.5"><Label htmlFor={`m-${v.key}`}>Minutes</Label><Input id={`m-${v.key}`} type="number" min={0} max={59} step={5} value={v.mins} onChange={(e) => set({ ...v, mins: e.target.value })} /></div>
+        </div>
+      )}
+      <div className="sm:col-span-2 space-y-1.5">
+        <Label htmlFor={`d-${v.key}`}>Tasks completed</Label>
+        <Textarea id={`d-${v.key}`} maxLength={2000} rows={3} value={v.desc} onChange={(e) => set({ ...v, desc: e.target.value })} placeholder="What did you work on?" />
+      </div>
+    </>
+  );
+};
+
+interface HourForm { key: string; date: string; mode: "times" | "duration"; start: string; end: string; brk: string; hrs: string; mins: string; desc: string }
+
+const formToInput = (v: HourForm): { error: string } | { input: { work_date: string; minutes: number; description: string; start_time: string | null; end_time: string | null; break_minutes: number } } => {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!v.date || v.date > today) return { error: "Choose a date that isn't in the future" };
+  let minutes: number; let start: string | null = null; let end: string | null = null; let brk = 0;
+  if (v.mode === "times") {
+    brk = parseInt(v.brk || "0");
+    const c = durationFromTimes(v.start, v.end, brk);
+    if (!c) return { error: "Check the start, end and break times" };
+    minutes = c; start = v.start; end = v.end;
+  } else {
+    minutes = parseInt(v.hrs || "0") * 60 + parseInt(v.mins || "0");
+    if (minutes <= 0 || minutes > 1440) return { error: "Duration must be between 1 minute and 24 hours" };
+  }
+  if (v.desc.trim().length < 3) return { error: "Describe the tasks you worked on" };
+  return { input: { work_date: v.date, minutes, description: v.desc.trim(), start_time: start, end_time: end, break_minutes: brk } };
+};
+
 const HourRow = ({ h, d }: { h: HourEntry; d: D }) => {
   const app = d.applications.find((a) => a.id === h.application_id);
+  const [edit, setEdit] = useState<HourForm | null>(null);
+  const [busy, setBusy] = useState(false);
+  const openEdit = () => setEdit({
+    key: h.id, date: h.work_date, mode: h.start_time ? "times" : "duration",
+    start: h.start_time?.slice(0, 5) ?? "", end: h.end_time?.slice(0, 5) ?? "", brk: String(h.break_minutes ?? 0),
+    hrs: String(Math.floor(h.minutes / 60)), mins: String(h.minutes % 60), desc: h.description,
+  });
+  const save = async () => {
+    if (!edit) return;
+    const r = formToInput(edit);
+    if ("error" in r) return toast.error(r.error);
+    setBusy(true);
+    const { error } = await d.updateHours(h.id, r.input);
+    setBusy(false);
+    if (error) return toast.error(error);
+    toast.success("Entry resubmitted for approval");
+    setEdit(null);
+  };
   return (
-    <div className="flex items-start justify-between gap-3 py-3 border-b border-border last:border-0">
-      <div className="min-w-0">
-        <p className="font-medium text-foreground">
-          {formatHours(h.minutes)} · {new Date(h.work_date + "T00:00:00").toLocaleDateString()}
-        </p>
-        <p className="text-xs text-muted-foreground truncate">{app?.job?.title ?? "Placement"}</p>
-        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{h.description}</p>
-        {h.reviewer_note && <p className="text-xs text-foreground mt-1">Employer note: {h.reviewer_note}</p>}
+    <div className="py-3 border-b border-border last:border-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-medium text-foreground">
+            {formatHours(h.minutes)} · {new Date(h.work_date + "T00:00:00").toLocaleDateString()}
+            {h.start_time && <span className="text-xs text-muted-foreground font-normal"> · {h.start_time.slice(0, 5)}–{h.end_time?.slice(0, 5)}, break {h.break_minutes} min</span>}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">{app?.job?.title ?? "Placement"}</p>
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{h.description}</p>
+          {h.reviewer_note && <p className="text-xs text-foreground mt-1">Supervisor note: {h.reviewer_note}</p>}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Badge variant="soft" className={statusStyle[h.status] ?? "bg-muted text-muted-foreground"}>{hourStatusLabel(h.status)}</Badge>
+          {seekerCanEditHours(h.status) && !edit && (
+            <Button size="sm" variant="ghost" onClick={openEdit}>{h.status === "correction_requested" ? "Correct" : "Edit"}</Button>
+          )}
+          {h.status === "pending" && (
+            <Button size="icon" variant="ghost" aria-label="Delete entry" onClick={async () => {
+              const { error } = await d.deleteHours(h.id);
+              error ? toast.error(error) : toast.success("Entry removed");
+            }}><Trash2 className="w-4 h-4" /></Button>
+          )}
+        </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
-        <StatusBadge status={h.status} />
-        {h.status === "pending" && (
-          <Button size="icon" variant="ghost" aria-label="Delete entry" onClick={async () => {
-            const { error } = await d.deleteHours(h.id);
-            error ? toast.error(error) : toast.success("Entry removed");
-          }}><Trash2 className="w-4 h-4" /></Button>
-        )}
-      </div>
+      {edit && (
+        <div className="grid sm:grid-cols-2 gap-3 mt-3">
+          <HourFields v={edit} set={setEdit} />
+          <div className="sm:col-span-2 flex gap-2">
+            <Button size="sm" disabled={busy} onClick={save}>{busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Resubmit</Button>
+            <Button size="sm" variant="outline" onClick={() => setEdit(null)}>Cancel</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+const blankForm = (): HourForm => ({ key: "new", date: new Date().toISOString().slice(0, 10), mode: "times", start: "", end: "", brk: "0", hrs: "", mins: "0", desc: "" });
+
 const Hours = ({ d }: { d: D }) => {
   const eligible = d.activePlacements;
-  const today = new Date().toISOString().slice(0, 10);
   const [appId, setAppId] = useState(eligible[0]?.application_id ?? "");
-  const [date, setDate] = useState(today);
-  const [hrs, setHrs] = useState("");
-  const [mins, setMins] = useState("0");
-  const [desc, setDesc] = useState("");
+  const [form, setForm] = useState<HourForm>(blankForm);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const total = (parseInt(hrs || "0") * 60) + parseInt(mins || "0");
     if (!appId) return toast.error("Choose a placement");
-    if (!date || date > today) return toast.error("Choose a date that isn't in the future");
-    if (total <= 0 || total > 1440) return toast.error("Duration must be between 1 minute and 24 hours");
-    if (desc.trim().length < 3) return toast.error("Describe the tasks you worked on");
+    const r = formToInput(form);
+    if ("error" in r) return toast.error(r.error);
     setBusy(true);
-    const { error } = await d.logHours({ application_id: appId, work_date: date, minutes: total, description: desc.trim() });
+    const { error } = await d.logHours({ application_id: appId, ...r.input });
     setBusy(false);
     if (error) return toast.error(error);
-    toast.success("Hours submitted for employer approval");
-    setHrs(""); setMins("0"); setDesc("");
+    toast.success("Hours submitted for supervisor approval");
+    setForm(blankForm());
   };
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          ["Verified", formatHours(d.summary.verified_minutes)],
-          ["Pending", formatHours(d.summary.pending_minutes)],
+          ["Verified (approved)", formatHours(d.summary.verified_minutes)],
+          ["Pending approval", formatHours(d.summary.pending_minutes)],
+          ["Corrections requested", String(d.summary.correction_count ?? 0)],
           ["Rejected entries", String(d.summary.rejected_count)],
         ].map(([l, v]) => (
           <Card key={l}><CardContent className="p-4"><p className="text-xl font-bold text-foreground">{v}</p><p className="text-xs text-muted-foreground">{l}</p></CardContent></Card>
@@ -433,7 +520,7 @@ const Hours = ({ d }: { d: D }) => {
       <Card>
         <CardHeader>
           <CardTitle>Log hours</CardTitle>
-          <p className="text-sm text-muted-foreground">Entries stay pending until the employer for that placement approves them. Only approved hours count as verified.</p>
+          <p className="text-sm text-muted-foreground">Entries stay pending until your assigned supervisor approves them. Only approved hours count as verified.</p>
         </CardHeader>
         <CardContent>
           {eligible.length === 0 ? (
@@ -449,24 +536,7 @@ const Hours = ({ d }: { d: D }) => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="work-date">Date</Label>
-                <Input id="work-date" type="date" max={today} value={date} onChange={(e) => setDate(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="hrs">Hours</Label>
-                  <Input id="hrs" type="number" min={0} max={24} value={hrs} onChange={(e) => setHrs(e.target.value)} placeholder="0" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="mins">Minutes</Label>
-                  <Input id="mins" type="number" min={0} max={59} step={5} value={mins} onChange={(e) => setMins(e.target.value)} />
-                </div>
-              </div>
-              <div className="sm:col-span-2 space-y-1.5">
-                <Label htmlFor="desc">Tasks completed</Label>
-                <Textarea id="desc" maxLength={2000} rows={3} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="What did you work on?" />
-              </div>
+              <HourFields v={form} set={setForm} />
               <div className="sm:col-span-2">
                 <Button type="submit" disabled={busy}>{busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}Submit for approval</Button>
               </div>
