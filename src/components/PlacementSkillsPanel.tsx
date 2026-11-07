@@ -13,11 +13,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { SKILL_CATEGORIES, SkillVerification, categoryLabel } from "@/lib/skills";
 import { toast } from "sonner";
 import { BadgeCheck, Loader2, Trash2, User, Wrench } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { ReportReferenceButton } from "@/components/references";
+import FeedbackHistory from "@/components/FeedbackHistory";
 
 const schema = z.object({
   skill: z.string().trim().min(1, "Enter a skill").max(60, "Skill must be 60 characters or fewer"),
   category: z.string().min(1, "Choose a category"),
-  example: z.string().trim().max(300, "Example must be 300 characters or fewer"),
+  example: z.string().trim().min(1, "Add a directly observed example").max(300, "Example must be 300 characters or fewer"),
   observed: z.literal(true, { errorMap: () => ({ message: "Confirm you directly observed this skill" }) }),
 });
 
@@ -41,30 +44,37 @@ interface Props {
 }
 
 const PlacementSkillsPanel = ({ placementId, status, canManage, isSeeker, listedSkills }: Props) => {
+  const { user } = useAuth();
+  const [assignedSupervisor, setAssignedSupervisor] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
   const [items, setItems] = useState<SkillVerification[]>([]);
   const [state, setState] = useState<"loading" | "error" | "ok">("loading");
   const [f, setF] = useState({ skill: "", category: "", example: "", observed: false });
   const [busy, setBusy] = useState(false);
-  const canVerify = canManage && !isSeeker && (status === "active" || status === "completed");
+  const canVerify = assignedSupervisor && !isSeeker && (status === "active" || status === "completed");
 
   const load = useCallback(async () => {
+    if (!user) return;
+    const permission = await supabase.rpc("can_confirm_placement_feedback", { _placement_id: placementId, _uid: user.id });
+    setAssignedSupervisor(!permission.error && !!permission.data);
     const { data, error } = await supabase.from("skill_verifications").select("*").eq("placement_id", placementId).order("verified_at", { ascending: false });
     if (error) return setState("error");
     setItems((data ?? []) as SkillVerification[]);
     setState("ok");
-  }, [placementId]);
+  }, [placementId, user]);
   useEffect(() => { load(); }, [load]);
 
   const submit = async () => {
     const r = schema.safeParse(f);
     if (!r.success) return toast.error(r.error.issues[0].message);
     setBusy(true);
-    const { error } = await supabase.rpc("verify_placement_skill", {
+    const { error } = editing ? await supabase.rpc("update_placement_skill", { _id: editing, _example: r.data.example, _directly_observed: true }) : await supabase.rpc("verify_placement_skill", {
       _placement_id: placementId, _skill: r.data.skill, _category: r.data.category, _example: r.data.example, _directly_observed: true,
     });
     setBusy(false);
     if (error) return toast.error(error.code === "23505" ? "That skill is already confirmed for this placement" : error.message);
-    toast.success("Skill confirmed");
+    toast.success(editing ? "Example updated — public visibility reset" : "Skill confirmed privately");
+    setEditing(null);
     setF({ skill: "", category: "", example: "", observed: false });
     load();
   };
@@ -86,34 +96,35 @@ const PlacementSkillsPanel = ({ placementId, status, canManage, isSeeker, listed
       {canVerify && (
         <div className="rounded-lg border border-border p-4 space-y-3">
           <p className="font-medium text-foreground">Confirm a demonstrated skill</p>
-          <p className="text-xs text-muted-foreground">Only confirm skills you or your team directly observed during this placement. Your name and today's date are recorded.</p>
+          <p className="text-xs text-muted-foreground">Confirm only skills you personally observed during this placement.</p>
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="sv-cat">Category</Label>
-              <Select value={f.category} onValueChange={(v) => setF({ ...f, category: v })}>
+              <Select disabled={!!editing} value={f.category} onValueChange={(v) => setF({ ...f, category: v })}>
                 <SelectTrigger id="sv-cat"><SelectValue placeholder="Choose a category" /></SelectTrigger>
                 <SelectContent>{SKILL_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="sv-skill">Skill</Label>
-              <Input id="sv-skill" maxLength={60} value={f.skill} onChange={(e) => setF({ ...f, skill: e.target.value })} placeholder="e.g. Presenting to a team" />
+              <Input disabled={!!editing} id="sv-skill" maxLength={60} value={f.skill} onChange={(e) => setF({ ...f, skill: e.target.value })} placeholder="e.g. Presenting to a team" />
             </div>
           </div>
           {listedSkills.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {listedSkills.map((s) => <button key={s} type="button" onClick={() => setF({ ...f, skill: s })} className="text-xs rounded-full border border-border px-2 py-0.5 text-muted-foreground hover:text-foreground">{s}</button>)}
+              {listedSkills.map((s) => <Button disabled={!!editing} key={s} size="sm" variant="outline" onClick={() => setF({ ...f, skill: s })}>{s}</Button>)}
             </div>
           )}
           <div className="space-y-1.5">
-            <Label htmlFor="sv-ex">Brief example (optional)</Label>
+            <Label htmlFor="sv-ex">Directly observed example</Label>
             <Textarea id="sv-ex" rows={2} maxLength={300} value={f.example} onChange={(e) => setF({ ...f, example: e.target.value })} placeholder="e.g. Led the Friday stand-up and summarised actions clearly." />
           </div>
           <label className="flex items-start gap-2 text-sm text-foreground">
             <Checkbox checked={f.observed} onCheckedChange={(v) => setF({ ...f, observed: !!v })} />
             <span>I directly observed this skill being demonstrated during the placement.</span>
           </label>
-          <Button size="sm" onClick={submit} disabled={busy}>{busy && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}Confirm skill</Button>
+          <Button size="sm" onClick={submit} disabled={busy}>{busy && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}{editing ? "Save example" : "Confirm skill"}</Button>
+          {editing && <Button size="sm" variant="ghost" onClick={() => { setEditing(null); setF({ skill: "", category: "", example: "", observed: false }); }}>Cancel</Button>}
         </div>
       )}
       {canManage && !isSeeker && !canVerify && (
@@ -139,14 +150,19 @@ const PlacementSkillsPanel = ({ placementId, status, canManage, isSeeker, listed
                   {s.example && <p className="text-sm text-muted-foreground mt-0.5">“{s.example}”</p>}
                   <p className="text-xs text-muted-foreground mt-1">Verified by {s.verifier_name} · {new Date(s.verified_at).toLocaleDateString()}</p>
                 </div>
-                {isSeeker && (
+                {isSeeker && s.status === "active" && (
                   <label className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                     Public <Switch checked={s.show_on_profile} onCheckedChange={(v) => toggle(s.id, v)} aria-label={`Show ${s.skill} on public profile`} />
                   </label>
                 )}
-                {canManage && !isSeeker && (
+                {canVerify && s.verified_by === user?.id && s.status === "active" && (
+                  <Button size="sm" variant="ghost" onClick={() => { setEditing(s.id); setF({ skill: s.skill, category: s.category, example: s.example ?? "", observed: false }); }}>Edit example</Button>
+                )}
+                {canVerify && s.verified_by === user?.id && s.status === "active" && (
                   <Button size="icon" variant="ghost" aria-label={`Remove ${s.skill}`} onClick={() => revoke(s.id)}><Trash2 className="w-4 h-4" /></Button>
                 )}
+                {s.status !== "active" && <Badge variant="soft">{s.status === "hidden" ? "Hidden by moderator" : "Withdrawn"}</Badge>}
+                <div className="flex flex-wrap"><ReportReferenceButton referenceId={s.id} skill /><FeedbackHistory resourceId={s.id} /></div>
               </div>
             ))}
             {isSeeker && status !== "completed" && <p className="text-xs text-muted-foreground">Verified skills appear on your public profile once this placement is completed.</p>}

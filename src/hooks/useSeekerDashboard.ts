@@ -209,7 +209,7 @@ export const useSeekerDashboard = () => {
         const refs = await supabase.from("placement_references").select(REFERENCE_SELECT).in("placement_id", plcIds).order("created_at", { ascending: false });
         if (refs.error) throw refs.error;
         setReferences((refs.data ?? []) as PlacementReference[]);
-        const sv = await supabase.from("skill_verifications").select("*").eq("user_id", user.id).order("verified_at", { ascending: false });
+        const sv = await supabase.from("skill_verifications").select("*").eq("user_id", user.id).eq("status", "active").order("verified_at", { ascending: false });
         if (sv.error) throw sv.error;
         setSkillVerifications((sv.data ?? []) as SkillVerification[]);
       } else { setReferences([]); setSkillVerifications([]); }
