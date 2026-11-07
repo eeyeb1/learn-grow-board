@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatHours, HourEntry, Placement, PLACEMENT_SELECT } from "@/hooks/useSeekerDashboard";
 import { StatusBadge } from "@/pages/Dashboard";
 import PlacementSkillsPanel from "@/components/PlacementSkillsPanel";
-import { EmployerReferencePanel } from "@/components/references";
+import { EmployerReferencePanel, SeekerPlacementReferences } from "@/components/references";
 import CertificatePanel from "@/components/CertificatePanel";
 import { PlacementPortfolioPanel } from "@/components/portfolio";
 import { toast } from "sonner";
@@ -200,6 +200,7 @@ const PlacementDetail = () => {
                   {placement.employer_feedback ? (
                     <p className="text-foreground whitespace-pre-line">{placement.employer_feedback}</p>
                   ) : <p className="text-sm text-muted-foreground">No feedback from the employer yet.</p>}
+                  {isSeeker ? <SeekerPlacementReferences placementId={placement.id} companyName={placement.company?.company_name} /> : placement.status === "completed" ? <EmployerReferencePanel placementId={placement.id} companyName={placement.company?.company_name} /> : <p className="text-sm text-muted-foreground mt-4">Professional references are available after completion.</p>}
                 </CardContent></Card>
               </TabsContent>
 
@@ -376,7 +377,6 @@ const ManagePanel = ({ placement, onChange }: { placement: Placement; onChange: 
         <div className="space-y-1.5"><Label htmlFor="lo">Learning objectives (one per line)</Label><Textarea id="lo" rows={3} value={f.objectives} onChange={(e) => setF({ ...f, objectives: e.target.value })} /></div>
         <div className="space-y-1.5"><Label htmlFor="fb">Feedback for the seeker</Label><Textarea id="fb" rows={3} maxLength={3000} value={f.feedback} onChange={(e) => setF({ ...f, feedback: e.target.value })} /></div>
         <Button onClick={saveDetails} disabled={busy}>{busy && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}Save details</Button>
-        {placement.status === "completed" && <EmployerReferencePanel placementId={placement.id} companyName={placement.company?.company_name} />}
       </CardContent>
     </Card>
   );

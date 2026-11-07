@@ -444,7 +444,7 @@ const VerifiedSkillsCard = ({ d }: { d: D }) => {
                   <p className="font-medium text-foreground">{s.skill} <Badge variant="soft" className="ml-1">{categoryLabel(s.category)}</Badge></p>
                   <p className="text-xs text-muted-foreground">{placementName(s.placement_id)} · Verified by {s.verifier_name} on {new Date(s.verified_at).toLocaleDateString()}</p>
                 </div>
-                <Switch checked={s.show_on_profile} aria-label={`Show ${s.skill} publicly`} onCheckedChange={async (v) => { const r = await d.setSkillVisibility(s.id, v); if (r.error) toast.error("Couldn't update visibility"); }} />
+                <div className="flex flex-wrap items-center"><Switch checked={s.show_on_profile} aria-label={`Show ${s.skill} publicly`} onCheckedChange={async (v) => { const r = await d.setSkillVisibility(s.id, v); if (r.error) toast.error("Couldn't update visibility"); }} /><ReportReferenceButton referenceId={s.id} skill /></div>
               </div>
             ))}
           </div>

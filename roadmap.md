@@ -1,5 +1,10 @@
 # Roadmap
 
+## Placement skills and professional references
+- [ ] Connect assigned-supervisor feedback to existing placement and seeker screens; preserve private viewing and public opt-in.
+- [ ] Enforce observed skill examples, audited edits and dispute moderation; test permissions and consent.
+- [ ] Verify a genuine supervisor/seeker feedback round-trip (blocked until a verified company and assigned supervisor exist).
+
 ## Employer integration
 - [x] Add guided Create Opportunity form (categories, all requested fields, autosave, preview, duplicate, delete, version history, unpaid-work/supervision warnings) with server-side validation; 9 unit tests and 6 server rule checks passed.
 - [ ] Try the form with a genuine draft contributor or company admin (blocker: no verified company exists).

@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
 
   const [hrs, skills, diary] = await Promise.all([
     sb.from("hour_entries").select("application_id, minutes").eq("user_id", uid).eq("status", "approved").in("application_id", placements.map((p) => p.application_id)),
-    sb.from("skill_verifications").select("placement_id, skill, category, example").eq("user_id", uid).in("placement_id", ids),
+    sb.from("skill_verifications").select("placement_id, skill, category, example").eq("user_id", uid).eq("status", "active").in("placement_id", ids),
     diaryIds.length
       ? sb.from("placement_diary").select("id, placement_id, entry_date, content").eq("user_id", uid).in("id", diaryIds).in("placement_id", ids)
       : Promise.resolve({ data: [], error: null }),

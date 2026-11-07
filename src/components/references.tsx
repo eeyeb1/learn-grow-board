@@ -11,6 +11,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Flag, Loader2, Pencil, Undo2 } from "lucide-react";
+import FeedbackHistory from "@/components/FeedbackHistory";
+import { Switch } from "@/components/ui/switch";
 
 export interface StructuredReference {
   id: string;
@@ -59,7 +61,7 @@ export const ReferenceBody = ({ r, company, showPrivate = false }: { r: Pick<Str
   );
 };
 
-export const ReportReferenceButton = ({ referenceId }: { referenceId: string }) => {
+export const ReportReferenceButton = ({ referenceId, skill = false }: { referenceId: string; skill?: boolean }) => {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [details, setDetails] = useState("");
@@ -68,7 +70,7 @@ export const ReportReferenceButton = ({ referenceId }: { referenceId: string }) 
     if (!reason) return toast.error("Choose a reason");
     if (details.length > 1000) return toast.error("Details must be 1000 characters or fewer");
     setBusy(true);
-    const { error } = await supabase.rpc("report_reference", { _id: referenceId, _reason: reason, _details: details });
+    const { error } = await supabase.rpc(skill ? "report_placement_skill" : "report_reference", { _id: referenceId, _reason: reason, _details: details });
     setBusy(false);
     if (error) return toast.error(error.message.includes("already") ? "You've already reported this reference" : "Couldn't send report");
     toast.success("Report sent to our moderators");
@@ -79,7 +81,7 @@ export const ReportReferenceButton = ({ referenceId }: { referenceId: string }) 
       <DialogTrigger asChild><Button size="sm" variant="ghost"><Flag className="w-4 h-4 mr-1" />Report</Button></DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Report this reference</DialogTitle>
+          <DialogTitle>Report this {skill ? "skill confirmation" : "reference"}</DialogTitle>
           <DialogDescription>Tell us if it is abusive or inaccurate. A moderator will review it and may hide it.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
@@ -114,10 +116,19 @@ export const EmployerReferencePanel = ({ placementId, companyName }: { placement
   const [f, setF] = useState<RefForm>(empty);
   const [editing, setEditing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [state, setState] = useState("loading");
+  const [canWrite, setCanWrite] = useState(false);
   const load = useCallback(async () => {
-    const { data } = await supabase.from("placement_references").select(REFERENCE_SELECT).eq("placement_id", placementId).order("created_at");
+    if (!user) return;
+    const [result, permission] = await Promise.all([
+      supabase.from("placement_references").select(REFERENCE_SELECT).eq("placement_id", placementId).order("created_at"),
+      supabase.rpc("can_confirm_placement_feedback", { _placement_id: placementId, _uid: user.id }),
+    ]);
+    if (result.error || permission.error) return setState("error");
+    const data = result.data;
+    setCanWrite(!!permission.data); setState("ok");
     setRefs((data ?? []) as StructuredReference[]);
-  }, [placementId]);
+  }, [placementId, user]);
   useEffect(() => { load(); }, [load]);
 
   const submit = async () => {
@@ -155,25 +166,28 @@ export const EmployerReferencePanel = ({ placementId, companyName }: { placement
           <ReferenceBody r={r} company={companyName} showPrivate />
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="soft">{r.status !== "published" ? STATUS_LABEL[r.status] : r.seeker_approved ? "Approved by seeker" : "Awaiting seeker approval"}</Badge>
-            {r.author_id === user?.id && r.status === "published" && (
+            {canWrite && r.author_id === user?.id && r.status === "published" && (
               <>
                 <Button size="sm" variant="ghost" onClick={() => startEdit(r)}><Pencil className="w-4 h-4 mr-1" />Edit</Button>
                 <Button size="sm" variant="ghost" onClick={() => withdraw(r.id)}><Undo2 className="w-4 h-4 mr-1" />Withdraw</Button>
               </>
             )}
             {r.status === "published" && <ReportReferenceButton referenceId={r.id} />}
+            <FeedbackHistory resourceId={r.id} />
           </div>
           {r.status === "hidden" && r.moderation_note && <p className="text-xs text-muted-foreground">Moderator note: {r.moderation_note}</p>}
         </div>
       ))}
-      <div className="space-y-3 rounded-lg bg-muted/40 p-4">
+      {state === "loading" && <p className="text-muted-foreground">Loading references…</p>}
+      {state === "error" && <Button variant="outline" onClick={load}>Retry references</Button>}
+      {canWrite && <div className="space-y-3 rounded-lg bg-muted/40 p-4">
         <p className="text-sm font-medium text-foreground">{editing ? "Edit reference" : "Write a reference"}</p>
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="space-y-1.5"><Label htmlFor="ra">Your name</Label><Input id="ra" maxLength={100} value={f.author_name} onChange={(e) => setF({ ...f, author_name: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="rr">Your role</Label><Input id="rr" maxLength={100} placeholder="e.g. Team lead" value={f.author_role} onChange={(e) => setF({ ...f, author_role: e.target.value })} /></div>
         </div>
         <div className="space-y-1.5"><Label htmlFor="rd">Duties carried out</Label><Textarea id="rd" rows={2} maxLength={1000} value={f.duties} onChange={(e) => setF({ ...f, duties: e.target.value })} /></div>
-        <div className="space-y-1.5"><Label htmlFor="rs">Strengths</Label><Textarea id="rs" rows={2} maxLength={1000} value={f.strengths} onChange={(e) => setF({ ...f, strengths: e.target.value })} /></div>
+        <div className="space-y-1.5"><Label htmlFor="rs">Learning and demonstrated performance</Label><Textarea id="rs" rows={2} maxLength={1000} value={f.strengths} onChange={(e) => setF({ ...f, strengths: e.target.value })} /></div>
         <div className="space-y-1.5"><Label htmlFor="rk">Skills demonstrated (optional)</Label><Textarea id="rk" rows={2} maxLength={1000} value={f.skills} onChange={(e) => setF({ ...f, skills: e.target.value })} /></div>
         <div className="space-y-1.5"><Label htmlFor="ri">Areas to develop (optional, private to the seeker)</Label><Textarea id="ri" rows={2} maxLength={1000} value={f.improvements} onChange={(e) => setF({ ...f, improvements: e.target.value })} /></div>
         <p className="text-xs text-muted-foreground">Attributed to {companyName ?? "your company"}.</p>
@@ -181,7 +195,23 @@ export const EmployerReferencePanel = ({ placementId, companyName }: { placement
           <Button size="sm" onClick={submit} disabled={busy}>{busy && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}{editing ? "Save changes" : "Submit reference"}</Button>
           {editing && <Button size="sm" variant="ghost" onClick={() => { setEditing(null); setF(empty); }}>Cancel</Button>}
         </div>
-      </div>
+      </div>}
     </div>
   );
+};
+
+export const SeekerPlacementReferences = ({ placementId, companyName }: { placementId: string; companyName?: string }) => {
+  const [refs, setRefs] = useState<StructuredReference[]>([]);
+  const [state, setState] = useState("loading");
+  const load = useCallback(async () => {
+    const { data, error } = await supabase.from("placement_references").select(REFERENCE_SELECT).eq("placement_id", placementId).order("created_at", { ascending: false });
+    if (error) return setState("error");
+    setRefs((data ?? []) as StructuredReference[]); setState("ok");
+  }, [placementId]);
+  useEffect(() => { void load(); }, [load]);
+  const approve = async (id: string, approved: boolean) => {
+    const { error } = await supabase.rpc("set_reference_approval", { _id: id, _approved: approved });
+    if (error) toast.error(error.message); else void load();
+  };
+  return <div className="space-y-4"><h2 className="font-medium">Employer references</h2>{state === "loading" ? <Loader2 className="w-4 h-4 animate-spin" /> : state === "error" ? <Button variant="outline" onClick={load}>Retry references</Button> : refs.length === 0 ? <p className="text-muted-foreground text-sm">No employer references yet.</p> : refs.map(r => <div key={r.id} className="border-b border-border py-3 space-y-3"><Badge variant="soft">Employer reference</Badge><ReferenceBody r={r} company={companyName} showPrivate /><div className="flex flex-wrap items-center gap-2">{r.status === "published" ? <label className="flex items-center gap-2 text-sm"><Switch checked={r.seeker_approved} onCheckedChange={v => approve(r.id, v)} />Approved for public profile</label> : <Badge variant="soft">{STATUS_LABEL[r.status]}</Badge>}<ReportReferenceButton referenceId={r.id} /><FeedbackHistory resourceId={r.id} /></div></div>)}</div>;
 };
