@@ -23,6 +23,7 @@ export interface SkillVerification {
   verifier_name: string;
   verified_at: string;
   show_on_profile: boolean;
+  status?: string;
 }
 
 export interface PublicVerifiedSkill {
