@@ -1599,6 +1599,50 @@ export type Database = {
           },
         ]
       }
+      placement_feedback_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          placement_id: string
+          resource_id: string
+          resource_type: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          placement_id: string
+          resource_id: string
+          resource_type: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          placement_id?: string
+          resource_id?: string
+          resource_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placement_feedback_events_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       placement_references: {
         Row: {
           author_id: string
@@ -2190,6 +2234,53 @@ export type Database = {
         }
         Relationships: []
       }
+      skill_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          skill_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          skill_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          skill_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_reports_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skill_verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       skill_verifications: {
         Row: {
           category: string
@@ -2200,6 +2291,8 @@ export type Database = {
           placement_id: string
           show_on_profile: boolean
           skill: string
+          status: string
+          updated_at: string
           user_id: string
           verified_at: string
           verified_by: string
@@ -2214,6 +2307,8 @@ export type Database = {
           placement_id: string
           show_on_profile?: boolean
           skill: string
+          status?: string
+          updated_at?: string
           user_id: string
           verified_at?: string
           verified_by: string
@@ -2228,6 +2323,8 @@ export type Database = {
           placement_id?: string
           show_on_profile?: boolean
           skill?: string
+          status?: string
+          updated_at?: string
           user_id?: string
           verified_at?: string
           verified_by?: string
@@ -2323,6 +2420,10 @@ export type Database = {
       begin_employee_email_challenge: {
         Args: { _hash: string; _uid: string }
         Returns: Json
+      }
+      can_confirm_placement_feedback: {
+        Args: { _placement_id: string; _uid: string }
+        Returns: boolean
       }
       can_manage_listing: {
         Args: { _job_id: string; _uid: string }
@@ -2438,6 +2539,10 @@ export type Database = {
         Args: { _decision: string; _note: string; _report_id: string }
         Returns: undefined
       }
+      moderate_skill_report: {
+        Args: { _decision: string; _note: string; _report_id: string }
+        Returns: undefined
+      }
       placement_action: {
         Args: { _action: string; _note?: string; _placement_id: string }
         Returns: undefined
@@ -2453,6 +2558,10 @@ export type Database = {
           _legitimacy: string
           _user_id: string
         }
+        Returns: string
+      }
+      report_placement_skill: {
+        Args: { _details: string; _id: string; _reason: string }
         Returns: string
       }
       report_reference: {
@@ -2633,6 +2742,10 @@ export type Database = {
       }
       update_placement_onboarding: {
         Args: { _data: Json; _placement_id: string }
+        Returns: undefined
+      }
+      update_placement_skill: {
+        Args: { _directly_observed: boolean; _example: string; _id: string }
         Returns: undefined
       }
       update_reference: {
