@@ -13,6 +13,7 @@ import { REFERENCE_SELECT, REPORT_REASONS, ReferenceBody, STATUS_LABEL, Structur
 import { toast } from "sonner";
 import { PortfolioRemovalQueue } from "@/components/portfolio";
 import { ShieldCheck } from "lucide-react";
+import FeedbackHistory from "@/components/FeedbackHistory";
 
 interface Report { id: string; reference_id: string; reason: string; details: string | null; status: string; created_at: string; resolution_note: string | null; resolved_at: string | null }
 
@@ -23,12 +24,23 @@ const ReferenceModeration = () => {
   const [refs, setRefs] = useState<Record<string, StructuredReference>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [state, setState] = useState<"loading" | "error" | "ok">("loading");
+  const [skillReports, setSkillReports] = useState<{ id: string; skill_id: string; reason: string; details: string | null; status: string; resolution_note: string | null }[]>([]);
+  const [skills, setSkills] = useState<Record<string, { skill: string; example: string | null; verifier_name: string; status: string }>>({});
 
   const load = useCallback(async () => {
     if (!user) return;
     const { data: admin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
     setIsAdmin(!!admin);
     if (!admin) return;
+    const sr = await supabase.from("skill_reports").select("id,skill_id,reason,details,status,resolution_note").order("created_at", { ascending: false });
+    if (sr.error) return setState("error");
+    setSkillReports(sr.data ?? []);
+    const skillIds = [...new Set((sr.data ?? []).map(r => r.skill_id))];
+    if (skillIds.length) {
+      const sk = await supabase.from("skill_verifications").select("id,skill,example,verifier_name,status").in("id", skillIds);
+      if (sk.error) return setState("error");
+      setSkills(Object.fromEntries((sk.data ?? []).map(s => [s.id, s])));
+    }
     const { data, error } = await supabase.from("reference_reports").select("*").order("created_at", { ascending: false });
     if (error) return setState("error");
     const rs = (data ?? []) as Report[];
@@ -96,6 +108,7 @@ const ReferenceModeration = () => {
             </CardContent></Card>
           );
         })}
+        {isAdmin && <section className="space-y-4"><h2 className="text-xl font-semibold text-foreground">Skill disputes</h2>{skillReports.length === 0 ? <p className="text-muted-foreground">No skill disputes.</p> : skillReports.map(r => <Card key={r.id}><CardContent className="p-6 space-y-3"><div className="flex flex-wrap gap-2"><Badge variant="soft">{reason(r.reason)}</Badge><Badge variant="soft">{r.status}</Badge></div><p className="font-medium">{skills[r.skill_id]?.skill}</p><p className="text-sm whitespace-pre-wrap">{skills[r.skill_id]?.example}</p><p className="text-xs text-muted-foreground">Verified by {skills[r.skill_id]?.verifier_name}</p>{r.details && <p className="text-sm">{r.details}</p>}<FeedbackHistory resourceId={r.skill_id} />{r.status === "open" ? <><Textarea aria-label="Skill dispute decision reason" value={notes[r.id] ?? ""} onChange={e => setNotes({ ...notes, [r.id]: e.target.value })} maxLength={1000} /><div className="flex flex-wrap gap-2">{(["upheld", "dismissed"] as const).map(d => <Button key={d} variant={d === "upheld" ? "destructive" : "outline"} onClick={async () => { const { error } = await supabase.rpc("moderate_skill_report", { _report_id: r.id, _decision: d, _note: notes[r.id] ?? "" }); if (error) toast.error(error.message); else { toast.success("Decision recorded"); void load(); } }}>{d === "upheld" ? "Uphold & hide" : "Dismiss"}</Button>)}</div></> : <p className="text-sm text-muted-foreground">{r.resolution_note}</p>}</CardContent></Card>)}</section>}
         {isAdmin && <PortfolioRemovalQueue />}
       </div>
       <Footer />
