@@ -118,7 +118,7 @@ const Dashboard = () => {
   return (
     <PageShell>
       <div className="grid lg:grid-cols-[220px_1fr] gap-6">
-        <aside className="lg:sticky lg:top-24 self-start">
+        <aside className="min-w-0 lg:sticky lg:top-24 self-start">
           <nav className="flex lg:flex-col gap-1 overflow-x-auto pb-2 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">
             {navItems.map(({ to, label, icon: Icon, end }) => (
               <NavLink

@@ -144,7 +144,7 @@ const PlacementSkillsPanel = ({ placementId, status, canManage, isSeeker, listed
          ) : (
           <div className="space-y-3">
             {items.map((s) => (
-              <div key={s.id} className="flex items-start justify-between gap-3 border-b border-border pb-3 last:border-0">
+              <div key={s.id} className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-3 last:border-0">
                 <div className="min-w-0">
                   <p className="font-medium text-foreground">{s.skill} <Badge variant="soft" className="ml-1">{categoryLabel(s.category)}</Badge></p>
                   {s.example && <p className="text-sm text-muted-foreground mt-0.5">“{s.example}”</p>}
