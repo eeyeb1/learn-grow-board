@@ -1,5 +1,9 @@
 # Roadmap
 
+## Employer completion
+- [ ] Connect authorised completion review to existing certificate issuance, privacy and correction controls.
+- [ ] Test trusted totals, permissions and outstanding-hour checks; verify available browser flow.
+
 ## Placement skills and professional references
 - [x] Connect assigned-supervisor feedback to existing placement and seeker screens; preserve private viewing and public opt-in.
 - [x] Enforce observed skill examples, audited edits and dispute moderation; 49 existing tests and six signed-in direct permission denials passed; publication filters checked.
