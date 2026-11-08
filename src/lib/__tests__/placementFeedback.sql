@@ -1,6 +1,5 @@
 -- Read-only permission checks; no live records, identities or authority are created.
 BEGIN;
-SET LOCAL ROLE authenticated;
 DO $$
 BEGIN
  IF public.can_confirm_placement_feedback('ffffffff-ffff-ffff-ffff-ffffffffffff', 'ffffffff-ffff-ffff-ffff-ffffffffffff') IS DISTINCT FROM false THEN RAISE EXCEPTION 'FAIL: unrelated reviewer gained permission'; END IF;
