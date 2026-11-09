@@ -177,6 +177,51 @@ export type Database = {
         }
         Relationships: []
       }
+      certificate_revisions: {
+        Row: {
+          actor_id: string | null
+          after_state: Json
+          before_state: Json | null
+          certificate_id: string
+          created_at: string
+          id: string
+          placement_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          after_state: Json
+          before_state?: Json | null
+          certificate_id: string
+          created_at?: string
+          id?: string
+          placement_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          after_state?: Json
+          before_state?: Json | null
+          certificate_id?: string
+          created_at?: string
+          id?: string
+          placement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificate_revisions_certificate_id_fkey"
+            columns: ["certificate_id"]
+            isOneToOne: false
+            referencedRelation: "certificates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certificate_revisions_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificates: {
         Row: {
           approved_minutes: number
@@ -2421,6 +2466,10 @@ export type Database = {
         Args: { _hash: string; _uid: string }
         Returns: Json
       }
+      can_complete_placement: {
+        Args: { _placement_id: string; _uid: string }
+        Returns: boolean
+      }
       can_confirm_placement_feedback: {
         Args: { _placement_id: string; _uid: string }
         Returns: boolean
@@ -2480,6 +2529,10 @@ export type Database = {
       employee_email_valid: { Args: { _email: string }; Returns: boolean }
       get_company_access: { Args: never; Returns: Json }
       get_my_hours_summary: { Args: never; Returns: Json }
+      get_placement_completion_review: {
+        Args: { _placement_id: string }
+        Returns: Json
+      }
       get_placement_hours: { Args: { _placement_id: string }; Returns: Json }
       get_public_company: { Args: { _company_id: string }; Returns: Json }
       get_public_profile: { Args: { _slug: string }; Returns: Json }
