@@ -1,0 +1,48 @@
+-- Run with psql -X -v ON_ERROR_STOP=1 -f src/lib/__tests__/placementCompletion.sql
+-- Disposable fixtures always roll back; no live identities or authority are retained.
+BEGIN;
+CREATE FUNCTION pg_temp.ok(c boolean,l text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF c IS DISTINCT FROM true THEN RAISE EXCEPTION 'FAIL: %',l; END IF; RAISE NOTICE 'PASS: %',l; END $$;
+CREATE FUNCTION pg_temp.as_user(n int) RETURNS void LANGUAGE sql AS $$ SELECT set_config('request.jwt.claim.sub','cc000000-0000-0000-0000-00000000000'||n,true) $$;
+INSERT INTO auth.users(id,email,email_confirmed_at) SELECT ('cc000000-0000-0000-0000-00000000000'||n)::uuid,'completion-test-'||n||'@completion.invalid',now() FROM generate_series(1,4)n;
+INSERT INTO company_profiles(id,user_id,company_name) VALUES('cc100000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000001','Completion test company');
+INSERT INTO company_verifications(company_id,status) VALUES('cc100000-0000-0000-0000-000000000001','verified');
+INSERT INTO company_memberships(company_id,user_id,role,status,approved_work_email) VALUES('cc100000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000001','company_admin','approved',null),('cc100000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000002','employee','approved','completion-test-2@completion.invalid');
+INSERT INTO employee_identities(user_id,full_name,job_title,claimed_company,work_email,work_email_verified_at) VALUES('cc000000-0000-0000-0000-000000000002','Test supervisor','Supervisor','Completion test company','completion-test-2@completion.invalid',now());
+INSERT INTO company_staff_scopes(company_id,user_id,scope) VALUES('cc100000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000002','supervisor');
+SELECT pg_temp.as_user(1);
+INSERT INTO jobs(id,company_id,title,description,status) VALUES('cc200000-0000-0000-0000-000000000001','cc100000-0000-0000-0000-000000000001','Test learning placement','Test only recorded learning placement','draft');
+-- Seeding a historical accepted record as the privileged test harness, not bypassing an app action.
+SET LOCAL session_replication_role=replica;
+INSERT INTO applications(id,user_id,job_id,status) VALUES('cc300000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000003','cc200000-0000-0000-0000-000000000001','accepted');
+INSERT INTO placements(id,application_id,user_id,job_id,company_id,status,start_date,end_date,supervisor_id,completion_checklist) VALUES('cc400000-0000-0000-0000-000000000001','cc300000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000003','cc200000-0000-0000-0000-000000000001','cc100000-0000-0000-0000-000000000001','active',current_date-7,current_date,'cc000000-0000-0000-0000-000000000002','[{"label":"Final review","done":true}]');
+SET LOCAL session_replication_role=origin;
+INSERT INTO company_resource_assignments(company_id,user_id,placement_id,permissions) VALUES('cc100000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000002','cc400000-0000-0000-0000-000000000001',ARRAY['manage']);
+SELECT pg_temp.ok(can_complete_placement('cc400000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000001'),'company admin may complete');
+SELECT pg_temp.ok(can_complete_placement('cc400000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000002'),'assigned supervisor may complete');
+SELECT pg_temp.ok(NOT can_complete_placement('cc400000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000004'),'unrelated employee denied');
+SELECT pg_temp.as_user(3); SET LOCAL ROLE authenticated;
+INSERT INTO hour_entries(id,user_id,application_id,work_date,minutes,description) VALUES('cc500000-0000-0000-0000-000000000001','cc000000-0000-0000-0000-000000000003','cc300000-0000-0000-0000-000000000001',current_date-1,120,'Observed test learning activity');
+RESET ROLE;
+SELECT pg_temp.as_user(2); SET LOCAL ROLE authenticated;
+DO $$ BEGIN BEGIN PERFORM placement_action('cc400000-0000-0000-0000-000000000001','complete'); RAISE EXCEPTION 'FAIL: pending completed'; EXCEPTION WHEN OTHERS THEN IF SQLERRM NOT LIKE '%outstanding hours%' THEN RAISE; END IF; END; END $$;
+SELECT review_hour_entry('cc500000-0000-0000-0000-000000000001','approve',null);
+SELECT placement_action('cc400000-0000-0000-0000-000000000001','complete','Final observed learning reviewed.');
+RESET ROLE;
+SELECT pg_temp.ok((SELECT status='completed' AND certificate_issued_at IS NOT NULL FROM placements WHERE id='cc400000-0000-0000-0000-000000000001'),'completion and issuance atomic');
+SELECT pg_temp.ok((SELECT approved_minutes=120 AND skills='{}'::text[] FROM certificates WHERE placement_id='cc400000-0000-0000-0000-000000000001'),'only actual 120 approved minutes; no invented skills');
+SELECT pg_temp.ok((SELECT count(*)=1 FROM certificates WHERE placement_id='cc400000-0000-0000-0000-000000000001'),'single certificate per placement');
+SELECT pg_temp.ok((SELECT count(*)>=1 FROM notifications WHERE user_id='cc000000-0000-0000-0000-000000000003' AND dedupe_key LIKE 'certificate:%'),'seeker completion certificate notice');
+SELECT set_config('test.cert',(SELECT id::text FROM certificates WHERE placement_id='cc400000-0000-0000-0000-000000000001'),true);
+SELECT set_config('test.oldcode',(SELECT code FROM certificates WHERE id=current_setting('test.cert')::uuid),true);
+SELECT pg_temp.as_user(3); SET LOCAL ROLE authenticated;
+SELECT set_certificate_privacy(current_setting('test.cert')::uuid,false,false,false,false);
+SELECT pg_temp.ok(verify_certificate(current_setting('test.oldcode'))->>'status'='private','verification preferences honoured');
+RESET ROLE;
+SELECT pg_temp.as_user(1); SET LOCAL ROLE authenticated;
+SELECT revoke_certificate(current_setting('test.cert')::uuid,'Correction test reason');
+SELECT issue_certificate('cc400000-0000-0000-0000-000000000001');
+SELECT pg_temp.ok(verify_certificate(current_setting('test.oldcode'))->>'status'='revoked','old verification reference remains revoked after correction');
+RESET ROLE;
+SELECT pg_temp.ok((SELECT code<>current_setting('test.oldcode') AND NOT verification_enabled AND NOT show_name AND NOT show_hours AND NOT show_skills FROM certificates WHERE id=current_setting('test.cert')::uuid),'new reference preserves privacy');
+SELECT pg_temp.ok((SELECT count(*)=3 FROM certificate_revisions WHERE certificate_id=current_setting('test.cert')::uuid),'issue revoke and correction snapshots retained');
+ROLLBACK;

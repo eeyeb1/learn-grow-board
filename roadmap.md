@@ -1,8 +1,9 @@
 # Roadmap
 
 ## Employer completion
-- [ ] Connect authorised completion review to existing certificate issuance, privacy and correction controls.
-- [ ] Test trusted totals, permissions and outstanding-hour checks; verify available browser flow.
+- [x] Connect authorised completion review to existing certificate issuance, privacy and correction controls; pending/correction hours block completion, zero approved hours award no certificate, reissue preserves privacy and revoked references.
+- [x] 54 unit tests and eight database structure checks passed; signed-in seeker experiences and three unrelated completion/issuance denials checked; unknown verification shows No certificate found; latest build passed.
+- [ ] Verify genuine employer completion and certificate/correction read-back (blocker: no verified company or placements exist; rolled-back fixture test cannot create auth fixtures with current database test permissions).
 
 ## Placement skills and professional references
 - [x] Connect assigned-supervisor feedback to existing placement and seeker screens; preserve private viewing and public opt-in.

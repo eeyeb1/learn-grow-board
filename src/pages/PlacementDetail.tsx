@@ -25,6 +25,7 @@ import CertificatePanel from "@/components/CertificatePanel";
 import { PlacementPortfolioPanel } from "@/components/portfolio";
 import { toast } from "sonner";
 import PlacementOnboarding from "@/components/PlacementOnboarding";
+import PlacementCompletion from "@/components/PlacementCompletion";
 import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, FolderOpen, History, Loader2, MessageSquare, Target, Trash2, UserCheck, Wrench } from "lucide-react";
 
 interface DiaryEntry { id: string; entry_date: string; content: string }
@@ -55,6 +56,7 @@ const PlacementDetail = () => {
   const [diary, setDiary] = useState<DiaryEntry[]>([]);
   const [events, setEvents] = useState<PlacementEvent[]>([]);
   const [canManage, setCanManage] = useState(false);
+  const [canComplete, setCanComplete] = useState(false);
   const [state, setState] = useState<"loading" | "error" | "missing" | "ok">("loading");
 
   const load = useCallback(async () => {
@@ -64,12 +66,13 @@ const PlacementDetail = () => {
     if (error) return setState("error");
     if (!data) return setState("missing");
     const p = data as unknown as Placement;
-    const [hrs, tot, dia, ev, mg] = await Promise.all([
+    const [hrs, tot, dia, ev, mg, cp] = await Promise.all([
       supabase.from("hour_entries").select("*").eq("application_id", p.application_id).order("work_date", { ascending: false }),
       supabase.rpc("get_placement_hours", { _placement_id: id }),
       supabase.from("placement_diary").select("id, entry_date, content").eq("placement_id", id).order("entry_date", { ascending: false }),
       supabase.from("placement_events").select("*").eq("placement_id", id).order("created_at", { ascending: false }),
       supabase.rpc("can_manage_placement", { _placement_id: id, _uid: user.id }),
+      supabase.rpc("can_complete_placement", { _placement_id: id, _uid: user.id }),
     ]);
     if (hrs.error || tot.error || ev.error) return setState("error");
     setPlacement(p);
@@ -78,6 +81,7 @@ const PlacementDetail = () => {
     setDiary((dia.data ?? []) as DiaryEntry[]);
     setEvents((ev.data ?? []) as PlacementEvent[]);
     setCanManage(!!mg.data);
+    setCanComplete(!!cp.data);
     setState("ok");
   }, [id, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -153,6 +157,7 @@ const PlacementDetail = () => {
             <PlacementOnboarding key={placement.id + placement.seeker_confirmed_at + placement.status} placement={placement} isSeeker={isSeeker} canManage={canManage} onChange={load} />
             {isSeeker && (placement.status === "upcoming" || placement.status === "active") && <SeekerDispute placementId={placement.id} onChange={load} />}
             {canManage && !isSeeker && <ManagePanel placement={placement} onChange={load} />}
+            {canComplete && placement.status === "active" && <PlacementCompletion placement={placement} onChange={load} />}
 
             <Tabs defaultValue="hours">
               <TabsList className="flex-wrap h-auto print:hidden">
@@ -209,7 +214,7 @@ const PlacementDetail = () => {
               </TabsContent>
 
               <TabsContent value="certificate">
-                <CertificatePanel placementId={placement.id} status={placement.status} isSeeker={isSeeker} canManage={canManage} onChange={load} />
+                <CertificatePanel placementId={placement.id} status={placement.status} isSeeker={isSeeker} canManage={canComplete} onChange={load} />
               </TabsContent>
 
               <TabsContent value="history">
@@ -361,7 +366,6 @@ const ManagePanel = ({ placement, onChange }: { placement: Placement; onChange: 
             <Input placeholder="Note for the history log (required to cancel, dispute or resolve)" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
             <div className="flex flex-wrap gap-2">
               {placement.status === "upcoming" && <ActionButton action="activate" label="Activate placement" desc="Requires an assigned supervisor, completed onboarding details and initial instructions, and the seeker's confirmation. The seeker can then log hours." />}
-              {placement.status === "active" && <ActionButton action="complete" label="Mark completed" desc="Requires the completion checklist. Hour logging closes and a certificate is issued using approved hours only. The end date defaults to today if not set." />}
               {placement.status === "disputed" && <ActionButton action="resolve" label="Resolve dispute" desc="The placement returns to the state it was in before the dispute." />}
               {placement.status !== "disputed" && <ActionButton action="dispute" label="Raise dispute" variant="outline" desc="The placement is paused as Disputed until a company administrator resolves it." />}
               <ActionButton action="cancel" label="Cancel placement" variant="outline" desc="The placement will be cancelled and hours can no longer be logged." />

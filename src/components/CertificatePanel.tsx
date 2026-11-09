@@ -108,7 +108,6 @@ const CertificatePanel = ({ placementId, status, isSeeker, canManage, onChange }
               </Button>
               <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(url); toast.success("Verification link copied"); }}><Copy className="w-4 h-4 mr-1" />Copy verification link</Button>
               <Link to={`/verify/${cert.code}`}><Button size="sm" variant="ghost"><ExternalLink className="w-4 h-4 mr-1" />View verification page</Button></Link>
-              {(isSeeker || canManage) && <Button size="sm" variant="ghost" onClick={issue} disabled={busy}><RefreshCw className="w-4 h-4 mr-1" />Refresh from records</Button>}
             </div>
           </CardContent>
         </Card>
@@ -142,7 +141,7 @@ const CertificatePanel = ({ placementId, status, isSeeker, canManage, onChange }
       {canManage && !cert.revoked_at && (
         <Card><CardContent className="p-6 space-y-2">
           <p className="font-medium text-foreground">Revoke certificate</p>
-          <p className="text-sm text-muted-foreground">Use this only if the certificate is wrong. Anyone checking it will see it is revoked. This is recorded in the placement history.</p>
+          <p className="text-sm text-muted-foreground">If a certificate is wrong, revoke it with a reason, correct the placement dates or observed skill records, then reissue. Approved hours cannot be changed here. Reissue creates a new verification reference, keeps the old one revoked and preserves the seeker's visibility choices and the original snapshot in history.</p>
           <AlertDialog>
             <AlertDialogTrigger asChild><Button variant="outline" size="sm" className="text-destructive"><Ban className="w-4 h-4 mr-1" />Revoke</Button></AlertDialogTrigger>
             <AlertDialogContent>

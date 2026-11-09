@@ -3,7 +3,7 @@
 - Verified hours are computed only in database functions (get_my_hours_summary, get_public_profile) from approved hour_entries; a trigger forces new/edited seeker entries to pending so the client can never self-verify.
 - Public seeker profiles are read only via the get_public_profile RPC, which returns opt-in fields only; never expose public_profiles or profiles rows to anon directly.
 - Placements are trigger-created on acceptance (one per application) and changed only via audited RPCs (placement_action, update_placement_details/onboarding, assign_placement_supervisor for Supervisor-scope members); activation needs supervisor, details, induction checklist and seeker confirmation.
-- Certificates come only from issue_certificate server snapshots; PDFs render from that row and public checks use verify_certificate with privacy flags. Why: no client totals.
+- Assigned supervisors/company admins complete after hour review; issue_certificate runs atomically. Snapshots change only via audited revoke/reissue; verification respects privacy. Why: trusted proof.
 - Portfolio files stay in the private `portfolio` bucket, served only via the `portfolio-file` function (access + magic-byte checks); removals use SECURITY DEFINER RPCs. Why: no URL leaks.
 - The cv-writer function uses the caller's RLS session to load only completed placements, approved hours, verified skills and chosen diary entries, redacting contacts. Why: grounded output, no private data to the model.
 - Seeker recommendations are rule-based and explainable (src/lib/recommendations.ts, tested with bun test): only active, unexpired listings; inputs limited to chosen preferences and feedback, never age/minor/education/personal data. Why: fair, auditable.
