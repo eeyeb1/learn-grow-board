@@ -26,7 +26,7 @@ export default function PlacementCompletion({ placement, onChange }: { placement
     const { data, error } = await supabase.rpc("get_placement_completion_review", { _placement_id: placement.id });
     setReview(data as unknown as CompletionReview | null); setFailed(!!error); setLoading(false);
   }, [placement.id]);
-  useEffect(() => { void load(); }, [load, placement.updated_at]);
+  useEffect(() => { void load(); }, [load, placement]);
   if (loading) return <Skeleton className="h-32" />;
   if (failed || !review) return <p className="text-sm text-muted-foreground">Completion review is unavailable. <Button variant="ghost" size="sm" onClick={() => void load()}>Try again</Button></p>;
   const blocker = completionBlocker(placement.status, review.outstanding_count, (placement.completion_checklist ?? []).length > 0 && (placement.completion_checklist ?? []).every(i => i.done), placement.start_date, placement.end_date ?? "", new Date().toISOString().slice(0, 10));
