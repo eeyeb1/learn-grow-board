@@ -95,6 +95,7 @@ const AppRow = ({ app, onChanged }: { app: DashApplication; onChanged?: () => vo
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {onChanged && <Button asChild size="sm" variant="ghost"><Link to={`/messages?application=${app.id}`}>Message</Link></Button>}
           {onChanged && seekerCanWithdraw(app.status) && <Button size="sm" variant="ghost" disabled={busy} onClick={() => void withdraw()}>Withdraw</Button>}
           <StatusBadge status={app.status} />
         </div>
