@@ -98,7 +98,7 @@ const PlacementDetail = () => {
         <Link to={canManage && !isSeeker ? "/archive" : "/dashboard/experiences"} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4 print:hidden">
           <ArrowLeft className="w-4 h-4" /> Back
         </Link>
-        {p && <Link to={`/messages?application=${p.application_id}`} className="ml-4 inline-flex items-center gap-1 text-sm text-primary hover:underline mb-4 print:hidden">Messages for this placement</Link>}
+        {placement?.application_id && <Link to={`/messages?application=${placement.application_id}`} className="ml-4 inline-flex items-center gap-1 text-sm text-primary hover:underline mb-4 print:hidden">Messages for this placement</Link>}
 
         {state === "loading" && <div className="space-y-4"><Skeleton className="h-40" /><Skeleton className="h-72" /></div>}
         {state === "error" && (
