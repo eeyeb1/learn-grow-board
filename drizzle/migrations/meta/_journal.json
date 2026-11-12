@@ -239,6 +239,13 @@
       "when": 1794225831851,
       "tag": "0033_placement_completion_certificates",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794484676780,
+      "tag": "0034_secure_messaging",
+      "breakpoints": true
     }
   ]
 }
