@@ -37,6 +37,7 @@ import ResetPassword from "./pages/ResetPassword";
 import CompanyVerificationReview from "./pages/CompanyVerificationReview";
 import EmployeeEmail from "./pages/EmployeeEmail";
 import PublicCompany from "./pages/PublicCompany";
+import Messages from "./pages/Messages";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,7 @@ const App = () => (
             <Route path="/archive" element={<Archive />} />
             <Route path="/saved-posts" element={<SavedPosts />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/:section" element={<Dashboard />} />
             <Route path="/hour-approvals" element={<HourApprovals />} />

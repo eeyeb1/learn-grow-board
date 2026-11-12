@@ -986,6 +986,86 @@ export type Database = {
           },
         ]
       }
+      conversation_blocks: {
+        Row: {
+          blocked_by: string
+          conversation_id: string
+          created_at: string
+          id: string
+          side: string
+        }
+        Insert: {
+          blocked_by: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          side: string
+        }
+        Update: {
+          blocked_by?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          side?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_blocks_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          application_id: string
+          company_id: string
+          created_at: string
+          id: string
+          job_id: string
+          last_message_at: string
+          seeker_id: string
+          started_by: string
+        }
+        Insert: {
+          application_id: string
+          company_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+          last_message_at?: string
+          seeker_id: string
+          started_by: string
+        }
+        Update: {
+          application_id?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          last_message_at?: string
+          seeker_id?: string
+          started_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cv_drafts: {
         Row: {
           bullets: Json
@@ -1493,12 +1573,120 @@ export type Database = {
           },
         ]
       }
+      message_reports: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          details: string | null
+          id: string
+          message_id: string
+          reason: string
+          reporter_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          message_id: string
+          reason: string
+          reporter_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          message_id?: string
+          reason?: string
+          reporter_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reports_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          hidden_at: string | null
+          hidden_by: string | null
+          id: string
+          kind: string
+          sender_detail: string | null
+          sender_id: string
+          sender_name: string
+          sender_role: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          hidden_at?: string | null
+          hidden_by?: string | null
+          id?: string
+          kind?: string
+          sender_detail?: string | null
+          sender_id: string
+          sender_name: string
+          sender_role: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          hidden_at?: string | null
+          hidden_by?: string | null
+          id?: string
+          kind?: string
+          sender_detail?: string | null
+          sender_id?: string
+          sender_name?: string
+          sender_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           application: boolean
           deadline: boolean
           feedback: boolean
           hours: boolean
+          messages: boolean
           placement: boolean
           updated_at: string
           user_id: string
@@ -1508,6 +1696,7 @@ export type Database = {
           deadline?: boolean
           feedback?: boolean
           hours?: boolean
+          messages?: boolean
           placement?: boolean
           updated_at?: string
           user_id: string
@@ -1517,6 +1706,7 @@ export type Database = {
           deadline?: boolean
           feedback?: boolean
           hours?: boolean
+          messages?: boolean
           placement?: boolean
           updated_at?: string
           user_id?: string
@@ -2279,6 +2469,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seeker_guardians: {
+        Row: {
+          created_at: string
+          guardian_name: string
+          guardian_user_id: string
+          id: string
+          relationship: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          seeker_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          guardian_name: string
+          guardian_user_id: string
+          id?: string
+          relationship: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seeker_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          guardian_name?: string
+          guardian_user_id?: string
+          id?: string
+          relationship?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          seeker_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       skill_reports: {
         Row: {
           created_at: string
@@ -2428,6 +2657,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      _message_role: {
+        Args: { _application_id: string; _uid: string }
+        Returns: string
+      }
       _new_certificate_code: { Args: never; Returns: string }
       _notify: {
         Args: {
@@ -2458,6 +2691,7 @@ export type Database = {
         Args: { _label: string; _max: number; _min: number; _v: string }
         Returns: string
       }
+      approved_guardian: { Args: { _seeker: string }; Returns: string }
       assign_placement_supervisor: {
         Args: { _note: string; _placement_id: string; _user_id: string }
         Returns: undefined
@@ -2524,10 +2758,15 @@ export type Database = {
         Args: { _placement_id: string }
         Returns: undefined
       }
+      conversation_ended_at: {
+        Args: { _application_id: string }
+        Returns: string
+      }
       duplicate_job_as_draft: { Args: { _job_id: string }; Returns: string }
       employee_domain_company: { Args: { _email: string }; Returns: string }
       employee_email_valid: { Args: { _email: string }; Returns: boolean }
       get_company_access: { Args: never; Returns: Json }
+      get_conversation: { Args: { _application_id: string }; Returns: Json }
       get_my_hours_summary: { Args: never; Returns: Json }
       get_placement_completion_review: {
         Args: { _placement_id: string }
@@ -2582,12 +2821,22 @@ export type Database = {
         Args: { _company_id: string }
         Returns: Json
       }
+      list_message_reports: { Args: never; Returns: Json }
       list_my_company_invitations: { Args: never; Returns: Json }
+      list_my_conversations: { Args: never; Returns: Json }
       list_placement_supervisors: {
         Args: { _placement_id: string }
         Returns: Json
       }
       list_platform_job_reviews: { Args: never; Returns: Json }
+      message_staff_access: {
+        Args: { _application_id: string; _uid: string }
+        Returns: boolean
+      }
+      moderate_message_report: {
+        Args: { _decision: string; _note: string; _report_id: string }
+        Returns: undefined
+      }
       moderate_reference_report: {
         Args: { _decision: string; _note: string; _report_id: string }
         Returns: undefined
@@ -2604,6 +2853,7 @@ export type Database = {
         Args: { _approve: boolean; _note: string; _request_id: string }
         Returns: undefined
       }
+      purge_expired_messages: { Args: never; Returns: number }
       recover_company_admin: {
         Args: {
           _authority: string
@@ -2611,6 +2861,10 @@ export type Database = {
           _legitimacy: string
           _user_id: string
         }
+        Returns: string
+      }
+      report_message: {
+        Args: { _details: string; _message_id: string; _reason: string }
         Returns: string
       }
       report_placement_skill: {
@@ -2629,6 +2883,10 @@ export type Database = {
           _pathway: string
           _website?: string
         }
+        Returns: string
+      }
+      request_guardian: {
+        Args: { _email: string; _name: string; _relationship: string }
         Returns: string
       }
       request_job_publication: { Args: { _job_id: string }; Returns: string }
@@ -2669,6 +2927,10 @@ export type Database = {
         Args: { _decision: string; _note: string; _request_id: string }
         Returns: undefined
       }
+      review_guardian: {
+        Args: { _decision: string; _id: string; _note: string }
+        Returns: undefined
+      }
       review_hour_entry: {
         Args: { _decision: string; _entry_id: string; _note: string }
         Returns: undefined
@@ -2706,6 +2968,11 @@ export type Database = {
           _work_email: string
         }
         Returns: undefined
+      }
+      seeker_safeguarded: { Args: { _uid: string }; Returns: boolean }
+      send_message: {
+        Args: { _application_id: string; _body: string; _kind?: string }
+        Returns: string
       }
       set_application_status: {
         Args: { _application_id: string; _reason?: string; _status: string }
@@ -2751,6 +3018,10 @@ export type Database = {
           _scope: string
           _user_id: string
         }
+        Returns: undefined
+      }
+      set_conversation_block: {
+        Args: { _application_id: string; _blocked: boolean }
         Returns: undefined
       }
       set_job_listing_state: {

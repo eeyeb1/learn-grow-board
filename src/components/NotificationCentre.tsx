@@ -11,15 +11,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications, NotificationRow } from "@/hooks/useNotifications";
 
-const CATEGORIES: { key: Exclude<NotificationRow["category"], 'company'>; label: string; text: string }[] = [
+const CATEGORIES: { key: Exclude<NotificationRow["category"], 'company' | 'message'> | "messages"; label: string; text: string }[] = [
   { key: "application", label: "Application updates", text: "When an employer changes the status of an application." },
   { key: "placement", label: "Placements", text: "When you're accepted or a placement starts, completes or is cancelled." },
   { key: "hours", label: "Hour reviews", text: "Approvals, rejections and correction requests from your supervisor." },
   { key: "feedback", label: "Feedback & references", text: "When an employer adds feedback or writes a reference." },
   { key: "deadline", label: "Placement deadlines", text: "Reminders before a placement starts or ends." },
+  { key: "messages", label: "Messages", text: "When a company or applicant sends you a message." },
 ];
-type Prefs = Record<Exclude<NotificationRow["category"], 'company'>, boolean>;
-const DEFAULT_PREFS: Prefs = { application: true, placement: true, hours: true, feedback: true, deadline: true };
+type PrefKey = Exclude<NotificationRow["category"], 'company' | 'message'> | "messages";
+type Prefs = Record<PrefKey, boolean>;
+const DEFAULT_PREFS: Prefs = { application: true, placement: true, hours: true, feedback: true, deadline: true, messages: true };
 
 const NotificationCentre = () => {
   const { user } = useAuth();
@@ -32,7 +34,7 @@ const NotificationCentre = () => {
   useEffect(() => {
     if (!user) return;
     supabase.from("notification_preferences").select("*").eq("user_id", user.id).maybeSingle().then(({ data }) => {
-      setPrefs(data ? { application: data.application, placement: data.placement, hours: data.hours, feedback: data.feedback, deadline: data.deadline } : DEFAULT_PREFS);
+      setPrefs(data ? { application: data.application, placement: data.placement, hours: data.hours, feedback: data.feedback, deadline: data.deadline, messages: data.messages } : DEFAULT_PREFS);
     });
   }, [user]);
 

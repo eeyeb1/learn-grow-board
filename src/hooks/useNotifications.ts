@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export type NotificationRow = {
   id: string;
-  category: "application" | "placement" | "hours" | "feedback" | "deadline" | "company";
+  category: "application" | "placement" | "hours" | "feedback" | "deadline" | "company" | "message";
   title: string;
   preview: string;
   body: string | null;
