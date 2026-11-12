@@ -25,7 +25,7 @@ import Recommendations from "@/components/Recommendations";
 import NotificationCentre from "@/components/NotificationCentre";
 import {
   LayoutDashboard, Search, FileText, Award, Clock, Globe, Settings as SettingsIcon,
-  CheckCircle2, FolderOpen, Briefcase, Share2, Hourglass, Heart, AlertCircle, ArrowRight, Trash2, Copy, Loader2, ExternalLink, Sparkles, Compass, Bell,
+  CheckCircle2, FolderOpen, Briefcase, Share2, Hourglass, Heart, AlertCircle, ArrowRight, Trash2, Copy, Loader2, ExternalLink, Sparkles, Compass, Bell, MessageSquare,
 } from "lucide-react";
 
 type Section = "overview" | "applications" | "experiences" | "hours" | "portfolio" | "cv" | "profile" | "recommended" | "notifications";
@@ -35,6 +35,7 @@ const navItems = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/dashboard/recommended", label: "Recommended", icon: Compass },
   { to: "/dashboard/notifications", label: "Notifications", icon: Bell },
+  { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/jobs", label: "Find Experience", icon: Search },
   { to: "/dashboard/applications", label: "Applications", icon: FileText },
   { to: "/dashboard/experiences", label: "My Experiences", icon: Award },
