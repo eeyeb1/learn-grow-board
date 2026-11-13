@@ -1,5 +1,9 @@
 # Roadmap
 
+## Secure messaging
+- [x] Application/placement-bound messaging, notifications, blocking, reporting, moderation, guardian-copied under-18 contact, 2-month retention, anti-spam checks; 6 new tests; unauthorised reads/sends/moderation denied.
+- [ ] Verify a real seeker/staff/guardian conversation (blocker: no verified company, application or moderator exists).
+
 ## Employer completion
 - [x] Connect authorised completion review to existing certificate issuance, privacy and correction controls; pending/correction hours block completion, zero approved hours award no certificate, reissue preserves privacy and revoked references.
 - [x] 54 unit tests and eight database structure checks passed; signed-in seeker experiences and three unrelated completion/issuance denials checked; unknown verification shows No certificate found; latest build passed.
