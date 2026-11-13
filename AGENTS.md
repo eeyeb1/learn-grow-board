@@ -1,4 +1,4 @@
-- Page-entry scroll handling lives in the router; job-filter updates keep position.
+- Page-entry scroll lives in the router; job-filter updates keep position.
 - Company page settings are private and admin-edited through save_company_page; public reads use get_public_company's whitelist and completed/approved impact with a five-participant privacy threshold. Logos use private storage, PNG re-encoding and publication-scoped signed reads. Why: no operational or small-cohort leaks.
 - Verified hours are computed only in database functions (get_my_hours_summary, get_public_profile) from approved hour_entries; a trigger forces new/edited seeker entries to pending so the client can never self-verify.
 - Public seeker profiles are read only via the get_public_profile RPC, which returns opt-in fields only; never expose public_profiles or profiles rows to anon directly.
