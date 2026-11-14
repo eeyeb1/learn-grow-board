@@ -1,5 +1,9 @@
 # Roadmap
 
+## Company analytics
+- [ ] Add role-scoped, aggregate-only analytics with listing/department/date filters, small-sample safeguards and privacy-safe CSV export.
+- [ ] Verify direct access denials, export and responsive states; genuine company activity remains dependent on verified company records.
+
 ## Secure messaging
 - [x] Application/placement-bound messaging, notifications, blocking, reporting, moderation, guardian-copied under-18 contact, 2-month retention, anti-spam checks; 6 new tests; unauthorised reads/sends/moderation denied.
 - [ ] Verify a real seeker/staff/guardian conversation (blocker: no verified company, application or moderator exists).
