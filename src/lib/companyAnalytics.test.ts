@@ -28,6 +28,7 @@ describe('company analytics safeguards', () => {
     expect(csv).toContain('"Applications","Acceptance rate","Not available"');
     expect(csv).toContain('"Opportunities","Views","Not available"');
     expect(csv).toContain('"Placements","Completion rate","80%"');
+    expect(csv).toContain('"Skill category","Category breakdown","Not available","Hidden until a category represents at least five distinct seekers"');
   });
 
   test('CSV is aggregate-only and cannot contain seeker identifiers from the analytics result', () => {

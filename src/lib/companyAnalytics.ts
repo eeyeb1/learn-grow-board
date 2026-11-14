@@ -98,7 +98,7 @@ export function companyAnalyticsCsv(data: CompanyAnalytics, companyName: string)
     ['Supervisor review', 'Median wait', data.review_wait.median_hours === null ? null : waitLabel(data.review_wait.median_hours), 'Median elapsed wait for current pending entries'],
     ['Supervisor review', 'Oldest wait', data.review_wait.oldest_hours === null ? null : waitLabel(data.review_wait.oldest_hours), 'Longest elapsed wait among current pending entries'],
     ['Skills', 'Active verifications', data.skills.verifications, 'Active supervisor-confirmed skills by verification date'],
-    ...data.skills.categories.map(c => ['Skill category', c.category, c.verifications, `At least five distinct seekers; ${c.seekers} seekers in this category`]),
+    ...(data.skills.categories.length ? data.skills.categories.map(c => ['Skill category', c.category, c.verifications, `At least five distinct seekers; ${c.seekers} seekers in this category`] as (string | number | null)[]) : [['Skill category', 'Category breakdown', data.skills.verifications ? null : 'No verified skills', data.skills.verifications ? 'Hidden until a category represents at least five distinct seekers' : 'No active supervisor-verified skills in this selection']]),
     [],
     ['Privacy', 'Contents', 'Aggregates only', 'No seeker names, user IDs, contact details, statements, individual dates or row-level records'],
     ['Privacy', 'Small samples', 'Rates hidden below five', 'Skill categories require at least five distinct seekers'],
