@@ -246,6 +246,13 @@
       "when": 1794484676780,
       "tag": "0034_secure_messaging",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794665805564,
+      "tag": "0035_company_privacy_safe_analytics",
+      "breakpoints": true
     }
   ]
 }
