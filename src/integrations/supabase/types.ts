@@ -2766,6 +2766,16 @@ export type Database = {
       employee_domain_company: { Args: { _email: string }; Returns: string }
       employee_email_valid: { Args: { _email: string }; Returns: boolean }
       get_company_access: { Args: never; Returns: Json }
+      get_company_analytics: {
+        Args: {
+          _company_id: string
+          _department?: string
+          _from?: string
+          _job_id?: string
+          _to?: string
+        }
+        Returns: Json
+      }
       get_conversation: { Args: { _application_id: string }; Returns: Json }
       get_my_hours_summary: { Args: never; Returns: Json }
       get_placement_completion_review: {

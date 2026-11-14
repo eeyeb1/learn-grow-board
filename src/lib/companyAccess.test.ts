@@ -17,6 +17,14 @@ describe('Company authentication destinations', () => {
     expect(workspacePermitted('draft_only', 'employee')).toBe(false);
     expect(workspacePermitted('draft_only', 'dashboard')).toBe(false);
   });
+  test('Company admins and approved employees can open analytics', () => {
+    expect(workspacePermitted('company_admin', 'analytics')).toBe(true);
+    expect(workspacePermitted('employee', 'analytics')).toBe(true);
+  });
+  test('Draft contributors and pending members cannot open analytics', () => {
+    expect(workspacePermitted('draft_only', 'analytics')).toBe(false);
+    expect(workspacePermitted('membership_pending', 'analytics')).toBe(false);
+  });
   for (const state of ['email_pending', 'company_pending', 'membership_pending', 'access_denied']) {
     test(`${state} cannot enter any unrestricted workspace`, () => {
       expect(companyDestination(context(state))).toBe('/employer/status?company=company-a');
