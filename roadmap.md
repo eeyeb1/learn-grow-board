@@ -2,7 +2,7 @@
 
 ## Company analytics
 - [x] Add role-scoped, aggregate-only analytics with listing/department/date filters, small-sample safeguards and privacy-safe CSV export.
-- [x] Verify real direct access denial, database grants/authority checks, empty-state UI, CSV download and responsive layout; 65 unit tests and latest build passed.
+- [x] Verify real direct access denial, database grants/authority checks, empty-state UI, CSV download and responsive layout; 67 unit tests and latest build passed.
 - [ ] Verify populated metrics against genuine company activity (blocker: no verified company, placements, hours or verified skills exist).
 
 ## Secure messaging
