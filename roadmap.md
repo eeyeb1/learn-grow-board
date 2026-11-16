@@ -1,5 +1,12 @@
 # Roadmap
 
+## Platform safety
+- [ ] Require workplace, hours, payment, supervision, safeguarding-contact and under-18 listing details; route unpaid-work and other safety flags through documented human review before publication.
+- [ ] Add private listing/employer/employee/seeker/safety reporting, urgent admin escalation, anti-retaliation wording and append-only investigation history.
+- [ ] Enforce under-18 application and placement restrictions while preserving guardian-supervised messaging and existing privacy controls.
+- [ ] Add employer conduct/suspension guidance and test validation, direct access denial, report submission/read-back and responsive screens.
+- [ ] Verify genuine admin investigation and flagged-listing publication decisions (blocker: no platform administrator or verified company exists).
+
 ## Company analytics
 - [x] Add role-scoped, aggregate-only analytics with listing/department/date filters, small-sample safeguards and privacy-safe CSV export.
 - [x] Verify real direct access denial, database grants/authority checks, empty-state UI, CSV download and responsive layout; 67 unit tests and latest build passed.
