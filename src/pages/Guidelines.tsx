@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import SafetyReportButton, { MySafetyReports } from "@/components/SafetyReportDialog";
 import {
   HeartHandshake,
   BadgeCheck,
@@ -36,6 +36,11 @@ const listingMustHaves = [
   "Requirements",
   "Whether it is paid or unpaid",
   "Application deadline where applicable",
+  "Learning objectives and expected tasks",
+  "Named supervision and safeguarding contact",
+  "Workplace arrangements and expected hours",
+  "Payment and legitimate expense arrangements",
+  "Eligibility and whether under-18s can participate with safeguards",
 ];
 
 const scamBehaviours = [
@@ -107,16 +112,6 @@ const SectionHeading = ({
 );
 
 const Guidelines = () => {
-  const { toast } = useToast();
-
-  const handleReport = () => {
-    toast({
-      title: "Thank you for helping keep the community safe",
-      description:
-        "In-app reporting is coming soon. If something needs urgent attention, please contact us directly.",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -302,8 +297,20 @@ const Guidelines = () => {
             </Card>
           </div>
 
-          {/* Reporting */}
+          {/* Employer conduct and suspension */}
           <div>
+            <SectionHeading icon={Briefcase} title="Employer Code of Conduct." />
+            <Card className="p-6 border-border/50 space-y-4 text-sm text-muted-foreground leading-relaxed">
+              <p>Employers must provide genuine learning objectives, appropriate supervision, safe workplace arrangements, clear hours and accurate pay or expense information. They must name a safeguarding contact, make reasonable adjustments, and never pressure a participant into unsafe or unpaid productive work.</p>
+              <p>Under-18 participation needs age-appropriate tasks, communication and placement arrangements. A platform-approved parent or guardian is required before an under-18 placement starts. Selecting “safeguarded” on a listing is not legal approval or a substitute for an employer's own safeguarding assessment.</p>
+              <p>Retaliation against anyone who raises a good-faith concern is prohibited. Employers must not ask reporters to withdraw concerns, threaten applications or hours, or attempt to identify confidential witnesses.</p>
+              <p><strong className="text-foreground">Grounds for restriction or suspension include:</strong> suspected exploitation or unlawful unpaid work, unsafe tasks, harassment or discrimination, misleading listings, mishandling personal data, bypassing approvals, retaliation, or inadequate supervision or safeguarding. Action is proportionate to risk and recorded by authorised reviewers.</p>
+              <p>Platform checks are not a guarantee of UK employment-law, safeguarding or health-and-safety compliance. Unclear employment status, minimum-wage duties, working-time limits, child-employment rules or safeguarding risks require manual assessment and, where appropriate, qualified advice or referral to the relevant authority.</p>
+            </Card>
+          </div>
+
+          {/* Reporting */}
+          <div id="reporting" className="scroll-mt-24">
             <SectionHeading icon={Flag} title="See Something Wrong? Tell Us." />
             <Card className="p-6 border-border/50">
               <p className="text-muted-foreground leading-relaxed mb-5">
@@ -318,10 +325,9 @@ const Guidelines = () => {
                   </div>
                 ))}
               </div>
-              <Button onClick={handleReport} className="w-full sm:w-auto">
-                <Flag className="w-4 h-4 mr-2" />
-                Report a Problem
-              </Button>
+              <SafetyReportButton subjectType="safety_concern" label="Report a Problem" className="w-full sm:w-auto" />
+              <p className="text-xs text-muted-foreground mb-4">For immediate danger in the UK, call 999. Reports are not monitored as an emergency service.</p>
+              <MySafetyReports />
             </Card>
           </div>
 
@@ -368,10 +374,7 @@ const Guidelines = () => {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" onClick={handleReport}>
-              <Flag className="w-4 h-4 mr-2" />
-              Report a Problem
-            </Button>
+            <SafetyReportButton subjectType="safety_concern" label="Report a Problem" size="lg" />
           </div>
           <p className="text-xs text-muted-foreground mt-10">
             These Community Guidelines should be read alongside our Terms &

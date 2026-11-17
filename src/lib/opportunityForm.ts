@@ -14,6 +14,8 @@ export interface OpportunityForm {
   estimated_hours: string; openings: string; audience: string; eligibility: string;
   objectives: string; activities: string; supervision: string;
   payment_details: string; expense_details: string; closing_date: string; accessibility_notes: string;
+  safeguarding_contact: string; workplace_arrangements: string;
+  under_18_policy: '' | 'safeguarded' | 'adults_only';
   no_productive_work_confirmed: boolean;
 }
 
@@ -21,7 +23,8 @@ export const emptyForm: OpportunityForm = {
   title: '', category: '', department: '', location_type: 'onsite', location: '', remote_preference: '',
   schedule: '', hours_per_week: '', start_date: '', end_date: '', estimated_hours: '', openings: '1',
   audience: '', eligibility: '', objectives: '', activities: '', supervision: '',
-  payment_details: '', expense_details: '', closing_date: '', accessibility_notes: '', no_productive_work_confirmed: false,
+  payment_details: '', expense_details: '', closing_date: '', accessibility_notes: '',
+  safeguarding_contact: '', workplace_arrangements: '', under_18_policy: '', no_productive_work_confirmed: false,
 };
 
 const lines = (s: string) => s.split('\n').map(l => l.trim()).filter(Boolean);
@@ -47,6 +50,10 @@ export function validate(f: OpportunityForm, today = new Date().toISOString().sl
   if (h === null || !Number.isFinite(h) || h <= 0 || h > 2000) e.estimated_hours = 'Enter estimated hours between 1 and 2000.';
   const o = num(f.openings);
   if (o === null || !Number.isInteger(o) || o < 1 || o > 100) e.openings = 'Enter a whole number of openings from 1 to 100.';
+  if (!f.hours_per_week.trim()) e.hours_per_week = 'Describe the expected hours per week.';
+  if (f.workplace_arrangements.trim().length < 10) e.workplace_arrangements = 'Describe the workplace arrangements, including where and how work is organised.';
+  if (f.safeguarding_contact.trim().length < 10) e.safeguarding_contact = 'Name a safeguarding contact and explain how to raise a concern.';
+  if (!f.under_18_policy) e.under_18_policy = 'Choose whether under-18s can take part with safeguards.';
   if (f.audience.trim().length < 3) e.audience = 'Describe the intended audience.';
   if (f.eligibility.trim().length < 3) e.eligibility = 'Describe eligibility.';
   if (!lines(f.objectives).length) e.objectives = 'Add at least one learning objective.';
@@ -77,6 +84,7 @@ export function toRow(f: OpportunityForm) {
     start_date: f.start_date, end_date: f.end_date, estimated_hours: num(f.estimated_hours), openings: num(f.openings),
     audience: f.audience, eligibility: f.eligibility, payment_details: f.payment_details, expense_details: f.expense_details,
     accessibility_notes: f.accessibility_notes, no_productive_work_confirmed: f.no_productive_work_confirmed,
+    safeguarding_contact: f.safeguarding_contact, workplace_arrangements: f.workplace_arrangements, under_18_policy: f.under_18_policy,
   };
   for (const k of ['estimated_hours', 'openings']) if (details[k] !== null && !Number.isFinite(details[k] as number)) details[k] = null;
   return {
@@ -102,6 +110,8 @@ export function fromRow(r: Row): OpportunityForm {
     audience: s('audience'), eligibility: s('eligibility'), objectives: (r.what_you_will_learn ?? []).join('\n'), activities: r.description,
     supervision: r.mentorship_details ?? '', payment_details: s('payment_details'), expense_details: s('expense_details'),
     closing_date: r.expires_at ? r.expires_at.slice(0, 10) : '', accessibility_notes: s('accessibility_notes'),
+    safeguarding_contact: s('safeguarding_contact'), workplace_arrangements: s('workplace_arrangements'),
+    under_18_policy: (['safeguarded', 'adults_only'].includes(s('under_18_policy')) ? s('under_18_policy') : '') as OpportunityForm['under_18_policy'],
     no_productive_work_confirmed: d.no_productive_work_confirmed === true,
   };
 }

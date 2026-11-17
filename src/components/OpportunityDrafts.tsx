@@ -187,7 +187,8 @@ function OpportunityEditor({ companyId, companyName, initialId, initial, returne
         {text('location', 'Location', { required: form.location_type !== 'remote', hint: 'Town or area. Avoid private addresses.' })}
         {text('remote_preference', 'Remote preference details', { hint: 'For example: two days in the office, the rest remote.' })}
         {text('schedule', 'Estimated schedule', { required: true, hint: 'For example: Tuesdays and Thursdays, 10am–3pm.' })}
-        {text('hours_per_week', 'Hours per week')}
+        {text('hours_per_week', 'Hours per week', { required: true, hint: 'State the expected weekly commitment, including any variation.' })}
+        {text('workplace_arrangements', 'Workplace arrangements', { area: true, required: true, hint: 'Explain where participants work, how remote or on-site time is organised, breaks, equipment and who coordinates the day.' })}
         <div className="grid gap-4 sm:grid-cols-3">{text('start_date', 'Start date', { type: 'date', required: true })}{text('end_date', 'End date', { type: 'date', required: true })}{text('closing_date', 'Applications close', { type: 'date', required: true })}</div>
         <div className="grid gap-4 sm:grid-cols-2">{text('estimated_hours', 'Estimated total hours', { type: 'number', required: true })}{text('openings', 'Number of openings', { type: 'number', required: true })}</div>
       </Step>
@@ -209,6 +210,12 @@ function OpportunityEditor({ companyId, companyName, initialId, initial, returne
         {text('payment_details', isPaid(form.category) ? 'Pay rate and arrangements' : 'Payment (optional)', { area: true, required: isPaid(form.category), hint: 'Rate, how it is calculated, and when it is paid.' })}
         {text('expense_details', 'Expense reimbursement', { area: true, hint: 'Legitimate costs you will cover, such as travel or lunch, and how to claim them.' })}
         {(form.category === 'shadowing' || form.category === 'learning_project') && <div className="space-y-2"><label className="flex items-start gap-3 text-sm"><Checkbox checked={form.no_productive_work_confirmed} onCheckedChange={v => set('no_productive_work_confirmed', v === true)} aria-invalid={showErrors && !!errors.no_productive_work_confirmed} /><span>I confirm participants will not do work the company would otherwise pay someone to do. Any tasks are educational exercises for their learning.</span></label>{err('no_productive_work_confirmed')}</div>}
+      </Step>
+
+      <Step n={6} title="Safeguarding and age-appropriate participation">
+        {text('safeguarding_contact', 'Safeguarding contact and reporting route', { area: true, required: true, hint: 'Name a role or responsible person and explain how a participant can raise a concern. Do not publish a personal home address or private phone number.' })}
+        <div className="space-y-2"><Label htmlFor="opp-under_18_policy">Can under-18s take part?<span className="text-destructive"> *</span></Label><Select value={form.under_18_policy} onValueChange={v => set('under_18_policy', v as OpportunityForm['under_18_policy'])}><SelectTrigger id="opp-under_18_policy" aria-invalid={showErrors && !!errors.under_18_policy}><SelectValue placeholder="Choose an age-appropriate policy" /></SelectTrigger><SelectContent><SelectItem value="adults_only">Adults only (18+)</SelectItem><SelectItem value="safeguarded">Under-18s may take part with safeguards</SelectItem></SelectContent></Select>{err('under_18_policy')}<p className="text-xs text-muted-foreground">Under-18 applications are limited to safeguarded listings. Placement activation also requires detailed arrangements and a platform-approved parent or guardian. Selecting this option is not a legal or safeguarding approval.</p></div>
+        <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">Listings that suggest unpaid productive work, unclear supervision, extended unpaid hours or discriminatory eligibility are held for documented human review. These checks do not establish UK employment-law or safeguarding compliance; obtain qualified advice where needed.</div>
       </Step>
 
       {warns.length > 0 && <div className="space-y-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4" role="note" aria-label="Warnings">{warns.map(w => <p key={w} className="flex gap-2 text-sm"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />{w}</p>)}</div>}
@@ -235,6 +242,7 @@ export function OpportunityPreview({ form, companyName }: { form: OpportunityFor
     {list(form.activities).length > 0 && <div><h4 className="text-sm font-semibold">What you will do</h4><ul className="ml-5 list-disc text-sm text-muted-foreground">{list(form.activities).map(l => <li key={l}>{l}</li>)}</ul></div>}
     <Row label="Supervision" value={form.supervision} /><Row label="Who it is for" value={form.audience} /><Row label="Eligibility" value={form.eligibility} />
     <Row label="Payment" value={form.payment_details || (cat && !cat.paid ? 'Unpaid educational experience' : '')} /><Row label="Expenses" value={form.expense_details} /><Row label="Accessibility" value={form.accessibility_notes} />
+    <Row label="Workplace arrangements" value={form.workplace_arrangements} /><Row label="Safeguarding contact" value={form.safeguarding_contact} /><Row label="Age-appropriate participation" value={form.under_18_policy === 'safeguarded' ? 'Under-18s may take part with the stated safeguards and an approved guardian.' : form.under_18_policy === 'adults_only' ? 'Adults only (18+)' : ''} />
   </div>;
 }
 

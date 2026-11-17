@@ -20,5 +20,12 @@ export const transformDbJobToDetail = (job: Job): JobDetail => ({
   requirements: job.requirements || [],
   whatYouWillLearn: job.what_you_will_learn || [],
   mentorshipDetails: job.mentorship_details || "Mentorship details not specified",
+  companyId: job.company_id,
+  workplaceArrangements: typeof job.opportunity_details?.workplace_arrangements === 'string' ? job.opportunity_details.workplace_arrangements : undefined,
+  safeguardingContact: typeof job.opportunity_details?.safeguarding_contact === 'string' ? job.opportunity_details.safeguarding_contact : undefined,
+  paymentDetails: typeof job.opportunity_details?.payment_details === 'string' ? job.opportunity_details.payment_details : undefined,
+  expenseDetails: typeof job.opportunity_details?.expense_details === 'string' ? job.opportunity_details.expense_details : undefined,
+  eligibility: typeof job.opportunity_details?.eligibility === 'string' ? job.opportunity_details.eligibility : undefined,
+  under18Policy: job.opportunity_details?.under_18_policy === 'safeguarded' || job.opportunity_details?.under_18_policy === 'adults_only' ? job.opportunity_details.under_18_policy : undefined,
 });
 

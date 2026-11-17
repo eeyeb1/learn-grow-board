@@ -253,6 +253,55 @@
       "when": 1794665805564,
       "tag": "0035_company_privacy_safe_analytics",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794928412611,
+      "tag": "0036_platform_listing_safety_review",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794928421603,
+      "tag": "0037_under18_application_placement_safeguards",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794928432222,
+      "tag": "0038_complete_under18_application_placement_rules",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794928462266,
+      "tag": "0039_private_safety_report_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794928498829,
+      "tag": "0040_submit_private_safety_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794928509906,
+      "tag": "0041_safety_investigation_queue",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1794928561025,
+      "tag": "0042_application_safety_report_subject",
+      "breakpoints": true
     }
   ]
 }

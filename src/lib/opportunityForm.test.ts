@@ -5,7 +5,9 @@ import { emptyForm, validate, warnings, toRow, fromRow, type OpportunityForm } f
 const good: OpportunityForm = { ...emptyForm, title: 'Office shadowing week', category: 'shadowing', location: 'Leeds', schedule: 'Mon–Fri 10–3',
   start_date: '2030-06-01', end_date: '2030-06-05', closing_date: '2030-05-20', estimated_hours: '25', openings: '2', audience: 'Students 16+',
   eligibility: 'Living near Leeds', objectives: 'Understand how a design studio runs', activities: 'Observe team meetings and complete a practice brief set for learning.',
-  supervision: 'Named mentor (senior designer) supervises daily with a check-in each morning.', no_productive_work_confirmed: true };
+  supervision: 'Named mentor (senior designer) supervises daily with a check-in each morning.', no_productive_work_confirmed: true,
+  hours_per_week: '5', workplace_arrangements: 'On-site in a supervised studio with breaks and a named first-day contact.',
+  safeguarding_contact: 'Alex Morgan, safeguarding lead; use the in-platform report or speak to the mentor.', under_18_policy: 'safeguarded' };
 const today = '2030-01-01';
 
 describe('opportunity validation', () => {
@@ -17,6 +19,12 @@ describe('opportunity validation', () => {
   test('openings must be whole 1–100', () => expect(validate({ ...good, openings: '1.5' }, today).openings).toBeDefined());
   test('warns on unpaid productive work', () => expect(warnings({ ...good, activities: 'Serve customers at the till and cover shifts' }).length).toBeGreaterThan(0));
   test('warns on unclear supervision', () => expect(warnings({ ...good, supervision: 'Someone will be around' }).some(w => w.startsWith('Supervision'))).toBe(true));
+  test('requires hours, workplace arrangements and a safeguarding contact', () => {
+    expect(validate({ ...good, hours_per_week: '' }, today).hours_per_week).toBeDefined();
+    expect(validate({ ...good, workplace_arrangements: '' }, today).workplace_arrangements).toBeDefined();
+    expect(validate({ ...good, safeguarding_contact: '' }, today).safeguarding_contact).toBeDefined();
+  });
+  test('requires an explicit under-18 participation policy', () => expect(validate({ ...good, under_18_policy: '' }, today).under_18_policy).toBeDefined());
   test('round trips through stored row', () => {
     const row = toRow(good);
     expect(fromRow({ ...row, opportunity_details: row.opportunity_details } as never)).toEqual(good);

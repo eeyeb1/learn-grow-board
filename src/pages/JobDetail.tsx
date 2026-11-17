@@ -9,6 +9,7 @@ import { useJobDetail } from "@/hooks/useJobDetail";
 import { useJobStorage } from "@/hooks/useJobStorage";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "@/components/AuthModal";
+import SafetyReportButton from "@/components/SafetyReportDialog";
 import { toast } from "sonner";
 import { 
   ArrowLeft, 
@@ -34,6 +35,7 @@ const JobDetail = () => {
 
   const isFav = id ? isFavorite(id) : false;
   const alreadyApplied = id ? hasApplied(id) : false;
+  const isRealListing = !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   const navigate = useNavigate();
 
@@ -275,6 +277,9 @@ const JobDetail = () => {
                   {job.mentorshipDetails}
                 </p>
               </Card>
+
+              {(job.workplaceArrangements || job.safeguardingContact || job.paymentDetails || job.eligibility) && <Card className="p-6"><h2 className="font-display font-semibold text-xl text-foreground mb-4">Safety, pay & eligibility</h2><div className="space-y-4 text-sm">{([['Workplace arrangements', job.workplaceArrangements], ['Safeguarding contact and reporting route', job.safeguardingContact], ['Payment', job.paymentDetails], ['Expenses', job.expenseDetails], ['Eligibility', job.eligibility], ['Age-appropriate participation', job.under18Policy === 'safeguarded' ? 'Under-18s may take part with the stated safeguards and an approved guardian.' : job.under18Policy === 'adults_only' ? 'Adults only (18+)' : undefined]] as const).filter(([, value]) => value).map(([label, value]) => <div key={label}><h3 className="font-semibold text-foreground">{label}</h3><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{value}</p></div>)}</div></Card>}
+              {isRealListing && <div className="flex flex-wrap gap-2"><SafetyReportButton subjectType="listing" subjectId={job.id} />{job.companyId && <SafetyReportButton subjectType="employer" subjectId={job.companyId} />}</div>}
             </div>
 
             {/* Sidebar - Company Info */}

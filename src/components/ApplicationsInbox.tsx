@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { applicationLabel, employerTransitions, reasonRequired, APPLICATION_LABELS } from '@/lib/applicationStatus';
+import SafetyReportButton from '@/components/SafetyReportDialog';
 
 type Ev = { from: string | null; to: string; reason: string | null; actor_role: string; at: string };
 type InboxApp = {
-  id: string; job_id: string; job_title: string; job_status: string; openings: number | null;
+  id: string; applicant_id: string; job_id: string; job_title: string; job_status: string; openings: number | null;
   status: string; status_reason: string | null; submitted_at: string;
   applicant_name: string; statement: string | null; links: Record<string, string>;
   profile: { slug: string; headline: string | null; skills: string[] } | null;
@@ -100,6 +101,7 @@ export default function ApplicationsInbox({ companyId }: { companyId: string }) 
               {open.verified_skills.length > 0 && <div><h3 className="flex items-center gap-1 font-semibold"><ShieldCheck className="h-4 w-4 text-primary" />Employer-verified skills</h3><div className="mt-1 flex flex-wrap gap-1">{open.verified_skills.map((s) => <Badge key={s} variant="outline">{s}</Badge>)}</div></div>}
               {open.public_portfolio.length > 0 && <div><h3 className="font-semibold">Public portfolio</h3><ul className="mt-1 list-disc pl-5 text-muted-foreground">{open.public_portfolio.map((p, i) => <li key={i}>{p.title}</li>)}</ul></div>}
               <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">Contact details, diary entries and private portfolio items are not shared. Use status updates for decisions, or <Link className="underline" to={`/messages?application=${open.id}`}>message the applicant</Link> securely on the platform.</p>
+              <div className="flex flex-wrap gap-2 border-t border-border pt-4"><SafetyReportButton subjectType="seeker" subjectId={open.applicant_id} contextId={open.id} /><SafetyReportButton subjectType="safety_concern" label="Report application safety concern" subjectId={null} contextId={open.id} /></div>
               <div><h3 className="font-semibold">History</h3><ol className="mt-1 space-y-1 text-muted-foreground"><li>Submitted · {new Date(open.submitted_at).toLocaleString()}</li>{open.events.map((e, i) => <li key={i}>{applicationLabel(e.to)} by {e.actor_role === 'seeker' ? 'applicant' : 'company'} · {new Date(e.at).toLocaleString()}{e.reason ? ` — “${e.reason}”` : ''}</li>)}</ol></div>
               {open.can_manage && employerTransitions(open.status).length > 0 && <div className="space-y-2 border-t border-border pt-4">
                 <h3 className="font-semibold">Update stage</h3>

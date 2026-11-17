@@ -26,6 +26,7 @@ import { PlacementPortfolioPanel } from "@/components/portfolio";
 import { toast } from "sonner";
 import PlacementOnboarding from "@/components/PlacementOnboarding";
 import PlacementCompletion from "@/components/PlacementCompletion";
+import SafetyReportButton from "@/components/SafetyReportDialog";
 import { AlertCircle, ArrowLeft, Award, BookOpen, Calendar, Clock, FolderOpen, History, Loader2, MessageSquare, Target, Trash2, UserCheck, Wrench } from "lucide-react";
 
 interface DiaryEntry { id: string; entry_date: string; content: string }
@@ -156,6 +157,7 @@ const PlacementDetail = () => {
             </Card>
 
             <PlacementOnboarding key={placement.id + placement.seeker_confirmed_at + placement.status} placement={placement} isSeeker={isSeeker} canManage={canManage} onChange={load} />
+            <div className="flex flex-wrap gap-2 rounded-lg border border-border bg-card p-4 print:hidden"><SafetyReportButton subjectType="safety_concern" subjectId={placement.id} contextId={placement.id} /><SafetyReportButton subjectType="employer" subjectId={placement.company_id} />{placement.supervisor_id && placement.supervisor_id !== user.id && <SafetyReportButton subjectType="employee" subjectId={placement.supervisor_id} contextId={placement.id} />}{canManage && !isSeeker && <SafetyReportButton subjectType="seeker" subjectId={placement.user_id} contextId={placement.application_id} />}</div>
             {isSeeker && (placement.status === "upcoming" || placement.status === "active") && <SeekerDispute placementId={placement.id} onChange={load} />}
             {canManage && !isSeeker && <ManagePanel placement={placement} onChange={load} />}
             {canComplete && placement.status === "active" && <PlacementCompletion placement={placement} onChange={load} />}

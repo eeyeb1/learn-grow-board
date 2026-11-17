@@ -22,6 +22,9 @@ export interface Job {
   created_at: string;
   updated_at: string;
   expires_at: string | null;
+  category?: string | null;
+  opportunity_details?: Record<string, unknown>;
+  safety_flags?: string[];
   company?: {
     company_name: string;
     company_description: string | null;

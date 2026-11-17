@@ -1506,6 +1506,8 @@ export type Database = {
           publication_revision: number
           requirements: string[] | null
           responsibilities: string[] | null
+          safety_flags: string[]
+          safety_review_required: boolean
           skill_level: string
           skills: string[] | null
           status: string
@@ -1531,6 +1533,8 @@ export type Database = {
           publication_revision?: number
           requirements?: string[] | null
           responsibilities?: string[] | null
+          safety_flags?: string[]
+          safety_review_required?: boolean
           skill_level?: string
           skills?: string[] | null
           status?: string
@@ -1556,6 +1560,8 @@ export type Database = {
           publication_revision?: number
           requirements?: string[] | null
           responsibilities?: string[] | null
+          safety_flags?: string[]
+          safety_review_required?: boolean
           skill_level?: string
           skills?: string[] | null
           status?: string
@@ -1569,6 +1575,57 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_safety_assessments: {
+        Row: {
+          checks: Json
+          created_at: string
+          decision: string
+          id: string
+          job_id: string
+          note: string
+          request_id: string
+          reviewer_id: string
+          revision: number
+        }
+        Insert: {
+          checks: Json
+          created_at?: string
+          decision: string
+          id?: string
+          job_id: string
+          note: string
+          request_id: string
+          reviewer_id: string
+          revision: number
+        }
+        Update: {
+          checks?: Json
+          created_at?: string
+          decision?: string
+          id?: string
+          job_id?: string
+          note?: string
+          request_id?: string
+          reviewer_id?: string
+          revision?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_safety_assessments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_safety_assessments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "job_publication_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -2448,6 +2505,142 @@ export type Database = {
           },
         ]
       }
+      safety_report_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          note: string | null
+          report_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          report_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          report_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_report_events_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "safety_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_reports: {
+        Row: {
+          application_id: string | null
+          assigned_to: string | null
+          company_id: string | null
+          context_id: string | null
+          created_at: string
+          details: string
+          id: string
+          job_id: string | null
+          placement_id: string | null
+          priority: string
+          reason: string
+          reporter_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          status: string
+          subject_id: string | null
+          subject_type: string
+          updated_at: string
+          urgent: boolean
+        }
+        Insert: {
+          application_id?: string | null
+          assigned_to?: string | null
+          company_id?: string | null
+          context_id?: string | null
+          created_at?: string
+          details: string
+          id?: string
+          job_id?: string | null
+          placement_id?: string | null
+          priority: string
+          reason: string
+          reporter_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject_id?: string | null
+          subject_type: string
+          updated_at?: string
+          urgent?: boolean
+        }
+        Update: {
+          application_id?: string | null
+          assigned_to?: string | null
+          company_id?: string | null
+          context_id?: string | null
+          created_at?: string
+          details?: string
+          id?: string
+          job_id?: string | null
+          placement_id?: string | null
+          priority?: string
+          reason?: string
+          reporter_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject_id?: string | null
+          subject_type?: string
+          updated_at?: string
+          urgent?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_reports_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_reports_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_reports_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_reports_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "placements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_blogs: {
         Row: {
           blog_id: string
@@ -2834,11 +3027,13 @@ export type Database = {
       list_message_reports: { Args: never; Returns: Json }
       list_my_company_invitations: { Args: never; Returns: Json }
       list_my_conversations: { Args: never; Returns: Json }
+      list_my_safety_reports: { Args: never; Returns: Json }
       list_placement_supervisors: {
         Args: { _placement_id: string }
         Returns: Json
       }
       list_platform_job_reviews: { Args: never; Returns: Json }
+      list_safety_reports: { Args: never; Returns: Json }
       message_staff_access: {
         Args: { _application_id: string; _uid: string }
         Returns: boolean
@@ -2855,6 +3050,10 @@ export type Database = {
         Args: { _decision: string; _note: string; _report_id: string }
         Returns: undefined
       }
+      opportunity_safety_flags: {
+        Args: { j: Database["public"]["Tables"]["jobs"]["Row"] }
+        Returns: string[]
+      }
       placement_action: {
         Args: { _action: string; _note?: string; _placement_id: string }
         Returns: undefined
@@ -2864,6 +3063,15 @@ export type Database = {
         Returns: undefined
       }
       purge_expired_messages: { Args: never; Returns: number }
+      record_listing_safety_assessment: {
+        Args: {
+          _checks: Json
+          _decision: string
+          _note: string
+          _request_id: string
+        }
+        Returns: string
+      }
       recover_company_admin: {
         Args: {
           _authority: string
@@ -2952,6 +3160,10 @@ export type Database = {
       review_job_submission: {
         Args: { _decision: string; _note: string; _request_id: string }
         Returns: string
+      }
+      review_safety_report: {
+        Args: { _action: string; _note: string; _report_id: string }
+        Returns: undefined
       }
       revoke_certificate: {
         Args: { _id: string; _reason: string }
@@ -3057,6 +3269,17 @@ export type Database = {
           _placement_id: string
           _skills: string
           _strengths: string
+        }
+        Returns: string
+      }
+      submit_safety_report: {
+        Args: {
+          _context_id: string
+          _details: string
+          _reason: string
+          _subject_id: string
+          _subject_type: string
+          _urgent?: boolean
         }
         Returns: string
       }

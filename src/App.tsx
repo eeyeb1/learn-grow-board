@@ -38,6 +38,7 @@ import CompanyVerificationReview from "./pages/CompanyVerificationReview";
 import EmployeeEmail from "./pages/EmployeeEmail";
 import PublicCompany from "./pages/PublicCompany";
 import Messages from "./pages/Messages";
+import PlatformSafetyCentre from "./pages/PlatformSafetyCentre";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +95,7 @@ const App = () => (
             <Route path="/moderation/references" element={<ReferenceModeration />} />
             <Route path="/admin/companies" element={<CompanyVerificationReview />} />
             <Route path="/admin/opportunities" element={<PlatformOpportunityReview />} />
+            <Route path="/admin/safety" element={<PlatformSafetyCentre />} />
             <Route path="/placements/:id" element={<PlacementDetail />} />
             <Route path="/verify" element={<VerifyCertificate />} />
             <Route path="/verify/:code" element={<VerifyCertificate />} />

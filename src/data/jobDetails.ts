@@ -19,6 +19,13 @@ export interface JobDetail {
   requirements: string[];
   whatYouWillLearn: string[];
   mentorshipDetails: string;
+  companyId?: string;
+  workplaceArrangements?: string;
+  safeguardingContact?: string;
+  paymentDetails?: string;
+  expenseDetails?: string;
+  eligibility?: string;
+  under18Policy?: 'safeguarded' | 'adults_only';
 }
 
 export const jobDetails: Record<string, JobDetail> = {
