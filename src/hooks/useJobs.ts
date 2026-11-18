@@ -23,7 +23,7 @@ export interface Job {
   updated_at: string;
   expires_at: string | null;
   category?: string | null;
-  opportunity_details?: Record<string, unknown>;
+  opportunity_details?: import('@/integrations/supabase/types').Json;
   safety_flags?: string[];
   company?: {
     company_name: string;

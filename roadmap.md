@@ -1,10 +1,10 @@
 # Roadmap
 
 ## Platform safety
-- [ ] Require workplace, hours, payment, supervision, safeguarding-contact and under-18 listing details; route unpaid-work and other safety flags through documented human review before publication.
-- [ ] Add private listing/employer/employee/seeker/safety reporting, urgent admin escalation, anti-retaliation wording and append-only investigation history.
-- [ ] Enforce under-18 application and placement restrictions while preserving guardian-supervised messaging and existing privacy controls.
-- [ ] Add employer conduct/suspension guidance and test validation, direct access denial, report submission/read-back and responsive screens.
+- [x] Require workplace, hours, payment, supervision, safeguarding-contact and under-18 listing details; route unpaid-work and other safety flags through documented human review before publication.
+- [x] Add private listing/employer/employee/seeker/safety reporting, urgent admin escalation, anti-retaliation wording and append-only investigation history.
+- [x] Enforce under-18 application and placement restrictions while preserving guardian-supervised messaging and existing privacy controls; application workflow and certificate-completion function bodies checked directly.
+- [x] Add employer conduct/suspension guidance; 72 tests passed, direct private-table reads returned no rows, reviewer RPC/page access was denied, real report submission and immediate read-back passed on desktop/mobile with no browser errors; the server returned unpaid_productive_work for a customer-service learning listing; test reports removed.
 - [ ] Verify genuine admin investigation and flagged-listing publication decisions (blocker: no platform administrator or verified company exists).
 
 ## Company analytics

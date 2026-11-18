@@ -30,6 +30,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import SafetyReportButton from "@/components/SafetyReportDialog";
 
 /*
   NOTE TO WEBSITE OWNER (internal — not rendered):
@@ -539,19 +540,7 @@ function ContactButton() {
 };
 
 function ReportButton() {
-  const { toast } = useToast();
-  return (
-    <Button variant="outline" onClick={() =>
-      toast({
-        title: "Thank you for helping keep the community safe",
-        description:
-          "In-app reporting is coming soon. If something needs urgent attention, please contact us directly.",
-      })
-    }>
-      <Flag className="w-4 h-4 mr-2" />
-      Report a Problem
-    </Button>
-  );
+  return <SafetyReportButton subjectType="safety_concern" label="Report a Problem" />;
 };
 
 const SectionHeading = ({
@@ -683,16 +672,7 @@ const Terms = () => {
             <Button variant="outline" asChild>
               <Link to="/privacy#cookies">Cookie Policy</Link>
             </Button>
-            <Button variant="outline" onClick={() =>
-              toast({
-                title: "Thank you for helping keep the community safe",
-                description:
-                  "In-app reporting is coming soon. If something needs urgent attention, please contact us directly.",
-              })
-            }>
-              <Flag className="w-4 h-4 mr-2" />
-              Report a Problem
-            </Button>
+            <SafetyReportButton subjectType="safety_concern" label="Report a Problem" />
           </div>
         </div>
       </section>

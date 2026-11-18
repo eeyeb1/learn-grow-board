@@ -302,6 +302,34 @@
       "when": 1794928561025,
       "tag": "0042_application_safety_report_subject",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1795038596535,
+      "tag": "0043_application_safety_concern_context",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1795038804308,
+      "tag": "0044_safety_record_foreign_key_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1795038819370,
+      "tag": "0045_under18_sample_listing_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1795038860171,
+      "tag": "0046_safety_helper_service_access",
+      "breakpoints": true
     }
   ]
 }

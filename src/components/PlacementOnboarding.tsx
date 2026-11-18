@@ -93,7 +93,7 @@ export default function PlacementOnboarding({ placement, isSeeker, canManage, on
           <Field k="schedule" label="Agreed schedule" long help="Days, times and any breaks." />
           <Field k="location" label="Location" help="Where the seeker should go, or 'Remote'." />
           <Field k="expected_duration" label="Expected duration" help="For example, '2 weeks, 15 hours per week'." />
-          <Field k="safeguarding" label="Safeguarding requirements (if relevant)" long help="Required for under-18s: named safeguarding contact, supervision ratios, any restrictions." />
+          <Field k="safeguarding" label="Safeguarding requirements (if relevant)" long help="Required for under-18s: named safeguarding contact, supervision ratios, any restrictions. Activation also requires an approved parent or guardian." />
         </div>
         <Field k="expectations" label="Agreed expectations" long help="Dress code, conduct, what to bring, how to report absence." />
         <div className="grid gap-4 md:grid-cols-2">

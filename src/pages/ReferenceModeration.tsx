@@ -72,7 +72,7 @@ const ReferenceModeration = () => {
       <Navbar />
       <div className="container mx-auto px-4 py-10 max-w-4xl space-y-6">
         <h1 className="font-display text-3xl font-bold text-foreground flex items-center gap-2"><ShieldCheck className="w-7 h-7 text-primary" />Reference reports</h1>
-        {isAdmin && <Button asChild variant="outline"><Link to="/admin/companies">Company verification</Link></Button>}
+        {isAdmin && <div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to="/admin/companies">Company verification</Link></Button><Button asChild variant="outline"><Link to="/admin/safety">Safety investigations</Link></Button></div>}
         {isAdmin === false ? (
           <Card><CardContent className="p-6 text-muted-foreground">Only moderators can view this page.</CardContent></Card>
         ) : state === "loading" ? <Skeleton className="h-40" /> : state === "error" ? (

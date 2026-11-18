@@ -50,6 +50,7 @@ export default function SafetyReportButton({ subjectType, subjectId = null, cont
     setBusy(false);
     if (rpcError) { setError(rpcError.message); return; }
     setReference(String(data));
+    window.dispatchEvent(new Event('safety-report-submitted'));
   };
 
   return <>
@@ -80,12 +81,15 @@ export function MySafetyReports() {
   const [error, setError] = useState('');
   useEffect(() => {
     if (!user) { setRows([]); return; }
-    void supabase.rpc('list_my_safety_reports').then(({ data, error: e }) => {
+    const load = () => void supabase.rpc('list_my_safety_reports').then(({ data, error: e }) => {
       if (e) setError('Your report status could not be loaded.'); else setRows((data ?? []) as unknown as OwnReport[]);
     });
+    load();
+    window.addEventListener('safety-report-submitted', load);
+    return () => window.removeEventListener('safety-report-submitted', load);
   }, [user]);
   if (!user) return null;
   return <div className="mt-6 rounded-lg border border-border p-4"><h3 className="font-semibold">Your reports</h3>
-    {error ? <p role="alert" className="mt-2 text-sm text-destructive">{error}</p> : rows === null ? <p role="status" className="mt-2 text-sm text-muted-foreground">Loading…</p> : rows.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">You have not submitted a safety report.</p> : <ul className="mt-3 space-y-3">{rows.map((r) => <li key={r.id} className="border-t border-border pt-3 text-sm"><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{r.status.replaceAll('_', ' ')}</Badge>{r.priority !== 'standard' && <Badge variant="secondary">{r.priority}</Badge>}<span className="text-xs text-muted-foreground">{r.id.slice(0, 8).toUpperCase()} · {new Date(r.created_at).toLocaleDateString()}</span></div><p className="mt-2 text-muted-foreground">{SAFETY_SUBJECT_LABELS[r.subject_type]} · {SAFETY_REASONS.find((x) => x.value === r.reason)?.label ?? r.reason}</p></li>)}</ul>}
+    {error ? <p role="alert" className="mt-2 text-sm text-destructive">{error}</p> : rows === null ? <p role="status" className="mt-2 text-sm text-muted-foreground">Loading…</p> : rows.length === 0 ? <p className="mt-2 text-sm text-muted-foreground">You have not submitted a safety report.</p> : <ul className="mt-3 space-y-3">{rows.map((r) => <li key={r.id} className="border-t border-border pt-3 text-sm"><div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{r.status.replace(/_/g, ' ')}</Badge>{r.priority !== 'standard' && <Badge variant="secondary">{r.priority}</Badge>}<span className="text-xs text-muted-foreground">{r.id.slice(0, 8).toUpperCase()} · {new Date(r.created_at).toLocaleDateString()}</span></div><p className="mt-2 text-muted-foreground">{SAFETY_SUBJECT_LABELS[r.subject_type]} · {SAFETY_REASONS.find((x) => x.value === r.reason)?.label ?? r.reason}</p></li>)}</ul>}
   </div>;
 }
