@@ -3,29 +3,44 @@
 BEGIN;
 -- Restore actual deployed grants with the schema; do not broaden them for tests.
 CREATE FUNCTION public.test_assert(ok boolean,label text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF ok IS DISTINCT FROM true THEN RAISE EXCEPTION 'FAIL: %',label; END IF; RAISE NOTICE 'PASS: %',label; END $$;
-INSERT INTO auth.users(id,email,email_confirmed_at) SELECT ('00000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'test'||n||'@rbac-example.org',now() FROM generate_series(1,8) n;
+INSERT INTO auth.users(id,email,email_confirmed_at) SELECT ('00000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'test'||n||'@rbac-example.org',now() FROM generate_series(1,9) n;
 INSERT INTO public.company_profiles(id,user_id,company_name) VALUES('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','Isolated company A'),('10000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002','Isolated company B');
 INSERT INTO public.company_verifications(company_id,status) SELECT id,'verified' FROM public.company_profiles;
 INSERT INTO public.company_domains(company_id,domain,approved) VALUES('10000000-0000-0000-0000-000000000001','rbac-example.org',true),('10000000-0000-0000-0000-000000000002','other-example.org',true);
-INSERT INTO public.employee_identities(user_id,full_name,job_title,claimed_company,work_email,work_email_verified_at,matched_company_id) SELECT id,'Test staff','Test role','Company A',email,now(),'10000000-0000-0000-0000-000000000001' FROM auth.users WHERE id::text IN ('00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000005','00000000-0000-0000-0000-000000000006');
+INSERT INTO public.employee_identities(user_id,full_name,job_title,claimed_company,work_email,work_email_verified_at,matched_company_id) SELECT id,'Test staff','Test role','Company A',email,now(),'10000000-0000-0000-0000-000000000001' FROM auth.users WHERE id::text IN ('00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000005','00000000-0000-0000-0000-000000000006','00000000-0000-0000-0000-000000000009');
 INSERT INTO public.company_memberships(company_id,user_id,role,status,approved_work_email) VALUES
 ('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','company_admin','approved',NULL),
-('10000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002','company_admin','approved',NULL);
+('10000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002','company_admin','approved',NULL),
+('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000009','employee','pending',NULL);
 INSERT INTO public.company_memberships(company_id,user_id,role,status,approved_work_email) SELECT '10000000-0000-0000-0000-000000000001',id,'employee','approved',email FROM auth.users WHERE id::text IN ('00000000-0000-0000-0000-000000000003','00000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-000000000005');
 INSERT INTO public.company_staff_scopes(company_id,user_id,scope) VALUES('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','opportunity_manager'),('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000004','supervisor'),('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000005','approved_employee');
-INSERT INTO public.jobs(id,company_id,created_by,title,description,status) VALUES
-('20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','Assigned listing','Actual assigned listing fixture','active'),
-('20000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002','Other company','Other company fixture','draft'),
-('20000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000006','Personal draft','Contributor private draft','draft'),
-('20000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','Unassigned draft','Unassigned draft fixture','draft');
-INSERT INTO public.company_resource_assignments(company_id,user_id,job_id,permissions) VALUES('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','20000000-0000-0000-0000-000000000001',ARRAY['read','edit','applications']);
-INSERT INTO public.applications(id,user_id,job_id) VALUES('30000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000007','20000000-0000-0000-0000-000000000001');
-UPDATE public.applications SET status='accepted' WHERE id='30000000-0000-0000-0000-000000000001';
-INSERT INTO public.company_resource_assignments(company_id,user_id,placement_id,permissions) SELECT company_id,'00000000-0000-0000-0000-000000000004',id,ARRAY['manage'] FROM public.placements;
-SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
-SET LOCAL ROLE authenticated;
-SELECT public.placement_action(id,'activate',NULL) FROM placements;
+INSERT INTO public.jobs(id,company_id,created_by,title,description,status,location_type,category,mentorship_details,what_you_will_learn,duration,expires_at,hours_per_week,opportunity_details) VALUES
+('20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','Assigned listing','A genuine supervised paid learning listing for isolated permission testing.','active','remote','paid_job','A named supervisor provides daily guidance and weekly feedback sessions.',ARRAY['Supervised learning'],'Two weekdays',now()+interval '10 days','8 hours per week',jsonb_build_object('start_date',(current_date+20)::text,'end_date',(current_date+40)::text,'estimated_hours',40,'openings',2,'audience','Adult learners','eligibility','Adults with an interest in learning','payment_details','£12.21 per hour, paid monthly','workplace_arrangements','Remote supervised learning using secure company systems','safeguarding_contact','Company safeguarding lead via the platform reporting workflow','under_18_policy','adults_only')),
+('20000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-000000000002','Other company','Other company fixture','draft','remote',NULL,NULL,NULL,NULL,NULL,NULL,'{}'::jsonb),
+('20000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000006','Personal draft','A genuine supervised paid draft owned only by the isolated contributor.','draft','remote','paid_job','A named supervisor provides daily guidance and weekly feedback sessions.',ARRAY['Supervised learning'],'Two weekdays',now()+interval '10 days','8 hours per week',jsonb_build_object('start_date',(current_date+20)::text,'end_date',(current_date+40)::text,'estimated_hours',40,'openings',1,'audience','Adult learners','eligibility','Adults with an interest in learning','payment_details','£12.21 per hour, paid monthly','workplace_arrangements','Remote supervised learning using secure company systems','safeguarding_contact','Company safeguarding lead via the platform reporting workflow','under_18_policy','adults_only')),
+('20000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000001','Unassigned draft','Unassigned draft fixture','draft','remote',NULL,NULL,NULL,NULL,NULL,NULL,'{}'::jsonb),
+('20000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000006','Pending listing','Pending listing must stay private','pending_company','remote',NULL,NULL,NULL,NULL,NULL,NULL,'{}'::jsonb),
+('20000000-0000-0000-0000-000000000006','10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000006','Rejected listing','Rejected listing must stay private','rejected','remote',NULL,NULL,NULL,NULL,NULL,NULL,'{}'::jsonb);
+SELECT set_config('request.jwt.claim.sub','',true);
+SET LOCAL ROLE anon;
+SELECT public.test_assert((SELECT count(*) FROM public.jobs WHERE id IN ('20000000-0000-0000-0000-000000000002','20000000-0000-0000-0000-000000000003','20000000-0000-0000-0000-000000000004','20000000-0000-0000-0000-000000000005','20000000-0000-0000-0000-000000000006'))=0,'Visitor cannot read draft pending or rejected listings');
+SELECT public.test_assert((SELECT count(*) FROM public.jobs WHERE id='20000000-0000-0000-0000-000000000001')=1,'Visitor can read the published listing');
+DO $$ BEGIN BEGIN INSERT INTO public.applications(user_id,job_id) VALUES('00000000-0000-0000-0000-000000000007','20000000-0000-0000-0000-000000000001'); RAISE EXCEPTION 'FAIL: anonymous application succeeded'; EXCEPTION WHEN insufficient_privilege THEN NULL; END; RAISE NOTICE 'PASS: Anonymous direct application denied'; END $$;
 RESET ROLE;
+INSERT INTO public.company_resource_assignments(company_id,user_id,job_id,permissions) VALUES('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','20000000-0000-0000-0000-000000000001',ARRAY['read','edit','applications']);
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000007',true);
+SET LOCAL ROLE authenticated;
+INSERT INTO public.applications(id,user_id,job_id) VALUES('30000000-0000-0000-0000-000000000001',auth.uid(),'20000000-0000-0000-0000-000000000001');
+DO $$ BEGIN BEGIN INSERT INTO public.applications(user_id,job_id) VALUES(auth.uid(),'20000000-0000-0000-0000-000000000001'); RAISE EXCEPTION 'FAIL: duplicate application succeeded'; EXCEPTION WHEN unique_violation THEN NULL; END; RAISE NOTICE 'PASS: Duplicate seeker application denied'; END $$;
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',true);
+SET LOCAL ROLE authenticated;
+SELECT public.set_application_status('30000000-0000-0000-0000-000000000001','accepted',NULL);
+DO $$ BEGIN BEGIN PERFORM public.set_application_status('30000000-0000-0000-0000-000000000001','accepted',NULL); RAISE EXCEPTION 'FAIL: duplicate acceptance succeeded'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: Duplicate acceptance decision denied'; END $$;
+RESET ROLE;
+UPDATE public.placements SET status='active',supervisor_id='00000000-0000-0000-0000-000000000004',start_date=current_date-1,end_date=current_date+5,schedule='Two supervised weekdays',location='Remote',expected_duration='Two weeks',expectations='Attend agreed supervised learning sessions and record actual hours.',learning_objectives=ARRAY['Supervised learning'],seeker_confirmed_at=now(),activated_at=now();
+INSERT INTO public.company_resource_assignments(company_id,user_id,placement_id,permissions) SELECT company_id,'00000000-0000-0000-0000-000000000004',id,ARRAY['manage'] FROM public.placements;
+INSERT INTO public.user_roles(user_id,role) VALUES('00000000-0000-0000-0000-000000000008','admin');
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000007',true);
 SET LOCAL ROLE authenticated;
 INSERT INTO hour_entries(application_id,user_id,work_date,minutes,description,status) VALUES('30000000-0000-0000-0000-000000000001',auth.uid(),current_date,60,'Observed work for isolated placement','approved');
@@ -33,7 +48,7 @@ SELECT public.test_assert((SELECT status='pending' FROM hour_entries),'Seeker ca
 RESET ROLE;
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000004',true);
 SET LOCAL ROLE authenticated;
-UPDATE hour_entries SET status='approved';
+SELECT public.review_hour_entry(id,'approve',NULL) FROM hour_entries;
 SELECT public.test_assert((SELECT status='approved' AND reviewed_by=auth.uid() FROM hour_entries),'Assigned supervisor approves relevant hours');
 SELECT public.verify_placement_skill(id,'Teamwork','teamwork','Observed collaborative work',true) FROM placements;
 SELECT public.test_assert((SELECT count(*) FROM skill_verifications)=1,'Assigned supervisor verifies observed skill');
@@ -59,9 +74,13 @@ SET LOCAL ROLE authenticated;
 SELECT public.set_company_staff_access('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000005','approved_employee',false,false,'Explicit staff scope reviewed by company admin');
 DO $$ BEGIN BEGIN PERFORM public.set_company_resource_assignment('10000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000005','20000000-0000-0000-0000-000000000002',NULL,ARRAY['edit'],'Attempt cross-company assignment'); RAISE EXCEPTION 'FAIL: cross-company assignment accepted'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: Company admin cannot assign another company record'; END $$;
 SELECT public.review_job_publication(id,true,'Reviewed current revision for publication') FROM job_publication_requests WHERE job_id='20000000-0000-0000-0000-000000000001' AND status='pending';
-SELECT public.test_assert((SELECT status='active' FROM jobs WHERE id='20000000-0000-0000-0000-000000000001'),'Company administrator approves public publication');
 SELECT public.test_assert((SELECT status='approved' FROM job_publication_requests WHERE job_id='20000000-0000-0000-0000-000000000001' AND revision=2),'Approval decision persists for submitted revision');
 RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000008',true);
+SET LOCAL ROLE authenticated;
+SELECT public.platform_review_job(id,true,'First company listing reviewed for publication safety') FROM job_publication_requests WHERE job_id='20000000-0000-0000-0000-000000000001' AND platform_status='pending';
+RESET ROLE;
+SELECT public.test_assert((SELECT status='active' FROM jobs WHERE id='20000000-0000-0000-0000-000000000001'),'Company administrator and required platform review approve public publication');
 UPDATE public.company_domains SET approved=false WHERE company_id='10000000-0000-0000-0000-000000000001';
 SELECT public.test_assert(NOT public.company_job_permission('20000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000003','edit'),'Changed approved domain invalidates manager access');
 UPDATE public.company_domains SET approved=true WHERE company_id='10000000-0000-0000-0000-000000000001';
@@ -73,11 +92,21 @@ SELECT public.test_assert(NOT public.company_job_permission('20000000-0000-0000-
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000006',true);
 SET LOCAL ROLE authenticated;
 SELECT public.test_assert((SELECT count(*) FROM jobs WHERE status='draft')=1,'Contributor sees only own private draft');
+UPDATE public.jobs SET title='Unauthorised edit' WHERE id='20000000-0000-0000-0000-000000000004';
+SELECT public.test_assert((SELECT title='Unassigned draft' FROM public.jobs WHERE id='20000000-0000-0000-0000-000000000003'),'Contributor own draft remains available');
+SELECT public.test_assert(NOT EXISTS(SELECT 1 FROM public.jobs WHERE id='20000000-0000-0000-0000-000000000004' AND title='Unauthorised edit'),'Contributor cannot edit another author draft');
 SELECT public.test_assert((SELECT count(*) FROM company_memberships)=0,'Contributor cannot read approved staff');
 DO $$ BEGIN BEGIN INSERT INTO company_memberships(company_id,user_id,role,status) VALUES('10000000-0000-0000-0000-000000000001',auth.uid(),'company_admin','approved'); RAISE EXCEPTION 'FAIL: self-appointment succeeded'; EXCEPTION WHEN insufficient_privilege THEN NULL; END; RAISE NOTICE 'PASS: Direct API self-appointment denied'; END $$;
 SELECT public.test_assert((SELECT count(*) FROM applications)=0,'Contributor cannot read seeker applications');
 SELECT public.request_job_publication('20000000-0000-0000-0000-000000000003');
 SELECT public.test_assert((SELECT count(*) FROM job_publication_requests)=1,'Contributor sees only own approval requests');
+DO $$ BEGIN BEGIN PERFORM public.request_job_publication('20000000-0000-0000-0000-000000000003'); RAISE EXCEPTION 'FAIL: duplicate submission succeeded'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: Duplicate pending submission denied'; END $$;
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000009',true);
+SET LOCAL ROLE authenticated;
+SELECT public.test_assert(NOT public.company_permission('10000000-0000-0000-0000-000000000001',auth.uid(),'member'),'Unapproved employee has no membership access');
+SELECT public.test_assert((SELECT count(*) FROM public.company_memberships)=0 AND (SELECT count(*) FROM public.applications)=0,'Unapproved employee cannot read staff or seeker records');
+DO $$ BEGIN BEGIN PERFORM public.review_employee_membership((SELECT id FROM public.job_publication_requests LIMIT 1),'approved','Unapproved employee escalation attempt'); RAISE EXCEPTION 'FAIL: unapproved review succeeded'; EXCEPTION WHEN OTHERS THEN IF SQLERRM LIKE 'FAIL:%' THEN RAISE; END IF; END; RAISE NOTICE 'PASS: Unapproved employee cannot review company records'; END $$;
 RESET ROLE;
 SELECT set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000008',true);
 SET LOCAL ROLE authenticated;

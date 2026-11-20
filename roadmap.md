@@ -1,5 +1,12 @@
 # Roadmap
 
+## Integrated platform audit
+- [ ] Run existing unit and database security suites; map failures to registration, verification, drafting, publication, applications, placements, hours, feedback, certificates and notifications.
+- [ ] Exercise nine roles and two unrelated companies with disposable fixtures, including direct API/RLS denial, escalation, revocation, invalid transitions and duplicates.
+- [ ] Check signed-out, seeker and unauthorised live-preview flows without fabricating live company authority.
+- [ ] Fix confirmed security or workflow defects, rerun affected tests and preserve existing seeker behaviour.
+- [ ] Record exact passed, failed and manual-review results in a user-readable audit report.
+
 ## Platform safety
 - [x] Require workplace, hours, payment, supervision, safeguarding-contact and under-18 listing details; route unpaid-work and other safety flags through documented human review before publication.
 - [x] Add private listing/employer/employee/seeker/safety reporting, urgent admin escalation, anti-retaliation wording and append-only investigation history.

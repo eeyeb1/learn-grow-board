@@ -21,6 +21,7 @@ SELECT set_config('request.jwt.claim.sub','90000000-0000-0000-0000-000000000001'
 SET LOCAL ROLE authenticated;
 SELECT save_company_page('91000000-0000-0000-0000-000000000001','{"company_name":"Edited company","is_public":true,"show_verified_impact":true}');
 RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','',true);
 INSERT INTO jobs(id,company_id,created_by,title,description,status,expires_at) VALUES
 ('92000000-0000-0000-0000-000000000001','91000000-0000-0000-0000-000000000001','90000000-0000-0000-0000-000000000001','Open role','Open role fixture','active',now()+interval '1 day'),
 ('92000000-0000-0000-0000-000000000002','91000000-0000-0000-0000-000000000001','90000000-0000-0000-0000-000000000001','Expired role','Expired role fixture','active',now()-interval '1 day'),
@@ -32,12 +33,18 @@ SELECT profile_assert(NOT (get_public_company('91000000-0000-0000-0000-000000000
 SELECT profile_assert(get_public_company('91000000-0000-0000-0000-000000000001')->'impact'='null'::jsonb,'Small-cohort impact remains hidden');
 RESET ROLE;
 INSERT INTO applications(id,user_id,job_id,status) SELECT ('93000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,('90000000-0000-0000-0000-'||lpad(n::text,12,'0'))::uuid,'92000000-0000-0000-0000-000000000001','submitted' FROM generate_series(3,7) n;
-UPDATE applications SET status='accepted' WHERE id::text LIKE '93000000%';
+SELECT set_config('request.jwt.claim.sub','90000000-0000-0000-0000-000000000001',true);
+SET LOCAL ROLE authenticated;
+SELECT set_application_status(id,'accepted',NULL) FROM applications WHERE id::text LIKE '93000000%';
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','',true);
+SET LOCAL session_replication_role=replica;
 UPDATE placements SET status='active' WHERE company_id='91000000-0000-0000-0000-000000000001';
 INSERT INTO hour_entries(user_id,application_id,work_date,minutes,description,status) SELECT user_id,id,current_date,60,'Pending hours fixture','pending' FROM applications WHERE id::text LIKE '93000000%';
 UPDATE hour_entries SET status='approved';
 INSERT INTO hour_entries(user_id,application_id,work_date,minutes,description,status) SELECT user_id,id,current_date,120,'Unverified hours fixture','pending' FROM applications WHERE id='93000000-0000-0000-0000-000000000003';
 UPDATE placements SET status='completed' WHERE company_id='91000000-0000-0000-0000-000000000001';
+SET LOCAL session_replication_role=origin;
 SELECT profile_assert((get_public_company('91000000-0000-0000-0000-000000000001')->'impact'->>'completed_experiences')::int=5,'Impact counts completed experiences accurately');
 SELECT profile_assert((get_public_company('91000000-0000-0000-0000-000000000001')->'impact'->>'approved_minutes')::int=300,'Verified impact uses approved hours only');
 UPDATE company_page_settings SET show_verified_impact=false;
