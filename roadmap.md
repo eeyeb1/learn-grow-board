@@ -1,11 +1,12 @@
 # Roadmap
 
 ## Integrated platform audit
-- [ ] Run existing unit and database security suites; map failures to registration, verification, drafting, publication, applications, placements, hours, feedback, certificates and notifications.
-- [ ] Exercise nine roles and two unrelated companies with disposable fixtures, including direct API/RLS denial, escalation, revocation, invalid transitions and duplicates.
-- [ ] Check signed-out, seeker and unauthorised live-preview flows without fabricating live company authority.
-- [ ] Fix confirmed security or workflow defects, rerun affected tests and preserve existing seeker behaviour.
-- [ ] Record exact passed, failed and manual-review results in a user-readable audit report.
+- [x] Run existing unit and database security suites across registration, verification, drafting, publication, applications, placements, hours, feedback, certificates and notifications: 72 unit tests and 132 database checks passed.
+- [x] Exercise nine roles and two unrelated companies with disposable fixtures, including direct API/RLS denial, escalation, revocation, invalid transitions and duplicates; no live fixtures created.
+- [x] Check signed-out and unauthorised live-preview flows plus anonymous private-record API reads; 14 browser checks passed and no private rows were exposed.
+- [x] Remove simulated phone authentication and legacy client company/profile authority writes; preserve seeker email/Google flows and rerun affected tests.
+- [x] Record exact passed, failed and manual-review results in `.lovable/reviews/platform-integration-audit.md`.
+- [ ] Verify genuine signed-in role UIs, real email/OAuth round-trips and certificate PDF/QR presentation (blocker: user selected isolated tests only; no verified company or platform administrator exists).
 
 ## Platform safety
 - [x] Require workplace, hours, payment, supervision, safeguarding-contact and under-18 listing details; route unpaid-work and other safety flags through documented human review before publication.

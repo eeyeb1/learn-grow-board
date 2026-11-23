@@ -3,9 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Mail, Lock, User, Phone, Chrome, ArrowLeft, CheckCircle, Building2, Globe, Users } from "lucide-react";
+import { Loader2, Mail, Lock, User, Chrome, ArrowLeft, CheckCircle, Building2, Users } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +17,6 @@ interface AuthModalProps {
   highlightCompany?: boolean;
 }
 
-type AuthMethod = "email" | "phone";
 type AuthView = "login" | "signup" | "forgot-password" | "reset-sent";
 type UserType = "applicant" | "company";
 
@@ -26,21 +24,11 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   const [view, setView] = useState<AuthView>("login");
-  const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
   const [userType, setUserType] = useState<UserType | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Company-specific fields
-  const [companyName, setCompanyName] = useState("");
-  const [companyDescription, setCompanyDescription] = useState("");
-  const [companyWebsite, setCompanyWebsite] = useState("");
-  const [companyIndustry, setCompanyIndustry] = useState("");
 
   // When opened from a "Post a Role" button, jump straight to signup with the company option highlighted
   useEffect(() => {
@@ -77,22 +65,12 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
           return;
         }
 
-        // If company user provided company details, create company profile
-        if (userType === "company" && companyName) {
-          // Wait a bit for the auth to complete
-          const { data: { user: newUser } } = await supabase.auth.getUser();
-          if (newUser) {
-            await supabase.from("company_profiles").insert({
-              user_id: newUser.id,
-              company_name: companyName,
-              company_description: companyDescription || null,
-              company_website: companyWebsite || null,
-              industry: companyIndustry || null,
-            });
-          }
+        if (userType === "company") {
+          sessionStorage.setItem("employer-pathway", "register");
+          toast.success("Account created. Verify your email, then complete company verification.");
+        } else {
+          toast.success("Account created successfully!");
         }
-
-        toast.success(userType === "company" ? "Company account created successfully!" : "Account created successfully!");
       }
       onOpenChange(false);
       resetForm();
@@ -121,37 +99,13 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
     }
   };
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (!codeSent) {
-        console.log("Send verification code to:", phoneNumber);
-        setCodeSent(true);
-        toast.success("Verification code sent!");
-      } else {
-        const signupData = userType === "company" 
-          ? { phoneNumber, verificationCode, fullName, userType, companyName, companyDescription, companyWebsite, companyIndustry }
-          : { phoneNumber, verificationCode, fullName, userType };
-        console.log("Verify code:", signupData);
-        toast.success(isLogin ? "Welcome back!" : userType === "company" ? "Company account created successfully!" : "Account created successfully!");
-        onOpenChange(false);
-        resetForm();
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGoogleLogin = async () => {
     try {
+      if (userType === "company") sessionStorage.setItem("employer-pathway", "register");
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}${userType === "company" ? "/employer/register" : "/"}`,
         },
       });
       if (error) {
@@ -166,16 +120,8 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
     setEmail("");
     setPassword("");
     setFullName("");
-    setPhoneNumber("");
-    setVerificationCode("");
-    setCodeSent(false);
-    setAuthMethod("email");
     setView("login");
     setUserType(null);
-    setCompanyName("");
-    setCompanyDescription("");
-    setCompanyWebsite("");
-    setCompanyIndustry("");
   };
 
   const getTitle = () => {
@@ -418,39 +364,7 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
           </span>
         </div>
 
-        {/* Auth Method Tabs */}
-        <div className="flex gap-2 mb-4">
-          <Button
-            type="button"
-            variant={authMethod === "email" ? "default" : "outline"}
-            size="sm"
-            className="flex-1"
-            onClick={() => {
-              setAuthMethod("email");
-              setCodeSent(false);
-            }}
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Email
-          </Button>
-          <Button
-            type="button"
-            variant={authMethod === "phone" ? "default" : "outline"}
-            size="sm"
-            className="flex-1"
-            onClick={() => {
-              setAuthMethod("phone");
-              setCodeSent(false);
-            }}
-          >
-            <Phone className="w-4 h-4 mr-2" />
-            Phone
-          </Button>
-        </div>
-
-        {/* Email Form */}
-        {authMethod === "email" && (
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
+        <form onSubmit={handleEmailSubmit} className="space-y-4">
             {isSignup && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">{userType === "company" ? "Contact Person Name" : "Full Name"}</Label>
@@ -513,67 +427,6 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
               </div>
             </div>
 
-            {/* Company-specific fields */}
-            {isSignup && userType === "company" && (
-              <>
-                <Separator className="my-4" />
-                <p className="text-sm font-medium text-foreground">Company Details</p>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company/Organization Name *</Label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="companyName"
-                      type="text"
-                      placeholder="e.g., TechStart Studio"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="companyDescription">Company Description</Label>
-                  <Textarea
-                    id="companyDescription"
-                    placeholder="Tell applicants about your organization..."
-                    value={companyDescription}
-                    onChange={(e) => setCompanyDescription(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="companyWebsite">Company Website</Label>
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="companyWebsite"
-                      type="url"
-                      placeholder="https://yourcompany.com"
-                      value={companyWebsite}
-                      onChange={(e) => setCompanyWebsite(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="companyIndustry">Industry</Label>
-                  <Input
-                    id="companyIndustry"
-                    type="text"
-                    placeholder="e.g., Technology, Healthcare, Education"
-                    value={companyIndustry}
-                    onChange={(e) => setCompanyIndustry(e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
@@ -584,145 +437,7 @@ const AuthModal = ({ open, onOpenChange, highlightCompany = false }: AuthModalPr
                 <>{isLogin ? "Sign In" : userType === "company" ? "Register Company" : "Create Account"}</>
               )}
             </Button>
-          </form>
-        )}
-
-        {/* Phone Form */}
-        {authMethod === "phone" && (
-          <form onSubmit={handlePhoneSubmit} className="space-y-4">
-            {isSignup && !codeSent && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="fullNamePhone">{userType === "company" ? "Contact Person Name" : "Full Name"}</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      id="fullNamePhone"
-                      type="text"
-                      placeholder={userType === "company" ? "Enter contact person name" : "Enter your full name"}
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10"
-                      required={isSignup}
-                    />
-                  </div>
-                </div>
-
-                {/* Company-specific fields for phone signup */}
-                {userType === "company" && (
-                  <>
-                    <Separator className="my-4" />
-                    <p className="text-sm font-medium text-foreground">Company Details</p>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="companyNamePhone">Company/Organization Name *</Label>
-                      <div className="relative">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="companyNamePhone"
-                          type="text"
-                          placeholder="e.g., TechStart Studio"
-                          value={companyName}
-                          onChange={(e) => setCompanyName(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="companyDescriptionPhone">Company Description</Label>
-                      <Textarea
-                        id="companyDescriptionPhone"
-                        placeholder="Tell applicants about your organization..."
-                        value={companyDescription}
-                        onChange={(e) => setCompanyDescription(e.target.value)}
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="companyWebsitePhone">Company Website</Label>
-                      <div className="relative">
-                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="companyWebsitePhone"
-                          type="url"
-                          placeholder="https://yourcompany.com"
-                          value={companyWebsite}
-                          onChange={(e) => setCompanyWebsite(e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="companyIndustryPhone">Industry</Label>
-                      <Input
-                        id="companyIndustryPhone"
-                        type="text"
-                        placeholder="e.g., Technology, Healthcare, Education"
-                        value={companyIndustry}
-                        onChange={(e) => setCompanyIndustry(e.target.value)}
-                      />
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+1 (555) 000-0000"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="pl-10"
-                  required
-                  disabled={codeSent}
-                />
-              </div>
-            </div>
-
-            {codeSent && (
-              <div className="space-y-2">
-                <Label htmlFor="code">Verification Code</Label>
-                <Input
-                  id="code"
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  className="text-center tracking-widest"
-                  maxLength={6}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setCodeSent(false)}
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Didn't receive a code? Try again
-                </button>
-              </div>
-            )}
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {codeSent ? "Verifying..." : "Sending code..."}
-                </>
-              ) : (
-                <>{codeSent ? "Verify Code" : "Send Verification Code"}</>
-              )}
-            </Button>
-          </form>
-        )}
+        </form>
 
         <div className="text-center mt-4">
           <button

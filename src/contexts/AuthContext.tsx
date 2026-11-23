@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, metadata?: { full_name?: string; user_type?: string }) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -75,13 +75,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       },
     });
 
-    // After signup, update the profile with user_type if provided
-    if (!error && data.user && metadata?.user_type) {
-      await supabase
-        .from("profiles")
-        .update({ user_type: metadata.user_type })
-        .eq("user_id", data.user.id);
-      
+    // Account type is presentation only; protected company records determine authority.
+    if (!error && metadata?.user_type) {
       setUserType(metadata.user_type as "applicant" | "company");
     }
 
