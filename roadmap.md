@@ -1,5 +1,11 @@
 # Roadmap
 
+## Selected security fixes
+- [x] Enable leaked-password checks for new and changed passwords.
+- [x] Replace unrestricted blog-comment reads with published-post scoping; no other findings changed.
+- [x] Replace unrestricted blog-like reads with published-post scoping; no other findings changed.
+- [x] Re-scan confirmed all three selected findings cleared; rollback-only anonymous access test passed and all three statuses updated.
+
 ## Integrated platform audit
 - [x] Run existing unit and database security suites across registration, verification, drafting, publication, applications, placements, hours, feedback, certificates and notifications: 72 unit tests and 132 database checks passed.
 - [x] Exercise nine roles and two unrelated companies with disposable fixtures, including direct API/RLS denial, escalation, revocation, invalid transitions and duplicates; no live fixtures created.

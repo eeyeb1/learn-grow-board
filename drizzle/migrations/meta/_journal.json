@@ -330,6 +330,13 @@
       "when": 1795038860171,
       "tag": "0046_safety_helper_service_access",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1795509823049,
+      "tag": "0047_scope_blog_interactions_to_public_posts",
+      "breakpoints": true
     }
   ]
 }
